@@ -180,6 +180,44 @@ class Vector2dInfoProxy : public InfoProxy<Stat, Vector2dInfo>
     Result total() const { return this->s.total(); }
 };
 
+template <class Stat>
+class CountMinHashInfoProxy : public InfoProxy<Stat, CountMinHashInfo>
+{
+  protected:
+    mutable VCounter cvec;
+    mutable VResult rvec;
+
+  public:
+    CountMinHashInfoProxy(Stat &stat) : InfoProxy<Stat, CountMinHashInfo>(stat) {}
+
+    size_type size() const { return this->s.size(); }
+
+    VCounter &
+    value() const
+    {
+        this->s.value(cvec);
+        return cvec;
+    }
+
+    const VResult &
+    result() const
+    {
+        this->s.result(rvec);
+        return rvec;
+    }
+
+    Result total() const { return this->s.total(); }
+};
+
+template <class Stat>
+class CountMinInfoProxy : public InfoProxy<Stat, CountMinInfo>
+{
+  public:
+    CountMinInfoProxy(Stat &stat) : InfoProxy<Stat, CountMinInfo>(stat) {}
+
+    Result total() const { return this->s.total(); }
+};
+
 class InfoAccess
 {
   private:
@@ -504,6 +542,170 @@ class DataWrapVec2d : public DataWrapVec<Derived, InfoProxyType>
         return this->info()->y_subnames[i];
     }
 
+};
+
+template <class Derived, template <class> class InfoProxyType>
+class DataWrapCountMinHash: public DataWrap<Derived, InfoProxyType>
+{
+  public:
+    typedef InfoProxyType<Derived> Info;
+
+    DataWrapCountMinHash(Group *parent = nullptr, const char *name = nullptr,
+                const units::Base *unit=units::Unspecified::get(),
+                const char *desc = nullptr)
+        : DataWrap<Derived, InfoProxyType>(parent, name, unit, desc)
+    {}
+
+    // The following functions are specific to vectors.  If you use them
+    // in a non vector context, you will get a nice compiler error!
+
+    /**
+     * Set the subfield name for the given index, and marks this stat to print
+     * at the end of simulation.
+     * @param index The subfield index.
+     * @param name The new name of the subfield.
+     * @return A reference to this stat.
+     */
+    Derived &
+    subname(off_type index, const std::string &name)
+    {
+        Derived &self = this->self();
+        Info *info = self.info();
+
+        std::vector<std::string> &subn = info->subnames;
+        if (subn.size() <= index)
+            subn.resize(index + 1);
+        subn[index] = name;
+        return self;
+    }
+
+    // The following functions are specific to 2d vectors.  If you use
+    // them in a non vector context, you will get a nice compiler
+    // error because info doesn't have the right variables.
+
+    /**
+     * Set the subfield description for the given index and marks this stat to
+     * print at the end of simulation.
+     * @param index The subfield index.
+     * @param desc The new description of the subfield
+     * @return A reference to this stat.
+     */
+    Derived &
+    subdesc(off_type index, const std::string &desc)
+    {
+        Info *info = this->info();
+
+        std::vector<std::string> &subd = info->subdescs;
+        if (subd.size() <= index)
+            subd.resize(index + 1);
+        subd[index] = desc;
+
+        return this->self();
+    }
+
+    void
+    prepare()
+    {
+        Derived &self = this->self();
+        Info *info = this->info();
+
+        size_t size = self.size();
+        for (off_type i = 0; i < size; ++i)
+            self.data(i)->prepare(info->getStorageParams());
+    }
+
+    void
+    reset()
+    {
+        Derived &self = this->self();
+        Info *info = this->info();
+
+        size_t size = self.size();
+        for (off_type i = 0; i < size; ++i)
+            self.data(i)->reset(info->getStorageParams());
+    }
+};
+
+template <class Derived, template <class> class InfoProxyType>
+class DataWrapCountMin : public DataWrapCountMinHash<Derived, InfoProxyType>
+{
+  public:
+    typedef InfoProxyType<Derived> Info;
+
+    DataWrapCountMin(Group *parent = nullptr, const char *name = nullptr,
+                const units::Base *unit=units::Unspecified::get(),
+                const char *desc = nullptr)
+        : DataWrapCountMinHash<Derived, InfoProxyType>(parent, name, unit, desc)
+    {}
+
+    // The following functions are specific to vectors.  If you use them
+    // in a non vector context, you will get a nice compiler error!
+
+    /**
+     * Set the subfield name for the given index, and marks this stat to print
+     * at the end of simulation.
+     * @param index The subfield index.
+     * @param name The new name of the subfield.
+     * @return A reference to this stat.
+     */
+    Derived &
+    subname(off_type index, const std::string &name)
+    {
+        Derived &self = this->self();
+        Info *info = self.info();
+
+        std::vector<std::string> &subn = info->subnames;
+        if (subn.size() <= index)
+            subn.resize(index + 1);
+        subn[index] = name;
+        return self;
+    }
+
+    // The following functions are specific to 2d vectors.  If you use
+    // them in a non vector context, you will get a nice compiler
+    // error because info doesn't have the right variables.
+
+    /**
+     * Set the subfield description for the given index and marks this stat to
+     * print at the end of simulation.
+     * @param index The subfield index.
+     * @param desc The new description of the subfield
+     * @return A reference to this stat.
+     */
+    Derived &
+    subdesc(off_type index, const std::string &desc)
+    {
+        Info *info = this->info();
+
+        std::vector<std::string> &subd = info->subdescs;
+        if (subd.size() <= index)
+            subd.resize(index + 1);
+        subd[index] = desc;
+
+        return this->self();
+    }
+
+    void
+    prepare()
+    {
+        Derived &self = this->self();
+        Info *info = this->info();
+
+        size_t size = self.size();
+        for (off_type i = 0; i < size; ++i)
+            self.data(i)->prepare(info->getStorageParams());
+    }
+
+    void
+    reset()
+    {
+        Derived &self = this->self();
+        Info *info = this->info();
+
+        size_t size = self.size();
+        for (off_type i = 0; i < size; ++i)
+            self.data(i)->reset(info->getStorageParams());
+    }
 };
 
 //////////////////////////////////////////////////////////////////////
@@ -1447,6 +1649,139 @@ class VectorDistBase : public DataWrapVec<Derived, VectorDistInfoProxy>
         info->data.resize(size);
         for (off_type i = 0; i < size; ++i)
             data(i)->prepare(info->getStorageParams(), info->data[i]);
+    }
+
+    bool
+    check() const
+    {
+        return size() > 0;
+    }
+};
+
+/**
+ * Implementation of a CountMin of stats. The type of stat is determined by the
+ * Storage class. @sa ScalarBase
+ */
+template <class Derived, class Stor>
+class CountMinBase : public DataWrapCountMin<Derived, CountMinInfoProxy>
+{
+  public:
+    typedef CountMinInfoProxy<Derived> Info;
+    typedef Stor Storage;
+    typedef typename Stor::Params Params;
+    typedef CountMinHashInfoProxy<Derived> Proxy;
+    friend class ScalarProxy<Derived>;
+    friend class VectorProxy<Derived>;
+    friend class DataWrapCountMinHash<Derived, CountMinInfoProxy>;
+    friend class DataWrapCountMin<Derived, CountMinInfoProxy>;
+
+  protected:
+    size_type x;
+    size_type y;
+    std::vector<Storage*> storage;
+
+  protected:
+    Storage *data(off_type index) { return storage[index]; }
+    const Storage *data(off_type index) const { return storage[index]; }
+
+  public:
+    CountMinBase(Group *parent, const char *name,
+                 const units::Base *unit,
+                 const char *desc)
+        : DataWrapCountMin<Derived, CountMinInfoProxy>(parent, name, unit, desc),
+          x(0), y(0), storage()
+    {
+      std::cout << "CountMinBase Initialised with " << name << std::endl;
+    }
+
+    ~CountMinBase()
+    {
+        for (auto& stor : storage) {
+            delete stor;
+        }
+    }
+
+    Derived &
+    init(size_type _x, size_type _y)
+    {
+        fatal_if((_x <= 0) || (_y <= 0), "Storage sizes must be positive");
+        fatal_if(check(), "Stat has already been initialized");
+
+        Derived &self = this->self();
+        Info *info = this->info();
+
+        x = _x;
+        y = _y;
+        info->x = _x;
+        info->y = _y;
+
+        storage.reserve(x * y);
+        for (size_type i = 0; i < x * y; ++i)
+            storage.push_back(new Storage(this->info()->getStorageParams()));
+
+        this->setInit();
+
+        return self;
+    }
+
+    Proxy
+    operator[](off_type index)
+    {
+        off_type offset = index * y;
+        assert (offset + y <= size());
+        return Proxy(this->self(), offset, y);
+    }
+
+
+    size_type
+    size() const
+    {
+        return storage.size();
+    }
+
+    bool
+    zero() const
+    {
+        return data(0)->zero();
+    }
+
+    /**
+     * Return a total of all entries in this vector.
+     * @return The total of all vector entries.
+     */
+    Result
+    total() const
+    {
+        Result total = 0.0;
+        for (off_type i = 0; i < size(); ++i)
+            total += data(i)->result();
+        return total;
+    }
+
+    void
+    prepare()
+    {
+        Info *info = this->info();
+        size_type size = this->size();
+
+        for (off_type i = 0; i < size; ++i)
+            data(i)->prepare(info->getStorageParams());
+
+        info->cvec.resize(size);
+        for (off_type i = 0; i < size; ++i)
+            info->cvec[i] = data(i)->value();
+    }
+
+    /**
+     * Reset stat value to default
+     */
+    void
+    reset()
+    {
+        Info *info = this->info();
+        size_type size = this->size();
+        for (off_type i = 0; i < size; ++i)
+            data(i)->reset(info->getStorageParams());
     }
 
     bool
@@ -2530,6 +2865,32 @@ class SparseHistogram : public SparseHistBase<SparseHistogram, SparseHistStor>
     }
 };
 
+/**
+ * A new implementation for Stats with CountMinSketchAlgortihm.
+ * @sa Stat, VectorBase, StatStor
+ */
+class CountMin : public CountMinBase<CountMin, StatStor>
+{
+  public:
+    CountMin(Group *parent = nullptr)
+        : CountMinBase<CountMin, StatStor>(
+                parent, nullptr, units::Unspecified::get(), nullptr)
+    {
+    }
+
+    CountMin(Group *parent, const char *name, const char *desc = nullptr)
+        : CountMinBase<CountMin, StatStor>(
+                parent, name, units::Unspecified::get(), desc)
+    {
+    }
+
+    CountMin(Group *parent, const char *name, const units::Base *unit,
+           const char *desc = nullptr)
+        : CountMinBase<CountMin, StatStor>(parent, name, unit, desc)
+    {
+    }
+};
+
 class Temp;
 /**
  * A formula for statistics that is calculated when printed. A formula is
@@ -2930,3 +3291,4 @@ void debugDumpStats();
 } // namespace gem5
 
 #endif // __BASE_STATISTICS_HH__
+

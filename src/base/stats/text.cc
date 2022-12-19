@@ -801,6 +801,112 @@ Text::visit(const SparseHistInfo &info)
     print(*stream);
 }
 
+void
+Text::visit(const CountMinHashInfo &info)
+{
+    if (noOutput(info))
+        return;
+
+    size_type size = info.size();
+    VectorPrint print(spaces);
+    print.setup(statName(info.name), info.flags, info.precision, descriptions,
+        info.desc, enableUnits, info.unit->getUnitString(), spaces);
+    print.separatorString = info.separatorString;
+    print.vec = info.result();
+    print.total = info.total();
+    print.forceSubnames = false;
+
+    if (!info.subnames.empty()) {
+        for (off_type i = 0; i < size; ++i) {
+            if (!info.subnames[i].empty()) {
+                print.subnames = info.subnames;
+                print.subnames.resize(size);
+                for (off_type i = 0; i < size; ++i) {
+                    if (!info.subnames[i].empty() &&
+                        !info.subdescs[i].empty()) {
+                        print.subdescs = info.subdescs;
+                        print.subdescs.resize(size);
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    print(*stream);
+}
+
+
+void
+Text::visit(const CountMinInfo &info)
+{
+    if (noOutput(info))
+        return;
+
+    bool havesub = false;
+    VectorPrint print(spaces);
+    if (!info.y_subnames.empty()) {
+        for (off_type i = 0; i < info.y; ++i) {
+            if (!info.y_subnames[i].empty()) {
+                print.subnames = info.y_subnames;
+                break;
+            }
+        }
+    }
+    print.flags = info.flags;
+    print.separatorString = info.separatorString;
+    print.descriptions = descriptions;
+    print.enableUnits = enableUnits;
+    print.precision = info.precision;
+    print.forceSubnames = true;
+
+    if (!info.subnames.empty()) {
+        for (off_type i = 0; i < info.x; ++i)
+            if (!info.subnames[i].empty())
+                havesub = true;
+    }
+
+    VResult tot_vec(info.y);
+    for (off_type i = 0; i < info.x; ++i) {
+        if (havesub && (i >= info.subnames.size() || info.subnames[i].empty()))
+            continue;
+
+        off_type iy = i * info.y;
+        VResult yvec(info.y);
+
+        Result total = 0.0;
+        for (off_type j = 0; j < info.y; ++j) {
+            yvec[j] = info.cvec[iy + j];
+            tot_vec[j] += yvec[j];
+            total += yvec[j];
+        }
+
+        print.name = statName(
+            info.name + "_" +
+            (havesub ? info.subnames[i] : std::to_string(i)));
+        print.desc = info.desc;
+        print.unitStr = info.unit->getUnitString();
+        print.vec = yvec;
+        print.total = total;
+        print(*stream);
+    }
+
+    // Create a subname for printing the total
+    std::vector<std::string> total_subname;
+    total_subname.push_back("total");
+
+    if (info.flags.isSet(statistics::total) && (info.x > 1)) {
+        print.name = statName(info.name);
+        print.subnames = total_subname;
+        print.desc = info.desc;
+        print.unitStr = info.unit->getUnitString();
+        print.vec = VResult(1, info.total());
+        print.flags = print.flags & ~total;
+        print(*stream);
+    }
+}
+
 Output *
 initText(const std::string &filename, bool desc, bool spaces)
 {
@@ -820,3 +926,4 @@ initText(const std::string &filename, bool desc, bool spaces)
 
 } // namespace statistics
 } // namespace gem5
+

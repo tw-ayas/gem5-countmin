@@ -1,4 +1,4 @@
-4# Copyright (c) 2012-2013 ARM Limited
+# Copyright (c) 2012-2013 ARM Limited
 # All rights reserved.
 #
 # The license below extends only to copyright in the software and shall
@@ -153,6 +153,7 @@ elif args.cmd:
 else:
     print("No workload specified. Exiting!\n", file=sys.stderr)
     sys.exit(1)
+
 
 (CPUClass, test_mem_mode, FutureClass) = Simulation.setCPUClass(args)
 CPUClass.numThreads = numThreads

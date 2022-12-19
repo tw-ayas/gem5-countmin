@@ -78,6 +78,9 @@ class BaseCache(ClockedObject):
 
     size = Param.MemorySize("Capacity")
     assoc = Param.Unsigned("Associativity")
+    prob_hw_counters = Param.Unsigned(0, "On/Off prob hardware counters")
+    prob_hw_counters_ep = Param.Float(0.01, "Error for prob hardware counters")
+    prob_hw_counters_gamma = Param.Float(0.1, "Probabiliy Error prob hardware counters")
 
     tag_latency = Param.Cycles("Tag lookup latency")
     data_latency = Param.Cycles("Data access latency")

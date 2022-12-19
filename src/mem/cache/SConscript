@@ -35,6 +35,7 @@ SimObject('Cache.py', sim_objects=[
 Source('base.cc')
 Source('cache.cc')
 Source('cache_blk.cc')
+Source('countmin.cc')
 Source('mshr.cc')
 Source('mshr_queue.cc')
 Source('noncoherent_cache.cc')

@@ -92,6 +92,8 @@ class Text : public Output
     void visit(const Vector2dInfo &info) override;
     void visit(const FormulaInfo &info) override;
     void visit(const SparseHistInfo &info) override;
+    void visit(const CountMinHashInfo &info) override;
+    void visit(const CountMinInfo &info) override;
 
     // Group handling
     void beginGroup(const char *name) override;
@@ -111,3 +113,4 @@ Output *initText(const std::string &filename, bool desc, bool spaces);
 } // namespace gem5
 
 #endif // __BASE_STATS_TEXT_HH__
+

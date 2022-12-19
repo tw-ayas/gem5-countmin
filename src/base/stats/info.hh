@@ -255,6 +255,42 @@ class SparseHistInfo : public Info
     SparseHistData data;
 };
 
+class CountMinHashInfo : public Info
+{
+  public:
+    /** Names and descriptions of subfields. */
+    std::vector<std::string> subnames;
+    std::vector<std::string> subdescs;
+
+  public:
+    void enable();
+
+  public:
+    virtual size_type size() const = 0;
+    virtual const VCounter &value() const = 0;
+    virtual const VResult &result() const = 0;
+    virtual Result total() const = 0;
+};
+
+class CountMinInfo : public Info
+{
+  public:
+    /** Names and descriptions of subfields. */
+    std::vector<std::string> subnames;
+    std::vector<std::string> subdescs;
+    std::vector<std::string> y_subnames;
+
+    size_type x;
+    size_type y;
+
+    /** Local storage for the entry values, used for printing. */
+    mutable VCounter cvec;
+
+    void enable();
+
+    virtual Result total() const = 0;
+};
+
 typedef std::map<std::string, Info *> NameMapType;
 NameMapType &nameMap();
 
@@ -262,3 +298,4 @@ NameMapType &nameMap();
 } // namespace gem5
 
 #endif // __BASE_STATS_INFO_HH__
+

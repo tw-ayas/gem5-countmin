@@ -92,6 +92,10 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
                                     name(), false,
                                     EventBase::Delayed_Writeback_Pri),
       blkSize(blk_size),
+      probHwCounters(p.prob_hw_counters),
+      probHwCountersEp(p.prob_hw_counters_ep),
+      probHwCountersGamma(p.prob_hw_counters_gamma),
+      countMinStructure(p.prob_hw_counters_ep, p.prob_hw_counters_gamma),
       lookupLatency(p.tag_latency),
       dataLatency(p.data_latency),
       forwardLatency(p.tag_latency),
@@ -134,6 +138,10 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
         "Compressed cache %s does not have a compression algorithm", name());
     if (compressor)
         compressor->setCache(this);
+
+    std::cout << name() << ":probHwCounterSetup:" << probHwCounters << " " << probHwCountersEp << " " << probHwCountersGamma << std::endl;
+    //Counter writeBackCountMin(10, 10);
+ //   CountMinCounter countMinStructure(getProbHwCountersEp(), getProbHwCountersGamma());
 }
 
 BaseCache::~BaseCache()
@@ -1696,6 +1704,9 @@ BaseCache::writebackBlk(CacheBlk *blk)
         (blk->isSet(CacheBlk::DirtyBit) || writebackClean));
 
     stats.writebacks[Request::wbRequestorId]++;
+    stats.writeBacksCountMin.increment((std::to_string(Request::wbRequestorId) + "writebacks").data());
+    stats.countMinWriteBacks[Request::wbRequestorId] = stats.writeBacksCountMin.estimate((std::to_string(Request::wbRequestorId) + "writebacks").data());
+    //stats.writeBacksCountMin.print();
 
     RequestPtr req = std::make_shared<Request>(
         regenerateBlkAddr(blk), blkSize, 0, Request::wbRequestorId);
@@ -2194,6 +2205,179 @@ BaseCache::CacheCmdStats::regStatsFromParent()
     }
 }
 
+BaseCache::CacheCmdStatsCountMin::CacheCmdStatsCountMin(BaseCache &c,
+                                        const std::string &name)
+    : statistics::Group(&c, name.c_str()), cache(c),
+      ADD_STAT(hits, statistics::units::Count::get(),
+               ("number of " + name + " hits").c_str()),
+      ADD_STAT(misses, statistics::units::Count::get(),
+               ("number of " + name + " misses").c_str()),
+      ADD_STAT(hitLatency, statistics::units::Tick::get(),
+               ("number of " + name + " hit ticks").c_str()),
+      ADD_STAT(missLatency, statistics::units::Tick::get(),
+               ("number of " + name + " miss ticks").c_str()),
+      ADD_STAT(accesses, statistics::units::Count::get(),
+               ("number of " + name + " accesses(hits+misses)").c_str()),
+      ADD_STAT(missRate, statistics::units::Ratio::get(),
+               ("miss rate for " + name + " accesses").c_str()),
+      ADD_STAT(avgMissLatency, statistics::units::Rate<
+                    statistics::units::Tick, statistics::units::Count>::get(),
+               ("average " + name + " miss latency").c_str()),
+      ADD_STAT(mshrHits, statistics::units::Count::get(),
+               ("number of " + name + " MSHR hits").c_str()),
+      ADD_STAT(mshrMisses, statistics::units::Count::get(),
+               ("number of " + name + " MSHR misses").c_str()),
+      ADD_STAT(mshrUncacheable, statistics::units::Count::get(),
+               ("number of " + name + " MSHR uncacheable").c_str()),
+      ADD_STAT(mshrMissLatency, statistics::units::Tick::get(),
+               ("number of " + name + " MSHR miss ticks").c_str()),
+      ADD_STAT(mshrUncacheableLatency, statistics::units::Tick::get(),
+               ("number of " + name + " MSHR uncacheable ticks").c_str()),
+      ADD_STAT(mshrMissRate, statistics::units::Ratio::get(),
+               ("mshr miss rate for " + name + " accesses").c_str()),
+      ADD_STAT(avgMshrMissLatency, statistics::units::Rate<
+                    statistics::units::Tick, statistics::units::Count>::get(),
+               ("average " + name + " mshr miss latency").c_str()),
+      ADD_STAT(avgMshrUncacheableLatency, statistics::units::Rate<
+                    statistics::units::Tick, statistics::units::Count>::get(),
+               ("average " + name + " mshr uncacheable latency").c_str())
+{
+}
+
+void
+BaseCache::CacheCmdStatsCountMin::regStatsFromParent()
+{
+    using namespace statistics;
+
+    statistics::Group::regStats();
+    System *system = cache.system;
+    const auto max_requestors = system->maxRequestors();
+
+    hits
+        .init(max_requestors)
+        .flags(total | nozero | nonan)
+        ;
+    for (int i = 0; i < max_requestors; i++) {
+        hits.subname(i, system->getRequestorName(i));
+    }
+
+    // Miss statistics
+    misses
+        .init(max_requestors)
+        .flags(total | nozero | nonan)
+        ;
+    for (int i = 0; i < max_requestors; i++) {
+        misses.subname(i, system->getRequestorName(i));
+    }
+
+    // Hit latency statistics
+    hitLatency
+        .init(max_requestors)
+        .flags(total | nozero | nonan)
+        ;
+    for (int i = 0; i < max_requestors; i++) {
+        hitLatency.subname(i, system->getRequestorName(i));
+    }
+
+    // Miss latency statistics
+    missLatency
+        .init(max_requestors)
+        .flags(total | nozero | nonan)
+        ;
+    for (int i = 0; i < max_requestors; i++) {
+        missLatency.subname(i, system->getRequestorName(i));
+    }
+
+    // access formulas
+    accesses.flags(total | nozero | nonan);
+    accesses = hits + misses;
+    for (int i = 0; i < max_requestors; i++) {
+        accesses.subname(i, system->getRequestorName(i));
+    }
+
+    // miss rate formulas
+    missRate.flags(total | nozero | nonan);
+    missRate = misses / accesses;
+    for (int i = 0; i < max_requestors; i++) {
+        missRate.subname(i, system->getRequestorName(i));
+    }
+
+    // miss latency formulas
+    avgMissLatency.flags(total | nozero | nonan);
+    avgMissLatency = missLatency / misses;
+    for (int i = 0; i < max_requestors; i++) {
+        avgMissLatency.subname(i, system->getRequestorName(i));
+    }
+
+    // MSHR statistics
+    // MSHR hit statistics
+    mshrHits
+        .init(max_requestors)
+        .flags(total | nozero | nonan)
+        ;
+    for (int i = 0; i < max_requestors; i++) {
+        mshrHits.subname(i, system->getRequestorName(i));
+    }
+
+    // MSHR miss statistics
+    mshrMisses
+        .init(max_requestors)
+        .flags(total | nozero | nonan)
+        ;
+    for (int i = 0; i < max_requestors; i++) {
+        mshrMisses.subname(i, system->getRequestorName(i));
+    }
+
+    // MSHR miss latency statistics
+    mshrMissLatency
+        .init(max_requestors)
+        .flags(total | nozero | nonan)
+        ;
+    for (int i = 0; i < max_requestors; i++) {
+        mshrMissLatency.subname(i, system->getRequestorName(i));
+    }
+
+    // MSHR uncacheable statistics
+    mshrUncacheable
+        .init(max_requestors)
+        .flags(total | nozero | nonan)
+        ;
+    for (int i = 0; i < max_requestors; i++) {
+        mshrUncacheable.subname(i, system->getRequestorName(i));
+    }
+
+    // MSHR miss latency statistics
+    mshrUncacheableLatency
+        .init(max_requestors)
+        .flags(total | nozero | nonan)
+        ;
+    for (int i = 0; i < max_requestors; i++) {
+        mshrUncacheableLatency.subname(i, system->getRequestorName(i));
+    }
+
+    // MSHR miss rate formulas
+    mshrMissRate.flags(total | nozero | nonan);
+    mshrMissRate = mshrMisses / accesses;
+
+    for (int i = 0; i < max_requestors; i++) {
+        mshrMissRate.subname(i, system->getRequestorName(i));
+    }
+
+    // mshrMiss latency formulas
+    avgMshrMissLatency.flags(total | nozero | nonan);
+    avgMshrMissLatency = mshrMissLatency / mshrMisses;
+    for (int i = 0; i < max_requestors; i++) {
+        avgMshrMissLatency.subname(i, system->getRequestorName(i));
+    }
+
+    // mshrUncacheable latency formulas
+    avgMshrUncacheableLatency.flags(total | nozero | nonan);
+    avgMshrUncacheableLatency = mshrUncacheableLatency / mshrUncacheable;
+    for (int i = 0; i < max_requestors; i++) {
+        avgMshrUncacheableLatency.subname(i, system->getRequestorName(i));
+    }
+}
+
 BaseCache::CacheStats::CacheStats(BaseCache &c)
     : statistics::Group(&c), cache(c),
 
@@ -2271,10 +2455,90 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
              "number of data expansions"),
     ADD_STAT(dataContractions, statistics::units::Count::get(),
              "number of data contractions"),
-    cmd(MemCmd::NUM_MEM_CMDS)
+    cmd(MemCmd::NUM_MEM_CMDS),
+    ADD_STAT(countMinWriteBacksOld, statistics::units::Count::get(),
+             "countMinSketch based writeBacks"),
+    writeBacksCountMin(0.00001, 0.001),
+    ADD_STAT(countMinDemandHits, statistics::units::Count::get(),
+               "countMin number of demand (read+write) hits"),
+    ADD_STAT(countMinOverallHits, statistics::units::Count::get(),
+               "countMin number of overall hits"),
+    ADD_STAT(countMinDemandHitLatency, statistics::units::Tick::get(),
+               "countMin number of demand (read+write) hit ticks"),
+    ADD_STAT(countMinOverallHitLatency, statistics::units::Tick::get(),
+               "countMin number of overall hit ticks"),
+    ADD_STAT(countMinDemandMisses, statistics::units::Count::get(),
+               "countMin number of demand (read+write) misses"),
+    ADD_STAT(countMinOverallMisses, statistics::units::Count::get(),
+               "countMin number of overall misses"),
+    ADD_STAT(countMinDemandMissLatency, statistics::units::Tick::get(),
+               "countMin number of demand (read+write) miss ticks"),
+    ADD_STAT(countMinOverallMissLatency, statistics::units::Tick::get(),
+               "countMin number of overall miss ticks"),
+    ADD_STAT(countMinDemandAccesses, statistics::units::Count::get(),
+               "countMin number of demand (read+write) accesses"),
+    ADD_STAT(countMinOverallAccesses, statistics::units::Count::get(),
+               "countMin number of overall (read+write) accesses"),
+    ADD_STAT(countMinDemandMissRate, statistics::units::Ratio::get(),
+               "countMin miss rate for demand accesses"),
+    ADD_STAT(countMinOverallMissRate, statistics::units::Ratio::get(),
+               "countMin miss rate for overall accesses"),
+    ADD_STAT(countMinDemandAvgMissLatency, statistics::units::Rate<
+                       statistics::units::Tick, statistics::units::Count>::get(),
+               "countMin average overall miss latency in ticks"),
+    ADD_STAT(countMinOverallAvgMissLatency, statistics::units::Rate<
+                       statistics::units::Tick, statistics::units::Count>::get(),
+               "countMin average overall miss latency"),
+    ADD_STAT(countMinBlockedCycles, statistics::units::Cycle::get(),
+               "countMin number of cycles access was blocked"),
+    ADD_STAT(countMinBlockedCauses, statistics::units::Count::get(),
+               "countMin number of times access was blocked"),
+    ADD_STAT(countMinAvgBlocked, statistics::units::Rate<
+                       statistics::units::Cycle, statistics::units::Count>::get(),
+               "countMin average number of cycles each access was blocked"),
+    ADD_STAT(countMinWriteBacks, statistics::units::Count::get(),
+               "countMin number of writebacks"),
+    ADD_STAT(countMinDemandMshrHits, statistics::units::Count::get(),
+               "countMin number of demand (read+write) MSHR hits"),
+    ADD_STAT(countMinOverallMshrHits, statistics::units::Count::get(),
+               "countMin number of overall MSHR hits"),
+    ADD_STAT(countMinDemandMshrMisses, statistics::units::Count::get(),
+               "countMin number of demand (read+write) MSHR misses"),
+    ADD_STAT(countMinOverallMshrMisses, statistics::units::Count::get(),
+            "number of overall MSHR misses"),
+    ADD_STAT(countMinOverallMshrUncacheable, statistics::units::Count::get(),
+               "countMin number of overall MSHR uncacheable misses"),
+    ADD_STAT(countMinDemandMshrMissLatency, statistics::units::Tick::get(),
+               "countMin number of demand (read+write) MSHR miss ticks"),
+    ADD_STAT(countMinOverallMshrMissLatency, statistics::units::Tick::get(),
+               "countMin number of overall MSHR miss ticks"),
+    ADD_STAT(countMinOverallMshrUncacheableLatency, statistics::units::Tick::get(),
+               "countMin number of overall MSHR uncacheable ticks"),
+    ADD_STAT(countMinDemandMshrMissRate, statistics::units::Ratio::get(),
+               "countMin mshr miss ratio for demand accesses"),
+    ADD_STAT(countMinOverallMshrMissRate, statistics::units::Ratio::get(),
+               "countMin mshr miss ratio for overall accesses"),
+    ADD_STAT(countMinDemandAvgMshrMissLatency, statistics::units::Rate<
+                statistics::units::Tick, statistics::units::Count>::get(),
+               "countMin average overall mshr miss latency"),
+    ADD_STAT(countMinOverallAvgMshrMissLatency, statistics::units::Rate<
+                statistics::units::Tick, statistics::units::Count>::get(),
+               "countMin average overall mshr miss latency"),
+    ADD_STAT(countMinOverallAvgMshrUncacheableLatency, statistics::units::Rate<
+                statistics::units::Tick, statistics::units::Count>::get(),
+               "countMin average overall mshr uncacheable latency"),
+    ADD_STAT(countMinReplacements, statistics::units::Count::get(),
+               "countMin number of replacements"),
+    ADD_STAT(countMinDataExpansions, statistics::units::Count::get(),
+               "countMin number of data expansions"),
+    ADD_STAT(countMinDataContractions, statistics::units::Count::get(),
+               "countMin number of data contractions"),
+    countMinCmd(MemCmd::NUM_MEM_CMDS)
 {
-    for (int idx = 0; idx < MemCmd::NUM_MEM_CMDS; ++idx)
+    for (int idx = 0; idx < MemCmd::NUM_MEM_CMDS; ++idx){
         cmd[idx].reset(new CacheCmdStats(c, MemCmd(idx).toString()));
+        countMinCmd[idx].reset(new CacheCmdStatsCountMin(c, "countMin_"+MemCmd(idx).toString()));
+    }
 }
 
 void
@@ -2290,6 +2554,8 @@ BaseCache::CacheStats::regStats()
     for (auto &cs : cmd)
         cs->regStatsFromParent();
 
+    for (auto &cmcs : countMinCmd)
+       cmcs->regStatsFromParent();
 // These macros make it easier to sum the right subset of commands and
 // to change the subset of commands that are considered "demand" vs
 // "non-demand"
@@ -2302,6 +2568,15 @@ BaseCache::CacheStats::regStats()
 #define SUM_NON_DEMAND(s)                                       \
     (cmd[MemCmd::SoftPFReq]->s + cmd[MemCmd::HardPFReq]->s +    \
      cmd[MemCmd::SoftPFExReq]->s)
+
+#define SUM_DEMAND_COUNTMIN(s)                                           \
+    (countMinCmd[MemCmd::ReadReq]->s + countMinCmd[MemCmd::WriteReq]->s +\
+     countMinCmd[MemCmd::WriteLineReq]->s + countMinCmd[MemCmd::ReadExReq]->s +         \
+     countMinCmd[MemCmd::ReadCleanReq]->s + countMinCmd[MemCmd::ReadSharedReq]->s)
+
+#define SUM_NON_DEMAND_COUNTMIN(s) \
+    (countMinCmd[MemCmd::SoftPFReq]->s + cmd[MemCmd::HardPFReq]->s + \
+     countMinCmd[MemCmd::SoftPFExReq]->s)
 
     demandHits.flags(total | nozero | nonan);
     demandHits = SUM_DEMAND(hits);
@@ -2413,6 +2688,16 @@ BaseCache::CacheStats::regStats()
         writebacks.subname(i, system->getRequestorName(i));
     }
 
+    countMinWriteBacksOld
+        .init(max_requestors)
+        .flags(total | nozero | nonan)
+        ;
+    for (int i = 0; i < max_requestors; i++){
+        countMinWriteBacksOld.subname(i, system->getRequestorName(i));
+        countMinWriteBacksOld[i] = writeBacksCountMin.estimate(i);
+        std::cout << system->getRequestorName(i) << ": " << writeBacksCountMin.estimate(i) << std::endl;
+    }
+
     demandMshrHits.flags(total | nozero | nonan);
     demandMshrHits = SUM_DEMAND(mshrHits);
     for (int i = 0; i < max_requestors; i++) {
@@ -2500,6 +2785,205 @@ BaseCache::CacheStats::regStats()
 
     dataExpansions.flags(nozero | nonan);
     dataContractions.flags(nozero | nonan);
+
+    countMinDemandHits.flags(total | nozero | nonan);
+    countMinDemandHits = SUM_DEMAND_COUNTMIN(hits);
+    for (int i = 0; i < max_requestors; i++){
+        countMinDemandHits.subname(i, system->getRequestorName(i));
+    }
+
+    countMinOverallHits.flags(total | nozero | nonan);
+    countMinOverallHits = countMinDemandHits + SUM_NON_DEMAND_COUNTMIN(hits);
+    for (int i = 0; i < max_requestors; i++) {
+        countMinOverallHits.subname(i, system->getRequestorName(i));
+    }
+
+    countMinDemandMisses.flags(total | nozero | nonan);
+    countMinDemandMisses = SUM_DEMAND_COUNTMIN(misses);
+    for (int i = 0; i < max_requestors; i++) {
+        countMinDemandMisses.subname(i, system->getRequestorName(i));
+    }
+
+    countMinOverallMisses.flags(total | nozero | nonan);
+    countMinOverallMisses = countMinDemandMisses + SUM_NON_DEMAND_COUNTMIN(misses);
+    for (int i = 0; i < max_requestors; i++) {
+        countMinOverallMisses.subname(i, system->getRequestorName(i));
+    }
+
+    countMinDemandMissLatency.flags(total | nozero | nonan);
+    countMinDemandMissLatency = SUM_DEMAND_COUNTMIN(missLatency);
+    for (int i = 0; i < max_requestors; i++) {
+        countMinDemandMissLatency.subname(i, system->getRequestorName(i));
+    }
+
+    countMinOverallMissLatency.flags(total | nozero | nonan);
+    countMinOverallMissLatency = countMinDemandMissLatency + SUM_NON_DEMAND_COUNTMIN(missLatency);
+    for (int i = 0; i < max_requestors; i++) {
+        countMinOverallMissLatency.subname(i, system->getRequestorName(i));
+    }
+
+    countMinDemandHitLatency.flags(total | nozero | nonan);
+    countMinDemandHitLatency = SUM_DEMAND_COUNTMIN(hitLatency);
+    for (int i = 0; i < max_requestors; i++) {
+        countMinDemandHitLatency.subname(i, system->getRequestorName(i));
+    }
+    countMinOverallHitLatency.flags(total | nozero | nonan);
+    countMinOverallHitLatency = countMinDemandHitLatency + SUM_NON_DEMAND_COUNTMIN(hitLatency);
+    for (int i = 0; i < max_requestors; i++) {
+        countMinOverallHitLatency.subname(i, system->getRequestorName(i));
+    }
+
+    countMinDemandAccesses.flags(total | nozero | nonan);
+    countMinDemandAccesses = countMinDemandHits + countMinDemandMisses;
+    for (int i = 0; i < max_requestors; i++) {
+        countMinDemandAccesses.subname(i, system->getRequestorName(i));
+    }
+
+    countMinOverallAccesses.flags(total | nozero | nonan);
+    countMinOverallAccesses = countMinOverallHits + countMinOverallMisses;
+    for (int i = 0; i < max_requestors; i++) {
+        countMinOverallAccesses.subname(i, system->getRequestorName(i));
+    }
+
+    countMinDemandMissRate.flags(total | nozero | nonan);
+    countMinDemandMissRate = countMinDemandMisses / countMinDemandAccesses;
+    for (int i = 0; i < max_requestors; i++) {
+        countMinDemandMissRate.subname(i, system->getRequestorName(i));
+    }
+
+    countMinOverallMissRate.flags(total | nozero | nonan);
+    countMinOverallMissRate = countMinOverallMisses / countMinOverallAccesses;
+    for (int i = 0; i < max_requestors; i++) {
+        countMinOverallMissRate.subname(i, system->getRequestorName(i));
+    }
+
+    countMinDemandAvgMissLatency.flags(total | nozero | nonan);
+    countMinDemandAvgMissLatency = countMinDemandMissLatency / countMinDemandMisses;
+    for (int i = 0; i < max_requestors; i++) {
+        countMinDemandAvgMissLatency.subname(i, system->getRequestorName(i));
+    }
+
+    countMinOverallAvgMissLatency.flags(total | nozero | nonan);
+    countMinOverallAvgMissLatency = countMinOverallMissLatency / countMinOverallMisses;
+    for (int i = 0; i < max_requestors; i++) {
+        countMinOverallAvgMissLatency.subname(i, system->getRequestorName(i));
+    }
+
+    countMinBlockedCycles.init(NUM_BLOCKED_CAUSES);
+    countMinBlockedCycles
+        .subname(Blocked_NoMSHRs, "no_mshrs")
+        .subname(Blocked_NoTargets, "no_targets")
+        ;
+
+
+    countMinBlockedCauses.init(NUM_BLOCKED_CAUSES);
+    countMinBlockedCauses
+        .subname(Blocked_NoMSHRs, "no_mshrs")
+        .subname(Blocked_NoTargets, "no_targets")
+        ;
+
+    countMinAvgBlocked
+        .subname(Blocked_NoMSHRs, "no_mshrs")
+        .subname(Blocked_NoTargets, "no_targets")
+        ;
+    countMinAvgBlocked = blockedCycles / blockedCauses;
+
+    countMinWriteBacks
+        .init(max_requestors)
+        .flags(total | nozero | nonan)
+        ;
+    for (int i = 0; i < max_requestors; i++) {
+        countMinWriteBacks.subname(i, system->getRequestorName(i));
+    }
+
+    countMinDemandMshrHits.flags(total | nozero | nonan);
+    countMinDemandMshrHits = SUM_DEMAND_COUNTMIN(mshrHits);
+    for (int i = 0; i < max_requestors; i++) {
+        countMinDemandMshrHits.subname(i, system->getRequestorName(i));
+    }
+
+    countMinOverallMshrHits.flags(total | nozero | nonan);
+    countMinOverallMshrHits = countMinDemandMshrHits + SUM_NON_DEMAND_COUNTMIN(mshrHits);
+    for (int i = 0; i < max_requestors; i++) {
+        countMinOverallMshrHits.subname(i, system->getRequestorName(i));
+    }
+
+    countMinDemandMshrMisses.flags(total | nozero | nonan);
+    countMinDemandMshrMisses = SUM_DEMAND_COUNTMIN(mshrMisses);
+    for (int i = 0; i < max_requestors; i++) {
+        countMinDemandMshrMisses.subname(i, system->getRequestorName(i));
+    }
+
+    countMinOverallMshrMisses.flags(total | nozero | nonan);
+    countMinOverallMshrMisses = countMinDemandMshrMisses + SUM_NON_DEMAND_COUNTMIN(mshrMisses);
+    for (int i = 0; i < max_requestors; i++) {
+        countMinOverallMshrMisses.subname(i, system->getRequestorName(i));
+    }
+
+    countMinDemandMshrMissLatency.flags(total | nozero | nonan);
+    countMinDemandMshrMissLatency = SUM_DEMAND_COUNTMIN(mshrMissLatency);
+    for (int i = 0; i < max_requestors; i++) {
+        countMinDemandMshrMissLatency.subname(i, system->getRequestorName(i));
+    }
+
+    countMinOverallMshrMissLatency.flags(total | nozero | nonan);
+    countMinOverallMshrMissLatency =
+        countMinDemandMshrMissLatency + SUM_NON_DEMAND_COUNTMIN(mshrMissLatency);
+    for (int i = 0; i < max_requestors; i++) {
+        countMinOverallMshrMissLatency.subname(i, system->getRequestorName(i));
+    }
+
+    countMinOverallMshrUncacheable.flags(total | nozero | nonan);
+    countMinOverallMshrUncacheable =
+        SUM_DEMAND_COUNTMIN(mshrUncacheable) + SUM_NON_DEMAND_COUNTMIN(mshrUncacheable);
+    for (int i = 0; i < max_requestors; i++) {
+        countMinOverallMshrUncacheable.subname(i, system->getRequestorName(i));
+    }
+
+
+    countMinOverallMshrUncacheableLatency.flags(total | nozero | nonan);
+    countMinOverallMshrUncacheableLatency =
+        SUM_DEMAND_COUNTMIN(mshrUncacheableLatency) +
+        SUM_NON_DEMAND_COUNTMIN(mshrUncacheableLatency);
+    for (int i = 0; i < max_requestors; i++) {
+        countMinOverallMshrUncacheableLatency.subname(i, system->getRequestorName(i));
+    }
+
+    countMinDemandMshrMissRate.flags(total | nozero | nonan);
+    countMinDemandMshrMissRate = countMinDemandMshrMisses / countMinDemandAccesses;
+    for (int i = 0; i < max_requestors; i++) {
+        countMinDemandMshrMissRate.subname(i, system->getRequestorName(i));
+    }
+
+    countMinOverallMshrMissRate.flags(total | nozero | nonan);
+    countMinOverallMshrMissRate = countMinOverallMshrMisses / countMinOverallAccesses;
+    for (int i = 0; i < max_requestors; i++) {
+        countMinOverallMshrMissRate.subname(i, system->getRequestorName(i));
+    }
+
+    countMinDemandAvgMshrMissLatency.flags(total | nozero | nonan);
+    countMinDemandAvgMshrMissLatency = countMinDemandMshrMissLatency / countMinDemandMshrMisses;
+    for (int i = 0; i < max_requestors; i++) {
+        countMinDemandAvgMshrMissLatency.subname(i, system->getRequestorName(i));
+    }
+
+    countMinOverallAvgMshrMissLatency.flags(total | nozero | nonan);
+    countMinOverallAvgMshrMissLatency = countMinOverallMshrMissLatency / countMinOverallMshrMisses;
+    for (int i = 0; i < max_requestors; i++) {
+        countMinOverallAvgMshrMissLatency.subname(i, system->getRequestorName(i));
+    }
+
+    countMinOverallAvgMshrUncacheableLatency.flags(total | nozero | nonan);
+    countMinOverallAvgMshrUncacheableLatency =
+        countMinOverallMshrUncacheableLatency / countMinOverallMshrUncacheable;
+    for (int i = 0; i < max_requestors; i++) {
+        countMinOverallAvgMshrUncacheableLatency.subname(i,
+            system->getRequestorName(i));
+    }
+
+    countMinDataExpansions.flags(nozero | nonan);
+    countMinDataContractions.flags(nozero | nonan);
+
 }
 
 void

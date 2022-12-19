@@ -60,6 +60,7 @@
 #include "enums/Clusivity.hh"
 #include "mem/cache/cache_blk.hh"
 #include "mem/cache/compressors/base.hh"
+#include "mem/cache/countmin.hh"
 #include "mem/cache/mshr_queue.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/write_queue.hh"
@@ -887,6 +888,11 @@ class BaseCache : public ClockedObject
     /** Block size of this cache */
     const unsigned blkSize;
 
+    const unsigned probHwCounters;
+    const float probHwCountersEp;
+    const float probHwCountersGamma;
+    CountMinCounter countMinStructure;
+
     /**
      * The latency of tag lookup of a cache. It occurs when there is
      * an access to the cache.
@@ -1039,6 +1045,60 @@ class BaseCache : public ClockedObject
         statistics::Formula avgMshrUncacheableLatency;
     };
 
+    struct CacheCmdStatsCountMin : public statistics::Group
+    {
+        CacheCmdStatsCountMin(BaseCache &c, const std::string &name);
+
+        /**
+         * Callback to register stats from parent
+         * CacheStats::regStats(). We can't use the normal flow since
+         * there is is no guaranteed order and CacheStats::regStats()
+         * needs to rely on these stats being initialised.
+         */
+        void regStatsFromParent();
+
+        const BaseCache &cache;
+
+        /** Number of hits per thread for each type of command.
+            @sa Packet::Command */
+        statistics::Vector hits;
+        /** Number of misses per thread for each type of command.
+            @sa Packet::Command */
+        statistics::Vector misses;
+        /**
+         * Total number of ticks per thread/command spent waiting for a hit.
+         * Used to calculate the average hit latency.
+         */
+        statistics::Vector hitLatency;
+        /**
+         * Total number of ticks per thread/command spent waiting for a miss.
+         * Used to calculate the average miss latency.
+         */
+        statistics::Vector missLatency;
+        /** The number of accesses per command and thread. */
+        statistics::Formula accesses;
+        /** The miss rate per command and thread. */
+        statistics::Formula missRate;
+        /** The average miss latency per command and thread. */
+        statistics::Formula avgMissLatency;
+        /** Number of misses that hit in the MSHRs per command and thread. */
+        statistics::Vector mshrHits;
+        /** Number of misses that miss in the MSHRs, per command and thread. */
+        statistics::Vector mshrMisses;
+        /** Number of misses that miss in the MSHRs, per command and thread. */
+        statistics::Vector mshrUncacheable;
+        /** Total tick latency of each MSHR miss, per command and thread. */
+        statistics::Vector mshrMissLatency;
+        /** Total tick latency of each MSHR miss, per command and thread. */
+        statistics::Vector mshrUncacheableLatency;
+        /** The miss rate in the MSHRs pre command and thread. */
+        statistics::Formula mshrMissRate;
+        /** The average latency of an MSHR miss, per command and thread. */
+        statistics::Formula avgMshrMissLatency;
+        /** The average latency of an MSHR miss, per command and thread. */
+        statistics::Formula avgMshrUncacheableLatency;
+    };
+
     struct CacheStats : public statistics::Group
     {
         CacheStats(BaseCache &c);
@@ -1047,6 +1107,10 @@ class BaseCache : public ClockedObject
 
         CacheCmdStats &cmdStats(const PacketPtr p) {
             return *cmd[p->cmdToIndex()];
+        }
+
+        CacheCmdStatsCountMin &countMinCmdStats(const PacketPtr p) {
+            return *countMinCmd[p->cmdToIndex()];
         }
 
         const BaseCache &cache;
@@ -1144,10 +1208,62 @@ class BaseCache : public ClockedObject
 
         /** Per-command statistics */
         std::vector<std::unique_ptr<CacheCmdStats>> cmd;
+
+        /**
+        * Experimental Counter using CountMinSketch Algorithm
+        */
+        statistics::Vector countMinWriteBacksOld;
+        CountMinCounter writeBacksCountMin;
+
+        statistics::Formula countMinDemandHits;
+        statistics::Formula countMinOverallHits;
+        statistics::Formula countMinDemandHitLatency;
+        statistics::Formula countMinOverallHitLatency;
+
+        statistics::Formula countMinDemandMisses;
+        statistics::Formula countMinOverallMisses;
+        statistics::Formula countMinDemandMissLatency;
+        statistics::Formula countMinOverallMissLatency;
+        statistics::Formula countMinDemandAccesses;
+        statistics::Formula countMinOverallAccesses;
+
+        statistics::Formula countMinDemandMissRate;
+        statistics::Formula countMinOverallMissRate;
+        statistics::Formula countMinDemandAvgMissLatency;
+        statistics::Formula countMinOverallAvgMissLatency;
+
+        statistics::Vector countMinBlockedCycles;
+        statistics::Vector countMinBlockedCauses;
+
+        statistics::Formula countMinAvgBlocked;
+
+        statistics::Vector countMinWriteBacks;
+
+        statistics::Formula countMinDemandMshrHits;
+        statistics::Formula countMinOverallMshrHits;
+        statistics::Formula countMinDemandMshrMisses;
+        statistics::Formula countMinOverallMshrMisses;
+        statistics::Formula countMinOverallMshrUncacheable;
+        statistics::Formula countMinDemandMshrMissLatency;
+        statistics::Formula countMinOverallMshrMissLatency;
+        statistics::Formula countMinOverallMshrUncacheableLatency;
+        statistics::Formula countMinDemandMshrMissRate;
+        statistics::Formula countMinOverallMshrMissRate;
+        statistics::Formula countMinDemandAvgMshrMissLatency;
+        statistics::Formula countMinOverallAvgMshrMissLatency;
+        statistics::Formula countMinOverallAvgMshrUncacheableLatency;
+        statistics::Scalar countMinReplacements;
+        statistics::Scalar countMinDataExpansions;
+        statistics::Scalar countMinDataContractions;
+
+        std::vector<std::unique_ptr<CacheCmdStatsCountMin>> countMinCmd;
+
     } stats;
 
     /** Registers probes. */
     void regProbePoints() override;
+
+    //CountMinCounter countMinStructure(probHwCountersEp, probHwCountersGamma);
 
   public:
     BaseCache(const BaseCacheParams &p, unsigned blk_size);
@@ -1297,6 +1413,8 @@ class BaseCache : public ClockedObject
     {
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).misses[pkt->req->requestorId()]++;
+        countMinStructure.increment((std::to_string(pkt->req->requestorId())).data());
+        stats.countMinCmdStats(pkt).misses[pkt->req->requestorId()] = countMinStructure.estimate((std::to_string(pkt->req->requestorId())).data());
         pkt->req->incAccessDepth();
         if (missCount) {
             --missCount;
@@ -1308,6 +1426,8 @@ class BaseCache : public ClockedObject
     {
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).hits[pkt->req->requestorId()]++;
+        countMinStructure.increment((std::to_string(pkt->req->requestorId()) + "hits").data());
+        stats.countMinCmdStats(pkt).hits[pkt->req->requestorId()] = countMinStructure.estimate((std::to_string(pkt->req->requestorId()) + "hits").data());
     }
 
     /**
@@ -1358,6 +1478,15 @@ class BaseCache : public ClockedObject
      */
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
+
+    float getProbHwCountersEp(){
+        return probHwCountersEp;
+    }
+
+    float getProbHwCountersGamma(){
+        return probHwCountersGamma;
+    }
+
 };
 
 /**

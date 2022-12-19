@@ -61,6 +61,8 @@ class VectorDistInfo;
 class Vector2dInfo;
 class FormulaInfo;
 class SparseHistInfo; // Sparse histogram
+class CountMinHashInfo;
+class CountMinInfo;
 
 struct Output
 {
@@ -80,9 +82,12 @@ struct Output
     virtual void visit(const Vector2dInfo &info) = 0;
     virtual void visit(const FormulaInfo &info) = 0;
     virtual void visit(const SparseHistInfo &info) = 0; // Sparse histogram
+    virtual void visit(const CountMinHashInfo &info) = 0;
+    virtual void visit(const CountMinInfo &info) = 0;
 };
 
 } // namespace statistics
 } // namespace gem5
 
 #endif // __BASE_STATS_OUTPUT_HH__
+
