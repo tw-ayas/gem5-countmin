@@ -331,6 +331,9 @@ class System : public SimObject, public PCEventScope
     Workload *workload = nullptr;
 
     /** CountMinCounter for statistics count in this system context **/
+    const unsigned probHwCounters;
+    const float probHwCountersEp;
+    const float probHwCountersGamma;
     CountMinCounter count_min_structure_system;
 
   public:

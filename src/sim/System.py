@@ -119,6 +119,9 @@ class System(SimObject):
 
     multi_thread = Param.Bool(False,
             "Supports multi-threaded CPUs? Impacts Thread/Context IDs")
+    prob_hw_counters = Param.Unsigned(0, "On/Off prob hardware counters")
+    prob_hw_counters_ep = Param.Float(0.01, "Error for prob hardware counters")
+    prob_hw_counters_gamma = Param.Float(0.1, "Probabiliy Error prob hardware counters")
 
     # Dynamic voltage and frequency handler for the system, disabled by default
     # Provide list of domains that need to be controlled by the handler
