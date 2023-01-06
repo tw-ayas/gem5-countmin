@@ -329,6 +329,9 @@ class System : public SimObject, public PCEventScope
     /** OS kernel */
     Workload *workload = nullptr;
 
+    /** CountMinCounter for statistics count in this system context **/
+    CountMinCounter count_min_structure_system;
+
   public:
     /**
      * Get a pointer to the Kernel Virtual Machine (KVM) SimObject,

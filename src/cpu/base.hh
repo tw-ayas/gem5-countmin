@@ -160,6 +160,12 @@ class BaseCPU : public ClockedObject
 
         statistics::Formula hostInstRate;
         statistics::Formula hostOpRate;
+
+        statistics::Value countMinSimInsts;
+        statistics::Value countMinSimOps;
+
+        statistics::Formula countMinHostInstRate;
+        statistics::Formula countMinHostOpRate;
     };
 
     /**
@@ -606,6 +612,11 @@ class BaseCPU : public ClockedObject
         statistics::Scalar numCycles;
         statistics::Scalar numWorkItemsStarted;
         statistics::Scalar numWorkItemsCompleted;
+
+        // Stats for CountMin
+        statistics::Scalar countMinNumCycles;
+        statistics::Scalar countMinNumWorkItemsStarted;
+        statistics::Scalar countMinNumWorkItemsCompleted;
     } baseStats;
 
   private:

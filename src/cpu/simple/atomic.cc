@@ -228,6 +228,8 @@ AtomicSimpleCPU::activateContext(ThreadID thread_num)
     Cycles delta = ticksToCycles(threadInfo[thread_num]->thread->lastActivate -
                                  threadInfo[thread_num]->thread->lastSuspend);
     baseStats.numCycles += delta;
+    system->count_min_structure_system.increment("numCycles", delta);
+    baseStats.countMinNumCycles = system->count_min_structure_system.estimate("numCycles");
 
     if (!tickEvent.scheduled()) {
         //Make sure ticks are still on multiples of cycles
@@ -636,6 +638,8 @@ AtomicSimpleCPU::tick()
 
     for (int i = 0; i < width || locked; ++i) {
         baseStats.numCycles++;
+        system->count_min_structure_system.increment("numCycles");
+        baseStats.countMinNumCycles = system->count_min_structure_system.estimate("numCycles");
         updateCycleCounters(BaseCPU::CPU_STATE_ON);
 
         if (!curStaticInst || !curStaticInst->isDelayedCommit()) {

@@ -192,7 +192,8 @@ System::System(const Params &p)
       _m5opRange(p.m5ops_base ?
                  RangeSize(p.m5ops_base, 0x10000) :
                  AddrRange(1, 0)), // Create an empty range if disabled
-      redirectPaths(p.redirect_paths)
+      redirectPaths(p.redirect_paths),
+      count_min_structure_system(p.prob_hw_counters_ep, p.prob_hw_counters_gamma),
 {
     panic_if(!workload, "No workload set for system %s "
             "(could use StubWorkload?).", name());

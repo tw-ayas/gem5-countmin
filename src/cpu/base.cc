@@ -379,7 +379,13 @@ BaseCPUStats::BaseCPUStats(statistics::Group *parent)
       ADD_STAT(numWorkItemsStarted, statistics::units::Count::get(),
                "Number of work items this cpu started"),
       ADD_STAT(numWorkItemsCompleted, statistics::units::Count::get(),
-               "Number of work items this cpu completed")
+               "Number of work items this cpu completed"),
+      ADD_STAT(countMinNumCycles, statistics::units::Cycle::get(),
+               "countMin Number of cpu cycles simulated"),
+      ADD_STAT(countMinNumWorkItemsStarted, statistics::units::Count::get(),
+               "countMin Number of work items this cpu started"),
+      ADD_STAT(countMinNumWorkItemsCompleted, statistics::units::Count::get(),
+               "countMin Number of work items this cpu completed")
 {
 }
 
@@ -739,7 +745,17 @@ BaseCPU::GlobalStats::GlobalStats(statistics::Group *parent)
              "Simulator instruction rate (inst/s)"),
     ADD_STAT(hostOpRate, statistics::units::Rate<
                 statistics::units::Count, statistics::units::Second>::get(),
-             "Simulator op (including micro ops) rate (op/s)")
+             "Simulator op (including micro ops) rate (op/s)"),
+    ADD_STAT(countMinSimInsts, statistics::units::Count::get(),
+             "countMin Number of instructions simulated"),
+    ADD_STAT(countMinSimOps, statistics::units::Count::get(),
+             "countMin Number of ops (including micro ops) simulated"),
+    ADD_STAT(countMinHostInstRate, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Second>::get(),
+             "countMin Simulator instruction rate (inst/s)"),
+    ADD_STAT(countMinHostOpRate, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Second>::get(),
+             "countMin Simulator op (including micro ops) rate (op/s)")
 {
     simInsts
         .functor(BaseCPU::numSimulatedInsts)
@@ -765,6 +781,31 @@ BaseCPU::GlobalStats::GlobalStats(statistics::Group *parent)
 
     hostInstRate = simInsts / hostSeconds;
     hostOpRate = simOps / hostSeconds;
+
+    countMinSimInsts
+        .functor(BaseCPU::numSimulatedInsts)
+        .precision(0)
+        .prereq(countMinSimInsts)
+        ;
+
+    countMinSimOps
+        .functor(BaseCPU::numSimulatedOps)
+        .precision(0)
+        .prereq(countMinSimOps)
+        ;
+
+    countMinHostInstRate
+        .precision(0)
+        .prereq(countMinSimInsts)
+        ;
+
+    countMinHostOpRate
+        .precision(0)
+        .prereq(countMinSimOps)
+        ;
+
+    countMinHostInstRate = countMinSimInsts / hostSeconds;
+    countMinHostOpRate = countMinSimOps / hostSeconds;
 }
 
 } // namespace gem5
