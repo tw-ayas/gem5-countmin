@@ -1,4 +1,4 @@
-#include "mem/cache/countmin.hh"
+#include "base/countmin/countmin.hh"
 
 #include <cmath>
 #include <ctime>

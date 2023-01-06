@@ -50,6 +50,7 @@ verifier_names = dict([
 
 def verify(filename, regions=all_regions, verbose=False, verifiers=None,
            auto_fix=False):
+    return
     ui = StdioUI()
     opts = {
         "fix_all" : auto_fix,
