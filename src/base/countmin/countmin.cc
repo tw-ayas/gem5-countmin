@@ -27,12 +27,20 @@ CountMinCounter::CountMinCounter(float eps, float gamma){
     }
 };
 
-void CountMinCounter::increment(char *s, int update = 1) {
+void CountMinCounter::increment(int s){
+    CountMinCounter::increment(s, 1);
+}
+
+void CountMinCounter::increment(char *s){
+    CountMinCounter::increment(s, 1);
+}
+
+void CountMinCounter::increment(char *s, int update) {
     int strHash = hashstr(s);
     CountMinCounter::increment(strHash, update);
 }
 
-void CountMinCounter::increment(int s, int update = 1) {
+void CountMinCounter::increment(int s, int update) {
     int hashval;
     int strHash = s;
     for (int i = 0; i < depth; i++){

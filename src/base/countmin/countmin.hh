@@ -21,6 +21,8 @@ class CountMinCounter
         CountMinCounter(float w, float d);
         static int hashstr(char *s);
         void print();
+        void increment(int s);
+        void increment(char *s);
         void increment(int s, int update);
         void increment(char *s, int update);
         int estimate(int s);
