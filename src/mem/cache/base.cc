@@ -139,9 +139,8 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     if (compressor)
         compressor->setCache(this);
 
-    std::cout << name() << ":probHwCounterSetup:" << probHwCounters << " " << probHwCountersEp << " " << probHwCountersGamma << std::endl;
-    //Counter writeBackCountMin(10, 10);
- //   CountMinCounter countMinStructure(getProbHwCountersEp(), getProbHwCountersGamma());
+    //std::cout << name() << ":probHwCounterSetup:" << probHwCounters << " " << probHwCountersEp << " " << probHwCountersGamma << std::endl;
+    
 }
 
 BaseCache::~BaseCache()
@@ -2695,7 +2694,6 @@ BaseCache::CacheStats::regStats()
     for (int i = 0; i < max_requestors; i++){
         countMinWriteBacksOld.subname(i, system->getRequestorName(i));
         countMinWriteBacksOld[i] = writeBacksCountMin.estimate(i);
-        std::cout << system->getRequestorName(i) << ": " << writeBacksCountMin.estimate(i) << std::endl;
     }
 
     demandMshrHits.flags(total | nozero | nonan);

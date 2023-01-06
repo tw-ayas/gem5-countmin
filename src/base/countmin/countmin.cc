@@ -67,6 +67,9 @@ int CountMinCounter::estimate(int s) {
             estimate = hash;
         }
     }
+    if(estimate % 10000 == 0){
+        CountMinCounter::print();
+    }
     return estimate;
 }
 
