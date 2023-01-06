@@ -7,6 +7,8 @@
 CountMinCounter::CountMinCounter(float eps, float gamma){
     width = ceil(exp(1)/eps);
     depth = ceil(log(1/gamma));
+    width = 12;
+    depth = 4;
     std::cout << "CountMinCounter with " << eps << " " << gamma << " " << width << " " << depth << std::endl;
     auto C = new unsigned int *[depth];
     for (int i = 0; i < depth; i++){
@@ -67,9 +69,7 @@ int CountMinCounter::estimate(int s) {
             estimate = hash;
         }
     }
-    if(estimate % 10000 == 0){
-        CountMinCounter::print();
-    }
+    CountMinCounter::print();
     return estimate;
 }
 
@@ -94,5 +94,6 @@ void CountMinCounter::print() {
         }
         cout << endl;
     }
+    cout << endl;
 }
 
