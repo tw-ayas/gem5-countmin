@@ -48,6 +48,7 @@
 #include <utility>
 #include <vector>
 
+#include "base/countmin/countmin.hh"
 #include "base/loader/memory_image.hh"
 #include "base/loader/symtab.hh"
 #include "base/statistics.hh"
