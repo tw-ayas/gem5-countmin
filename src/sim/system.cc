@@ -196,7 +196,7 @@ System::System(const Params &p)
       probHwCounters(p.prob_hw_counters),
       probHwCountersEp(p.prob_hw_counters_ep),
       probHwCountersGamma(p.prob_hw_counters_gamma),
-      count_min_structure_system(p.prob_hw_counters_ep, p.prob_hw_counters_gamma),
+      count_min_structure_system(p.prob_hw_counters_ep, p.prob_hw_counters_gamma)
 {
     panic_if(!workload, "No workload set for system %s "
             "(could use StubWorkload?).", name());

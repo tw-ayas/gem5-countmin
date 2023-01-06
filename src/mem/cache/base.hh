@@ -50,6 +50,7 @@
 #include <cstdint>
 #include <string>
 
+#include "base/countmin/countmin.hh"
 #include "base/addr_range.hh"
 #include "base/compiler.hh"
 #include "base/statistics.hh"
@@ -60,7 +61,6 @@
 #include "enums/Clusivity.hh"
 #include "mem/cache/cache_blk.hh"
 #include "mem/cache/compressors/base.hh"
-#include "mem/cache/countmin.hh"
 #include "mem/cache/mshr_queue.hh"
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/write_queue.hh"
