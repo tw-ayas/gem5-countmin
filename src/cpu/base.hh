@@ -604,30 +604,6 @@ class BaseCPU : public ClockedObject
         return total;
     }
 
-    static Counter
-    countMinNumSimulatedInsts()
-    {
-        Counter total = 0;
-
-        int size = cpuList.size();
-        for (int i = 0; i < size; ++i)
-            total = system->count_min_structure_system[counterName]->increment(std::string(name() + ".numSimulatedInsts").data(), cpuList[i]->totalInsts());
-
-        return total;
-    }
-
-    static Counter
-    countMinNumSimulatedOps()
-    {
-        Counter total = 0;
-
-        int size = cpuList.size();
-        for (int i = 0; i < size; ++i)
-            total += system->count_min_structure_system[counterName]->increment(std::string(name() + ".numSimulatedOps").data(), cpuList[i]->totalOps());
-
-        return total;
-    }
-
   public:
     struct BaseCPUStats : public statistics::Group
     {

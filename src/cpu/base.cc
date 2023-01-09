@@ -789,13 +789,13 @@ BaseCPU::GlobalStats::GlobalStats(statistics::Group *parent)
     hostOpRate = simOps / hostSeconds;
 
     countMinSimInsts
-        .functor(BaseCPU::countMinNumSimulatedInsts)
+        .functor(BaseCPU::numSimulatedInsts)
         .precision(0)
         .prereq(countMinSimInsts)
         ;
 
     countMinSimOps
-        .functor(BaseCPU::countMinNumSimulatedOps)
+        .functor(BaseCPU::numSimulatedOps)
         .precision(0)
         .prereq(countMinSimOps)
         ;
