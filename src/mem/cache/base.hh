@@ -888,11 +888,12 @@ class BaseCache : public ClockedObject
     /** Block size of this cache */
     const unsigned blkSize;
 
-    const unsigned probHwCounters;
-    const float probHwCountersEp;
-    const float probHwCountersGamma;
-    CountMinCounter countMinStructure;
-
+    std::string counterName;
+//    const unsigned probHwCounters;
+//    const float probHwCountersEp;
+//    const float probHwCountersGamma;
+//    CountMinCounter countMinStructure;
+  
     /**
      * The latency of tag lookup of a cache. It occurs when there is
      * an access to the cache.
@@ -1212,8 +1213,8 @@ class BaseCache : public ClockedObject
         /**
         * Experimental Counter using CountMinSketch Algorithm
         */
-        statistics::Vector countMinWriteBacksOld;
-        CountMinCounter writeBacksCountMin;
+//        statistics::Vector countMinWriteBacksOld;
+//        CountMinCounter writeBacksCountMin;
 
         statistics::Formula countMinDemandHits;
         statistics::Formula countMinOverallHits;
@@ -1413,8 +1414,9 @@ class BaseCache : public ClockedObject
     {
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).misses[pkt->req->requestorId()]++;
-        countMinStructure.increment((std::to_string(pkt->req->requestorId())).data());
-        stats.countMinCmdStats(pkt).misses[pkt->req->requestorId()] = countMinStructure.estimate((std::to_string(pkt->req->requestorId())).data());
+        stats.countMinCmdStats(pkt).misses[pkt->req->requestorId()] = system->count_min_structure_system[counterName]->increment(std::string(system->getRequestorName(pkt->req->requestorId()) + ".misses").data());
+//        stats.countMinCmdStats(pkt).misses[pkt->req->requestorId()] = countMinStructure.estimate((std::to_string(pkt->req->requestorId())).data());
+       
         pkt->req->incAccessDepth();
         if (missCount) {
             --missCount;
@@ -1426,8 +1428,8 @@ class BaseCache : public ClockedObject
     {
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).hits[pkt->req->requestorId()]++;
-        countMinStructure.increment((std::to_string(pkt->req->requestorId()) + "hits").data());
-        stats.countMinCmdStats(pkt).hits[pkt->req->requestorId()] = countMinStructure.estimate((std::to_string(pkt->req->requestorId()) + "hits").data());
+        stats.countMinCmdStats(pkt).hits[pkt->req->requestorId()] = system->count_min_structure_system[counterName]->increment(std::string(system->getRequestorName(pkt->req->requestorId()) + "hits").data());
+//        stats.countMinCmdStats(pkt).hits[pkt->req->requestorId()] = countMinStructure.estimate((std::to_string(pkt->req->requestorId()) + "hits").data());
     }
 
     /**
@@ -1479,13 +1481,13 @@ class BaseCache : public ClockedObject
     void serialize(CheckpointOut &cp) const override;
     void unserialize(CheckpointIn &cp) override;
 
-    float getProbHwCountersEp(){
-        return probHwCountersEp;
-    }
-
-    float getProbHwCountersGamma(){
-        return probHwCountersGamma;
-    }
+//    float getProbHwCountersEp(){
+//        return probHwCountersEp;
+//    }
+//
+//    float getProbHwCountersGamma(){
+//        return probHwCountersGamma;
+//    }
 
 };
 

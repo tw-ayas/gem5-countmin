@@ -92,10 +92,10 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
                                     name(), false,
                                     EventBase::Delayed_Writeback_Pri),
       blkSize(blk_size),
-      probHwCounters(p.prob_hw_counters),
-      probHwCountersEp(p.prob_hw_counters_ep),
-      probHwCountersGamma(p.prob_hw_counters_gamma),
-      countMinStructure(p.prob_hw_counters_ep, p.prob_hw_counters_gamma),
+//      probHwCounters(p.prob_hw_counters),
+//      probHwCountersEp(p.prob_hw_counters_ep),
+//      probHwCountersGamma(p.prob_hw_counters_gamma),
+//      countMinStructure(p.prob_hw_counters_ep, p.prob_hw_counters_gamma),
       lookupLatency(p.tag_latency),
       dataLatency(p.data_latency),
       forwardLatency(p.tag_latency),
@@ -139,7 +139,12 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     if (compressor)
         compressor->setCache(this);
 
-    //std::cout << name() << ":probHwCounterSetup:" << probHwCounters << " " << probHwCountersEp << " " << probHwCountersGamma << std::endl;
+    std::string counter_name = name();
+    int first_pos= counter_name.find(".") + 1;
+    int second_pos = counter_name.find(".", first_pos);
+    counterName = counter_name.substr(0, second_pos);
+//    std::cout << counterName << " " << first_pos << " " << second_pos << " " << name() << std::endl;
+//    std::cout << name() << ":probHwCounterSetup:" << probHwCounters << " " << probHwCountersEp << " " << probHwCountersGamma << std::endl;
     
 }
 
@@ -1703,8 +1708,9 @@ BaseCache::writebackBlk(CacheBlk *blk)
         (blk->isSet(CacheBlk::DirtyBit) || writebackClean));
 
     stats.writebacks[Request::wbRequestorId]++;
-    stats.writeBacksCountMin.increment((std::to_string(Request::wbRequestorId) + "writebacks").data());
-    stats.countMinWriteBacks[Request::wbRequestorId] = stats.writeBacksCountMin.estimate((std::to_string(Request::wbRequestorId) + "writebacks").data());
+    stats.countMinWriteBacks[Request::wbRequestorId] = system->count_min_structure_system[counterName]->increment(std::string(system->getRequestorName(Request::wbRequestorId) + ".writebacks").data());
+//    stats.writeBacksCountMin.increment((std::to_string(Request::wbRequestorId) + "writebacks").data());
+//    stats.countMinWriteBacks[Request::wbRequestorId] = stats.writeBacksCountMin.estimate((std::to_string(Request::wbRequestorId) + "writebacks").data());
     //stats.writeBacksCountMin.print();
 
     RequestPtr req = std::make_shared<Request>(
@@ -2455,9 +2461,9 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
     ADD_STAT(dataContractions, statistics::units::Count::get(),
              "number of data contractions"),
     cmd(MemCmd::NUM_MEM_CMDS),
-    ADD_STAT(countMinWriteBacksOld, statistics::units::Count::get(),
-             "countMinSketch based writeBacks"),
-    writeBacksCountMin(0.00001, 0.001),
+//    ADD_STAT(countMinWriteBacksOld, statistics::units::Count::get(),
+//             "countMinSketch based writeBacks"),
+//    writeBacksCountMin(0.00001, 0.001),
     ADD_STAT(countMinDemandHits, statistics::units::Count::get(),
                "countMin number of demand (read+write) hits"),
     ADD_STAT(countMinOverallHits, statistics::units::Count::get(),
@@ -2687,14 +2693,14 @@ BaseCache::CacheStats::regStats()
         writebacks.subname(i, system->getRequestorName(i));
     }
 
-    countMinWriteBacksOld
-        .init(max_requestors)
-        .flags(total | nozero | nonan)
-        ;
-    for (int i = 0; i < max_requestors; i++){
-        countMinWriteBacksOld.subname(i, system->getRequestorName(i));
-        countMinWriteBacksOld[i] = writeBacksCountMin.estimate(i);
-    }
+//    countMinWriteBacksOld
+//        .init(max_requestors)
+//        .flags(total | nozero | nonan)
+//        ;
+//    for (int i = 0; i < max_requestors; i++){
+//        countMinWriteBacksOld.subname(i, system->getRequestorName(i));
+//        countMinWriteBacksOld[i] = writeBacksCountMin.estimate(i);
+//    }
 
     demandMshrHits.flags(total | nozero | nonan);
     demandMshrHits = SUM_DEMAND(mshrHits);

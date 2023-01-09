@@ -334,7 +334,7 @@ class System : public SimObject, public PCEventScope
     const unsigned probHwCounters;
     const float probHwCountersEp;
     const float probHwCountersGamma;
-    CountMinCounter count_min_structure_system;
+    std::map<std::string, CountMinCounter*> count_min_structure_system;
 
   public:
     /**
@@ -405,7 +405,12 @@ class System : public SimObject, public PCEventScope
      * The thermal model used for this system (if any).
      */
     ThermalModel * getThermalModel() const { return thermalModel; }
-
+    
+    void addCounter(const std::string counterName){
+        std::cout << "Adding new CountMin Counter: " << counterName << std::endl;
+	count_min_structure_system[counterName] = new CountMinCounter(probHwCountersEp, probHwCountersGamma);
+    }
+    
   protected:
 
     KvmVM *kvmVM = nullptr;

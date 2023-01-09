@@ -267,5 +267,12 @@ system.workload = SEWorkload.init_compatible(mp0_path)
 if args.wait_gdb:
     system.workload.wait_for_remote_gdb = True
 
+if args.prob_hw_counters:
+    system.prob_hw_counters = args.prob_hw_counters
+if args.prob_hw_counters_ep:
+    system.prob_hw_counters_ep = args.prob_hw_counters_ep
+if args.prob_hw_counters_gamma:
+    system.prob_hw_counters_gamma = args.prob_hw_counters_gamma
+
 root = Root(full_system = False, system = system)
 Simulation.run(args, root, system, FutureClass)

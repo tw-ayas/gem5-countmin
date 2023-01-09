@@ -178,6 +178,12 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
         fatal("Number of ISAs (%i) assigned to the CPU does not equal number "
               "of threads (%i).\n", params().isa.size(), numThreads);
     }
+
+    //Add CountMinCounter for this Cpu with name() as key
+    system->addCounter(std::string(name()));
+//    for(auto const& i : cpuList){
+//        std::cout << i->name() << " " << i->cpuId() << std::endl;
+//    }
 }
 
 void
