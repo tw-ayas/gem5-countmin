@@ -275,9 +275,9 @@ class BaseTags : public ClockedObject
         stats.totalRefs += blk->getRefCount();
         stats.sampledRefs++;
 
-        stats.countMinOccupancies[blk->getSrcRequestorId()] = system->count_min_structure_system[counterName]->decrement(std::string(system->getRequestorName(name() + "." + blk->getSrcRequestorId()) + ".occupancies").data());
-        stats.countMinTotalRefs = system->count_min_structure_system[counterName]->increment(std::string(system->getRequestorName(name() + ".occupancies").data(), blk->getRefCount());
-        stats.countMinSampledRefs = system->count_min_structure_system[counterName]->increment(std::string(system->getRequestorName(name() + ".sampledRefs").data());
+        //stats.countMinOccupancies[blk->getSrcRequestorId()] = system->count_min_structure_system[counterName]->decrement(std::string(name() + "." + system->getRequestorName(blk->getSrcRequestorId()) + ".occupancies").data());
+        //stats.countMinTotalRefs = system->count_min_structure_system[counterName]->increment(std::string(name() + ".occupancies").data(), blk->getRefCount());
+        //stats.countMinSampledRefs = system->count_min_structure_system[counterName]->increment(std::string(name() + ".sampledRefs").data());
 
         blk->invalidate();
     }
