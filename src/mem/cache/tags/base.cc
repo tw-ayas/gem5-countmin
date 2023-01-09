@@ -72,7 +72,7 @@ BaseTags::BaseTags(const Params &p)
     std::string counter_name = name();
     int first_pos= counter_name.find(".") + 1;
     int second_pos = counter_name.find(".", first_pos) + 1;
-    int third_pos = counter_name.find(".", second_pos)
+    int third_pos = counter_name.find(".", second_pos);
     counterName = counter_name.substr(0, third_pos);
 }
 
@@ -347,7 +347,7 @@ BaseTags::BaseTagStats::regStats()
         countMinAvgOccs.subname(i, system->getRequestorName(i));
     }
 
-    countMinAvgOccs = countMinAccupancies / statistics::constant(tags.numBlocks);
+    countMinAvgOccs = countMinOccupancies / statistics::constant(tags.numBlocks);
 
     countMinOccupanciesTaskId
         .init(context_switch_task_id::NumTaskId)
