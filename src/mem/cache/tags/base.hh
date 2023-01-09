@@ -155,7 +155,22 @@ class BaseTags : public ClockedObject
         statistics::Scalar tagAccesses;
         /** Number of data blocks consulted over all accesses. */
         statistics::Scalar dataAccesses;
+
+        statistics::Average countMinTagsInUse;
+        statistics::Scalar countMinTotalRefs;
+        statistics::Scalar countMinSampledRefs;
+        statistics::Formula countMinAvgRefs;
+        statistics::Scalar countMinWarmupTick;
+        statistics::AverageVector countMinOccupancies;
+        statistics::Formula countMinAvgOccs;
+        statistics::Vector countMinOccupanciesTaskId;
+        statistics::Vector2d countMinAgeTaskId;
+        statistics::Formula countMinRatioOccsTaskId;
+        statistics::Scalar countMinTagAccesses;
+        statistics::Scalar countMinDataAccesses;
     } stats;
+
+    std::string counterName;
 
   public:
     typedef BaseTagsParams Params;
@@ -259,6 +274,10 @@ class BaseTags : public ClockedObject
         stats.occupancies[blk->getSrcRequestorId()]--;
         stats.totalRefs += blk->getRefCount();
         stats.sampledRefs++;
+
+        stats.countMinOccupancies[blk->getSrcRequestorId()] = system->count_min_structure_system[counterName]->decrement(std::string(system->getRequestorName(name() + "." + blk->getSrcRequestorId()) + ".occupancies").data());
+        stats.countMinTotalRefs = system->count_min_structure_system[counterName]->increment(std::string(system->getRequestorName(name() + ".occupancies").data(), blk->getRefCount());
+        stats.countMinSampledRefs = system->count_min_structure_system[counterName]->increment(std::string(system->getRequestorName(name() + ".sampledRefs").data());
 
         blk->invalidate();
     }

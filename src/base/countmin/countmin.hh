@@ -38,6 +38,12 @@ class CountMinCounter
         int increment(int s, int update);
         int increment(unsigned long s, int update);
         int increment(char *s, int update);
+        int decrement(int s);
+        int decrement(char *s);
+        int decrement(int s, int update);
+        int decrement(unsigned long s, int update);
+        int decrement(char *s, int update);
+
         int estimate(int s);
         int estimate(char *s);
         int estimate(unsigned long s);

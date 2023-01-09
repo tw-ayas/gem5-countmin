@@ -156,9 +156,11 @@ BaseSimpleCPU::countInst()
     if (!curStaticInst->isMicroop() || curStaticInst->isLastMicroop()) {
         t_info.numInst++;
         t_info.execContextStats.numInsts++;
+        t_info.countMinExecContextStats.numInsts = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numInsts").data());
     }
     t_info.numOp++;
     t_info.execContextStats.numOps++;
+    t_info.countMinExecContextStats.numOps = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numOps").data());
 }
 
 Counter
@@ -390,6 +392,7 @@ BaseSimpleCPU::postExecute()
 
     if (curStaticInst->isMemRef()) {
         t_info.execContextStats.numMemRefs++;
+        t_info.countMinExecContextStats.numMemRefs = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numMemRefs").data());
     }
 
     if (curStaticInst->isLoad()) {
@@ -398,6 +401,7 @@ BaseSimpleCPU::postExecute()
 
     if (curStaticInst->isControl()) {
         ++t_info.execContextStats.numBranches;
+        t_info.countMinExecContextStats.numBranches = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numBranches").data());
     }
 
     /* Power model statistics */
@@ -405,41 +409,52 @@ BaseSimpleCPU::postExecute()
     if (curStaticInst->isInteger()){
         t_info.execContextStats.numIntAluAccesses++;
         t_info.execContextStats.numIntInsts++;
+        t_info.countMinExecContextStats.numIntAluAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numIntAluAccesses").data());
+        t_info.countMinExecContextStats.numIntInsts = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numIntInsts").data());
     }
 
     //float alu accesses
     if (curStaticInst->isFloating()){
         t_info.execContextStats.numFpAluAccesses++;
         t_info.execContextStats.numFpInsts++;
+        t_info.countMinExecContextStats.numFpAluAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numFpAluAccesses").data());
+        t_info.countMinExecContextStats.numFpInsts = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numFpInsts").data());
     }
 
     //vector alu accesses
     if (curStaticInst->isVector()){
         t_info.execContextStats.numVecAluAccesses++;
         t_info.execContextStats.numVecInsts++;
+        t_info.countMinExecContextStats.numVecAluAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numVecAluAccesses").data());
+        t_info.countMinExecContextStats.numVecInsts = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numVecInsts").data());
     }
 
     //number of function calls/returns to get window accesses
     if (curStaticInst->isCall() || curStaticInst->isReturn()){
         t_info.execContextStats.numCallsReturns++;
+        t_info.countMinExecContextStats.numCallsReturns = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numCallsReturns").data());
     }
 
     //the number of branch predictions that will be made
     if (curStaticInst->isCondCtrl()){
         t_info.execContextStats.numCondCtrlInsts++;
+        t_info.countMinExecContextStats.numCondCtrlInsts = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numCondCtrlInsts").data());
     }
 
     //result bus acceses
     if (curStaticInst->isLoad()){
         t_info.execContextStats.numLoadInsts++;
+        t_info.countMinExecContextStats.numLoadInsts = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numLoadInsts").data());
     }
 
     if (curStaticInst->isStore() || curStaticInst->isAtomic()){
         t_info.execContextStats.numStoreInsts++;
+        t_info.countMinExecContextStats.numStoreInsts = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numStoreInsts").data());
     }
     /* End power model statistics */
 
     t_info.execContextStats.statExecutedInstType[curStaticInst->opClass()]++;
+    t_info.countMinExecContextStats.statExecutedInstType[curStaticInst->opClass()] = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".statExecutedInstType::" + std::to_string(curStaticInst->opClass())).data());
 
     if (FullSystem)
         traceFunctions(instAddr);

@@ -7,8 +7,8 @@
 CountMinCounter::CountMinCounter(float eps, float gamma){
     width = ceil(exp(1)/eps);
     depth = ceil(log(1/gamma));
-    width = 12;
-    depth = 4;
+    width = 16;
+    depth = 6;
     std::cout << "CountMinCounter with " << eps << " " << gamma << " " << width << " " << depth << std::endl;
     auto C = new unsigned int *[depth];
     for (int i = 0; i < depth; i++){
@@ -53,7 +53,7 @@ int CountMinCounter::increment(char *s){
 }
 
 int CountMinCounter::increment(char *s, int update) {
-    cout << "CountMinKey: " << s << endl;
+//    cout << "CountMinKey: " << s << endl;
     unsigned long strHash = hashstr(s);
     return CountMinCounter::increment(strHash, update);
 }
@@ -73,6 +73,44 @@ int CountMinCounter::increment(unsigned long s, int update){
 //        cout << "Index: " << i << " " << hashval << endl;
         int hash = counters[i][hashval];
         hash += update;
+        counters[i][hashval] = hash;
+        if (hash < estimate || estimate < 0) {
+            estimate = hash;
+        }
+    }
+//    cout << "Estimate: " << estimate << endl;
+    return estimate;
+}
+
+int CountMinCounter::decrement(int s){
+    return CountMinCounter::decrement(s, 1);
+}
+
+int CountMinCounter::decrement(char *s){
+    return  CountMinCounter::decrement(s, 1);
+}
+
+int CountMinCounter::decrement(char *s, int update) {
+//    cout << "CountMinKey: " << s << endl;
+    unsigned long strHash = hashstr(s);
+    return CountMinCounter::decrement(strHash, update);
+}
+
+int CountMinCounter::decrement(int s, int update) {
+    return CountMinCounter::decrement((unsigned long) s, update);
+}
+
+int CountMinCounter::decrement(unsigned long s, int update){
+    //    cout << "CountMinKeyInt: " << s << endl;
+    int hashval;
+    unsigned long strHash = s;
+    int estimate = -1;
+    for (int i = 0; i < depth; i++) {
+        //hashval = (int((long) hashes[i][0] * strHash + hashes[i][1] % LONG_PRIM) % width);
+        hashval = (hashes[i][0] * strHash * hashes[i][1] >> 26) % width;
+//        cout << "Index: " << i << " " << hashval << endl;
+        int hash = counters[i][hashval];
+        hash -= update;
         counters[i][hashval] = hash;
         if (hash < estimate || estimate < 0) {
             estimate = hash;

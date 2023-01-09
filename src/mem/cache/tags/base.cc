@@ -68,6 +68,12 @@ BaseTags::BaseTags(const Params &p)
       stats(*this)
 {
     registerExitCallback([this]() { cleanupRefs(); });
+
+    std::string counter_name = name();
+    int first_pos= counter_name.find(".") + 1;
+    int second_pos = counter_name.find(".", first_pos) + 1;
+    int third_pos = counter_name.find(".", second_pos)
+    counterName = counter_name.substr(0, third_pos);
 }
 
 ReplaceableEntry*
@@ -124,6 +130,9 @@ BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     // We only need to write into one tag and one data block.
     stats.tagAccesses += 1;
     stats.dataAccesses += 1;
+
+    stats.countMinTagAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".tagAccessess").data());
+    stats.countMinDataAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".dataAccesses").data());
 }
 
 void
@@ -167,6 +176,7 @@ BaseTags::computeStatsVisitor(CacheBlk &blk)
         const uint32_t task_id = blk.getTaskId();
         assert(task_id < context_switch_task_id::NumTaskId);
         stats.occupanciesTaskId[task_id]++;
+        stats.countMinOccupanciesTaskId[task_id] = system->count_min_structure_system[counterName]->increment(std::string(name() + ".occupanciesTaskId::" + std::to_string(task_id)).data());
         Tick age = blk.getAge();
 
         int age_index;
@@ -182,6 +192,7 @@ BaseTags::computeStatsVisitor(CacheBlk &blk)
             age_index = 4; // >10ms
 
         stats.ageTaskId[task_id][age_index]++;
+        stats.ageTaskId[task_id][age_index] = system->count_min_structure_system[counterName]->increment(std::string(name() + ".ageTaskId_" + std::to_string(task_id) + "::" + std::to_string(age_index)).data());
     }
 }
 
@@ -190,8 +201,10 @@ BaseTags::computeStats()
 {
     for (unsigned i = 0; i < context_switch_task_id::NumTaskId; ++i) {
         stats.occupanciesTaskId[i] = 0;
+        stats.countMinOccupanciesTaskId[i] = 0;
         for (unsigned j = 0; j < 5; ++j) {
             stats.ageTaskId[i][j] = 0;
+            stats.countMinAgeTaskId[i][j] = 0;
         }
     }
 
@@ -246,7 +259,36 @@ BaseTags::BaseTagStats::BaseTagStats(BaseTags &_tags)
     ADD_STAT(tagAccesses, statistics::units::Count::get(),
              "Number of tag accesses"),
     ADD_STAT(dataAccesses, statistics::units::Count::get(),
-             "Number of data accesses")
+             "Number of data accesses"),
+
+      ADD_STAT(countMinTagsInUse, statistics::units::Rate<
+                       statistics::units::Tick, statistics::units::Count>::get(),
+               "countMin Average ticks per tags in use"),
+      ADD_STAT(countMinTotalRefs, statistics::units::Count::get(),
+               "countMin Total number of references to valid blocks."),
+      ADD_STAT(countMinSampledRefs, statistics::units::Count::get(),
+               "countMin Sample count of references to valid blocks."),
+      ADD_STAT(countMinAvgRefs, statistics::units::Rate<
+                       statistics::units::Count, statistics::units::Count>::get(),
+               "countMin Average number of references to valid blocks."),
+      ADD_STAT(countMinWarmupTick, statistics::units::Tick::get(),
+               "countMin The tick when the warmup percentage was hit."),
+      ADD_STAT(countMinOccupancies, statistics::units::Rate<
+                       statistics::units::Count, statistics::units::Tick>::get(),
+               "countMin Average occupied blocks per tick, per requestor"),
+      ADD_STAT(countMinAvgOccs, statistics::units::Rate<
+                       statistics::units::Ratio, statistics::units::Tick>::get(),
+               "countMin Average percentage of cache occupancy"),
+      ADD_STAT(countMinOccupanciesTaskId, statistics::units::Count::get(),
+               "countMin Occupied blocks per task id"),
+      ADD_STAT(countMinAgeTaskId, statistics::units::Count::get(),
+               "countMin Occupied blocks per task id, per block age"),
+      ADD_STAT(countMinRatioOccsTaskId, statistics::units::Ratio::get(),
+               "countMin Ratio of occupied blocks and all blocks, per task id"),
+      ADD_STAT(countMinTagAccesses, statistics::units::Count::get(),
+               "countMin Number of tag accesses"),
+      ADD_STAT(countMinDataAccesses, statistics::units::Count::get(),
+               "countMin Number of data accesses")
 {
 }
 
@@ -289,6 +331,37 @@ BaseTags::BaseTagStats::regStats()
     ratioOccsTaskId.flags(nozero);
 
     ratioOccsTaskId = occupanciesTaskId / statistics::constant(tags.numBlocks);
+
+    countMinAvgRefs = countMinTotalRefs / countMinSampledRefs;
+
+    countMinOccupancies
+        .init(system->maxRequestors())
+        .flags(nozero | nonan)
+        ;
+    for (int i = 0; i < system->maxRequestors(); i++) {
+        countMinOccupancies.subname(i, system->getRequestorName(i));
+    }
+
+    countMinAvgOccs.flags(nozero | total);
+    for (int i = 0; i < system->maxRequestors(); i++) {
+        countMinAvgOccs.subname(i, system->getRequestorName(i));
+    }
+
+    countMinAvgOccs = countMinAccupancies / statistics::constant(tags.numBlocks);
+
+    countMinOccupanciesTaskId
+        .init(context_switch_task_id::NumTaskId)
+        .flags(nozero | nonan)
+        ;
+
+    countMinAgeTaskId
+        .init(context_switch_task_id::NumTaskId, 5)
+        .flags(nozero | nonan)
+        ;
+
+    countMinRatioOccsTaskId.flags(nozero);
+
+    countMinRatioOccsTaskId = countMinOccupanciesTaskId / statistics::constant(tags.numBlocks);
 }
 
 void
