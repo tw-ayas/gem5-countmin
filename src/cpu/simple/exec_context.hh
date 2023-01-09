@@ -521,7 +521,7 @@ class SimpleExecContext : public ExecContext
     SimpleExecContext(BaseSimpleCPU* _cpu, SimpleThread* _thread)
         : cpu(_cpu), thread(_thread), fetchOffset(0), stayAtPC(false),
         numInst(0), numOp(0), numLoad(0), lastIcacheStall(0),
-        lastDcacheStall(0), execContextStats(cpu, thread)
+        lastDcacheStall(0), execContextStats(cpu, thread), countMinExecContextStats(cpu, thread)
     { }
 
     RegVal
@@ -572,7 +572,7 @@ class SimpleExecContext : public ExecContext
     readMiscRegOperand(const StaticInst *si, int idx) override
     {
         execContextStats.numMiscRegReads++;
-        countMinExecContextStats.numMiscRegReads = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numMiscRegReads").data());
+//        countMinExecContextStats.numMiscRegReads = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numMiscRegReads").data());
         const RegId& reg = si->srcRegIdx(idx);
         assert(reg.is(MiscRegClass));
         return thread->readMiscReg(reg.index());
@@ -582,7 +582,7 @@ class SimpleExecContext : public ExecContext
     setMiscRegOperand(const StaticInst *si, int idx, RegVal val) override
     {
         execContextStats.numMiscRegWrites++;
-        countMinExecContextStats.numMiscRegWrites = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numMiscRegWrites").data());
+//        countMinExecContextStats.numMiscRegWrites = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numMiscRegWrites").data());
         const RegId& reg = si->destRegIdx(idx);
         assert(reg.is(MiscRegClass));
         thread->setMiscReg(reg.index(), val);
@@ -596,7 +596,7 @@ class SimpleExecContext : public ExecContext
     readMiscReg(int misc_reg) override
     {
         execContextStats.numMiscRegReads++;
-        countMinExecContextStats.numMiscRegReads = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numMiscRegReads").data());
+//        countMinExecContextStats.numMiscRegReads = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numMiscRegReads").data());
         return thread->readMiscReg(misc_reg);
     }
 
@@ -608,7 +608,7 @@ class SimpleExecContext : public ExecContext
     setMiscReg(int misc_reg, RegVal val) override
     {
         execContextStats.numMiscRegWrites++;
-        countMinExecContextStats.numMiscRegWrites = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numMiscRegWrites").data());
+//        countMinExecContextStats.numMiscRegWrites = system->count_min_structure_system[counterName]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numMiscRegWrites").data());
         thread->setMiscReg(misc_reg, val);
     }
 
