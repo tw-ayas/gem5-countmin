@@ -71,9 +71,9 @@ BaseTags::BaseTags(const Params &p)
 
     std::string counter_name = name();
     int first_pos= counter_name.find(".") + 1;
-    int second_pos = counter_name.find(".", first_pos) + 1;
-    int third_pos = counter_name.find(".", second_pos);
-    counterName = counter_name.substr(0, third_pos);
+    int second_pos = counter_name.find(".", first_pos);
+//    int third_pos = counter_name.find(".", second_pos);
+    counterName = counter_name.substr(0, second_pos);
 }
 
 ReplaceableEntry*

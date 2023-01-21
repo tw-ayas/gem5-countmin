@@ -144,7 +144,10 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     int second_pos = counter_name.find(".", first_pos);
     counterName = counter_name.substr(0, second_pos);
 //    std::cout << counterName << " " << first_pos << " " << second_pos << " " << name() << std::endl;
-//    std::cout << name() << ":probHwCounterSetup:" << probHwCounters << " " << probHwCountersEp << " " << probHwCountersGamma << std::endl;
+    if (system->count_min_structure_system.count(counterName) == 0){
+        system->addCounter(counterName);
+    }
+    std::cout << "Cache: " << name() << " with CounterName: " << counterName << std::endl;
     
 }
 

@@ -4,7 +4,13 @@
 #include <ctime>
 #include <iostream>
 
-CountMinCounter::CountMinCounter(float eps, float gamma){
+CountMinCounter::CountMinCounter(float eps, float gamma) : 
+hash_string_prime {503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599,
+                   601, 607, 613, 617, 619, 631, 641, 643, 647, 653, 659, 661, 673, 677, 683, 691,
+                   701, 709, 719, 727, 733, 739, 743, 751, 757, 761, 769, 773, 787, 797,
+                   809, 811, 821, 823, 827, 829, 839, 853, 857, 859, 863, 877, 881, 883, 887,
+                   907, 911, 919, 929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997}
+{
     width = ceil(exp(1)/eps);
     depth = ceil(log(1/gamma));
     width = 16;
@@ -19,18 +25,18 @@ CountMinCounter::CountMinCounter(float eps, float gamma){
     }
     counters = C;
 
-    std::srand(time(nullptr));
-    std::random_device rd;
-    std::mt19937_64 gen(rd());
+//    std::srand(time(nullptr));
+//    std::random_device rd;
+//    std::mt19937_64 gen(rd());
 
-    int rand_start = 0;
-    int rand_end = 1000;
+//    int rand_start = 0;
+//    int rand_end = 1000;
     hashes = new unsigned int*[depth];
     for (int i = 0; i < depth; i++){
-        rand_start = i * 1000000;
-        rand_end = rand_start + (i + 1) * 1000000 - 1;
+//        rand_start = i * 1000000;
+//        rand_end = rand_start + (i + 1) * 1000000 - 1;
         //cout << a << " " << b << endl;
-        std::uniform_int_distribution<> distr(rand_start, rand_end);
+//        std::uniform_int_distribution<> distr(rand_start, rand_end);
         hashes[i] = new unsigned int[2];
         hashes[i][0] = int(float(std::rand()) * float(LONG_PRIM)/float(RAND_MAX) + 1);
         hashes[i][1] = int(float(std::rand()) * float(LONG_PRIM)/float(RAND_MAX) + 1);
@@ -41,7 +47,7 @@ CountMinCounter::CountMinCounter(float eps, float gamma){
         cout << "hashes for " << i << ": " << hashes[i][0] << " " << hashes[i][1] << endl;
     }
 
-    hash_string_prime = (unsigned int *) &prime_array;
+//    hash_string_prime = (unsigned int *) &prime_array;
 };
 
 int CountMinCounter::increment(int s){
@@ -63,7 +69,6 @@ int CountMinCounter::increment(int s, int update) {
 }
 
 int CountMinCounter::increment(unsigned long s, int update){
-//    cout << "CountMinKeyInt: " << s << endl;
     int hashval;
     unsigned long strHash = s;
     int estimate = -1;
@@ -101,7 +106,6 @@ int CountMinCounter::decrement(int s, int update) {
 }
 
 int CountMinCounter::decrement(unsigned long s, int update){
-    //    cout << "CountMinKeyInt: " << s << endl;
     int hashval;
     unsigned long strHash = s;
     int estimate = -1;
@@ -145,17 +149,17 @@ int CountMinCounter::estimate(unsigned long s){
 }
 
 unsigned long CountMinCounter::hashstr(char *s) {
-    hash<char*> hash_string;
-    hash<unsigned long> hash_long;
-//    cout << s << " => ";
+//    hash<char*> hash_string;
+//    hash<unsigned long> hash_long;
+//    cout << s << " => " << endl;
     unsigned long hash = 2540;
     int c;
     c = *s++;
-    int pos = 0;
+    int pos = 1;
 
     while (c) {
         int index = pos % 73;
-        //cout << "Hashes:" << hash << " " << pos << " " << c << " " << hash_string_prime[index] << " " << index << endl;
+//        cout << "Hashes:" << hash << " " << pos << " " << c << " " << hash_string_prime[index] << " " << index << endl;
         hash = hash + c * hash_string_prime[index];
         c = *s++;
         pos++;
