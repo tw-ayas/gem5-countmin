@@ -508,4 +508,10 @@ BaseSimpleCPU::advancePC(const Fault &fault)
     }
 }
 
+/*void
+BaseSimpleCPU::updateCountMinStats()
+{
+
+}*/
+
 } // namespace gem5

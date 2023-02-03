@@ -194,8 +194,8 @@ System::System(const Params &p)
                  AddrRange(1, 0)), // Create an empty range if disabled
       redirectPaths(p.redirect_paths),
       probHwCounters(p.prob_hw_counters),
-      probHwCountersEp(p.prob_hw_counters_ep),
-      probHwCountersGamma(p.prob_hw_counters_gamma)
+      probHwCountersSize(p.prob_hw_counters_size),
+      probHwCountersDepth(p.prob_hw_counters_depth)
 {
     panic_if(!workload, "No workload set for system %s "
             "(could use StubWorkload?).", name());
@@ -226,14 +226,8 @@ System::System(const Params &p)
     for (int x = 0; x < params().memories.size(); x++)
         params().memories[x]->system(this);
     
-//    CountMinCounter count_min = new CountMinCounter(p.prob_hw_counters_ep, p.prob_hw_counters_gamma);
-    count_min_structure_system[std::string("system")] = new CountMinCounter(p.prob_hw_counters_ep, p.prob_hw_counters_gamma);
-//    std::cout << p.num_work_ids << " " << p.multi_thread << std::endl;
-//    std::cout << maxRequestors() << std::endl;
+    count_min_structure_system[std::string("system")] = new CountMinCounter(p.prob_hw_counters_size, p.prob_hw_counters_depth);
 
-//    for (auto const& a : systemList){
-//        std::cout << a->name() << std::endl;
-//    }
 }
 
 System::~System()

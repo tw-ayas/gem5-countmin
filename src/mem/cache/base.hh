@@ -1098,7 +1098,11 @@ class BaseCache : public ClockedObject
         statistics::Formula avgMshrMissLatency;
         /** The average latency of an MSHR miss, per command and thread. */
         statistics::Formula avgMshrUncacheableLatency;
-    };
+        
+        std::vector<bool> hitsInUse;
+        std::vector<bool> missesInUse;
+        bool inUse;
+   };
 
     struct CacheStats : public statistics::Group
     {
@@ -1213,9 +1217,8 @@ class BaseCache : public ClockedObject
         /**
         * Experimental Counter using CountMinSketch Algorithm
         */
-//        statistics::Vector countMinWriteBacksOld;
-//        CountMinCounter writeBacksCountMin;
 
+/*
         statistics::Formula countMinDemandHits;
         statistics::Formula countMinOverallHits;
         statistics::Formula countMinDemandHitLatency;
@@ -1256,6 +1259,10 @@ class BaseCache : public ClockedObject
         statistics::Scalar countMinReplacements;
         statistics::Scalar countMinDataExpansions;
         statistics::Scalar countMinDataContractions;
+*/       
+        statistics::Scalar countMinWriteBacks;
+        statistics::Scalar countMinCacheOverallHits;
+        statistics::Scalar countMinCacheOverallMisses;         
 
         std::vector<std::unique_ptr<CacheCmdStatsCountMin>> countMinCmd;
 
@@ -1263,8 +1270,6 @@ class BaseCache : public ClockedObject
 
     /** Registers probes. */
     void regProbePoints() override;
-
-    //CountMinCounter countMinStructure(probHwCountersEp, probHwCountersGamma);
 
   public:
     BaseCache(const BaseCacheParams &p, unsigned blk_size);
@@ -1410,27 +1415,90 @@ class BaseCache : public ClockedObject
         return mshrQueue.findMatch(addr, is_secure);
     }
 
+  private:
+    int isHitMissSumPkt(PacketPtr pkt)
+    {
+        int index = pkt->cmdToIndex();
+        int isHitMissSum = 0;
+        switch (index)
+        {
+            case 1:
+            case 4:
+            case 11:
+            case 12:
+            case 13:
+            case 16:
+            case 22:
+            case 24:
+            case 25:
+                isHitMissSum = 1;
+                break;
+            default:
+                isHitMissSum = 0;
+        }
+        return isHitMissSum;
+    }
+
+  public:
+
     void incMissCount(PacketPtr pkt)
     {
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).misses[pkt->req->requestorId()]++;
-        stats.countMinCmdStats(pkt).misses[pkt->req->requestorId()] = system->count_min_structure_system[counterName]->increment(std::string(system->getRequestorName(pkt->req->requestorId()) + ".misses").data());
-//        stats.countMinCmdStats(pkt).misses[pkt->req->requestorId()] = countMinStructure.estimate((std::to_string(pkt->req->requestorId())).data());
-       
+
+        stats.countMinCmdStats(pkt).inUse = true;
+        stats.countMinCmdStats(pkt).missesInUse[pkt->req->requestorId()] = true;
+        
+//        std::cout << counterName << " " << name() << ": " << pkt->cmdToIndex() << " inUse: " << stats.countMinCmdStats(pkt).inUse << std::string(system->getRequestorName(pkt->req->requestorId()) + "." + MemCmd(pkt->cmdToIndex()).toString() + ".misses: ").data() << pkt->req->requestorId() << " => " << " missesInUse: " << stats.countMinCmdStats(pkt).missesInUse[pkt->req->requestorId()] << std::endl;
+        
+        std::string key = "";
+        if (isHitMissSumPkt(pkt)){
+            key = name() + ".OverallMisses";
+        }
+        else{
+            key = system->getRequestorName(pkt->req->requestorId()) + "." + MemCmd(pkt->cmdToIndex()).toString() + ".misses";
+        }
+
+//        std::cout << key << std::endl;
+        stats.cmdStats(pkt).misses[pkt->req->requestorId()].value();
+
+	system->count_min_structure_system[counterName]->increment(key.data());            
+        
         pkt->req->incAccessDepth();
         if (missCount) {
             --missCount;
             if (missCount == 0)
                 exitSimLoop("A cache reached the maximum miss count");
         }
+//        std::cout.flush();
     }
+
     void incHitCount(PacketPtr pkt)
     {
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).hits[pkt->req->requestorId()]++;
-        stats.countMinCmdStats(pkt).hits[pkt->req->requestorId()] = system->count_min_structure_system[counterName]->increment(std::string(system->getRequestorName(pkt->req->requestorId()) + "hits").data());
-//        stats.countMinCmdStats(pkt).hits[pkt->req->requestorId()] = countMinStructure.estimate((std::to_string(pkt->req->requestorId()) + "hits").data());
+
+        stats.countMinCmdStats(pkt).inUse = true;
+        stats.countMinCmdStats(pkt).hitsInUse[pkt->req->requestorId()] = true;
+
+//        std::cout << counterName << " " << name() << ": " << pkt->cmdToIndex() << " inUse: " << stats.countMinCmdStats(pkt).inUse << std::string(system->getRequestorName(pkt->req->requestorId()) + "." + MemCmd(pkt->cmdToIndex()).toString() + ".hits: ").data() << pkt->req->requestorId() << " => " << " hitsInUse: " << stats.countMinCmdStats(pkt).hitsInUse[pkt->req->requestorId()] << std::endl;
+
+        std::string key = "";
+        if (isHitMissSumPkt(pkt)){
+            key = name() + ".OverallHits";
+        }
+        else{
+           key = system->getRequestorName(pkt->req->requestorId()) + "." + MemCmd(pkt->cmdToIndex()).toString() + ".hits";   
+        }
+
+//        std::cout << key << std::endl;
+        stats.cmdStats(pkt).hits[pkt->req->requestorId()].value();
+        
+        system->count_min_structure_system[counterName]->increment(key.data());
+//        std::cout.flush();
     }
+
+    void updateCountMinStats();
 
     /**
      * Checks if the cache is coalescing writes

@@ -1083,8 +1083,13 @@ TimingSimpleCPU::updateCycleCounts()
     const Cycles delta(curCycle() - previousCycle);
 
     baseStats.numCycles += delta;
-    baseStats.countMinNumCycles = system->count_min_structure_system["system"]->increment(std::string(name() + "numCycles").data(), delta);
-    //baseStats.countMinNumCycles = system->count_min_structure_system["system"]->estimate("numCycles");
+
+    system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), delta);
+
+    if (std::fmod(baseStats.numCycles.value(), 1000) == 0 || delta > 1000){
+        updateCountMinStats();
+    }
+
 
     previousCycle = curCycle();
 }

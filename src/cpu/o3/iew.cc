@@ -113,6 +113,9 @@ IEW::IEW(CPU *_cpu, const BaseO3CPUParams &params)
     updateLSQNextCycle = false;
 
     skidBufferMax = (renameToIEWDelay + 1) * params.renameWidth;
+
+    counterName = cpu->name();
+
 }
 
 std::string
@@ -189,7 +192,11 @@ IEW::IEWStats::IEWStats(CPU *cpu)
              "Insts written-back per cycle"),
     ADD_STAT(wbFanout, statistics::units::Rate<
                 statistics::units::Count, statistics::units::Count>::get(),
-             "Average fanout of values written-back")
+             "Average fanout of values written-back"),
+    ADD_STAT(countMinIqFullEvents, statistics::units::Count::get(),
+             "countMin Number of times the IQ has become full, causing a stall"),
+    ADD_STAT(countMinLsqFullEvents, statistics::units::Count::get(),
+             "countMin Number of times the LSQ has become fuill, causing a stall")
 {
     instsToCommit
         .init(cpu->numThreads)
@@ -236,7 +243,9 @@ IEW::IEWStats::ExecutedInstStats::ExecutedInstStats(CPU *cpu)
              "Number of stores executed"),
     ADD_STAT(numRate, statistics::units::Rate<
                 statistics::units::Count, statistics::units::Cycle>::get(),
-             "Inst execution rate", numInsts / cpu->baseStats.numCycles)
+             "Inst execution rate", numInsts / cpu->baseStats.numCycles),
+    ADD_STAT(countMinNumBranches, statistics::units::Count::get(),
+             "countMin Number of branches executed")
 {
     numLoadInsts
         .init(cpu->numThreads)
@@ -1573,8 +1582,9 @@ IEW::updateExeInstStats(const DynInstPtr& inst)
     //
     //  Control operations
     //
-    if (inst->isControl())
+    if (inst->isControl()) {
         iewStats.executedInstStats.numBranches[tid]++;
+    }
 
     //
     //  Memory operations

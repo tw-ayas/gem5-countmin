@@ -507,8 +507,7 @@ BaseKvmCPU::activateContext(ThreadID thread_num)
 
     baseStats.numCycles +=
         ticksToCycles(thread->lastActivate - thread->lastSuspend);
-    baseStats.countMinNumCycles = system->count_min_structure_system["system"]->increment(std::string(name() + "numCycles").data(), ticksToCycles(thread->lastActivate - thread->lastSuspend));
-    //baseStats.countMinNumCycles = system->count_min_structure_system["system"]->estimate("numCycles");
+    system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), ticksToCycles(thread->lastActivate - thread->lastSuspend));
 
     schedule(tickEvent, clockEdge(Cycles(0)));
     _status = Running;
@@ -780,8 +779,8 @@ BaseKvmCPU::kvmRun(Tick ticks)
 
         /* Update statistics */
         baseStats.numCycles += simCyclesExecuted;
-        baseStats.countMinNumCycles = system->count_min_structure_system["system"]->increment(std::string(name() + "numCycles").data(), simCyclesExecuted);
-        //baseStats.countMinNumCycles = system->count_min_structure_system["system"]->estimate("numCycles");
+        system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), simCyclesExecuted);
+
         stats.committedInsts += instsExecuted;
         ctrInsts += instsExecuted;
 

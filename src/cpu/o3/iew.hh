@@ -363,6 +363,9 @@ class IEW
      * IEW knows if there will be activity on the next cycle.
      */
     bool updateLSQNextCycle;
+    
+    /** counterName for count_min_structure */
+    std::string counterName;
 
   private:
     /** Records if there is a fetch redirect on this cycle for each thread. */
@@ -451,6 +454,10 @@ class IEW
          *  execute. */
         statistics::Formula branchMispredicts;
 
+        /** countMin Stats */
+        statistics::Scalar countMinIqFullEvents;
+        statistics::Scalar countMinLsqFullEvents;
+
         struct ExecutedInstStats : public statistics::Group
         {
             ExecutedInstStats(CPU *cpu);
@@ -474,6 +481,10 @@ class IEW
             statistics::Formula numStoreInsts;
             /** Number of instructions executed per cycle. */
             statistics::Formula numRate;
+        
+            /** countMin Stats */
+            statistics::Scalar countMinNumBranches; 
+
         } executedInstStats;
 
         /** Number of instructions sent to commit. */

@@ -124,10 +124,6 @@ def config_cache(options, system):
         system.tol2bus = L2XBar(clk_domain = system.cpu_clk_domain)
         system.l2.cpu_side = system.tol2bus.mem_side_ports
         system.l2.mem_side = system.membus.cpu_side_ports
-        system.l2.prob_hw_counters = options.prob_hw_counters
-        system.l2.prob_hw_counters_ep = options.prob_hw_counters_ep
-        system.l2.prob_hw_counters_gamma = options.prob_hw_counters_gamma
-
 
     if options.memchecker:
         system.memchecker = MemChecker()
@@ -137,24 +133,11 @@ def config_cache(options, system):
             icache = icache_class(**_get_cache_opts('l1i', options))
             dcache = dcache_class(**_get_cache_opts('l1d', options))
 
-            dcache.prob_hw_counters = options.prob_hw_counters
-            icache.prob_hw_counters = options.prob_hw_counters
-            dcache.prob_hw_counters_ep = options.prob_hw_counters_ep
-            icache.prob_hw_counters_ep = options.prob_hw_counters_ep
-            dcache.prob_hw_counters_gamma = options.prob_hw_counters_gamma
-            icache.prob_hw_counters_gamma = options.prob_hw_counters_gamma
-
             # If we have a walker cache specified, instantiate two
             # instances here
             if walk_cache_class:
                 iwalkcache = walk_cache_class()
                 dwalkcache = walk_cache_class()
-                iwalkcache.prob_hw_counters = options.prob_hw_counters
-                dwalkcache.prob_hw_counters = options.prob_hw_counters
-                iwalkcache.prob_hw_counters_ep = options.prob_hw_counters_ep
-                dwalkcache.prob_hw_counters_ep = options.prob_hw_counters_ep
-                iwalkcache.prob_hw_counters_gamma = options.prob_hw_counters_gamma
-                dwalkcache.prob_hw_counters_gamma = options.prob_hw_counters_gamma
             else:
                 iwalkcache = None
                 dwalkcache = None

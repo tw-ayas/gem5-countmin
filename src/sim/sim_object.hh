@@ -328,6 +328,8 @@ class SimObject : public EventManager, public Serializable, public Drainable,
      * would be needlessly serialized more than once.
      */
     static void serializeAll(const std::string &cpt_dir);
+   
+    virtual void updateCountMinStats() {};
 
 #ifdef DEBUG
   public:

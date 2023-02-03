@@ -269,10 +269,10 @@ if args.wait_gdb:
 
 if args.prob_hw_counters:
     system.prob_hw_counters = args.prob_hw_counters
-if args.prob_hw_counters_ep:
-    system.prob_hw_counters_ep = args.prob_hw_counters_ep
-if args.prob_hw_counters_gamma:
-    system.prob_hw_counters_gamma = args.prob_hw_counters_gamma
+if args.prob_hw_counters_size:
+    system.prob_hw_counters_size = args.prob_hw_counters_size
+if args.prob_hw_counters_depth:
+    system.prob_hw_counters_depth = args.prob_hw_counters_depth
 
 root = Root(full_system = False, system = system)
 Simulation.run(args, root, system, FutureClass)

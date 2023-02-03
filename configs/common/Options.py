@@ -115,8 +115,8 @@ def addNoISAOptions(parser):
 
     parser.add_argument("--prob-hw-counters", type=int, default=0,
                         help="on/off prob hw counters")
-    parser.add_argument("--prob-hw-counters-ep", type=float, default=0.01,help="Ep for CountMinSketch")
-    parser.add_argument("--prob-hw-counters-gamma", type=float, default=0.1,help="Probabilty for Error CountMinSketch")
+    parser.add_argument("--prob-hw-counters-size", type=str, default="128B",help="Total Size for the CountMinSketch based counter")
+    parser.add_argument("--prob-hw-counters-depth", type=int, default=4,help="Depth of the CountMinSketch (No. of Hashtable in the CountMinSketch")
     # Memory Options
     parser.add_argument("--list-mem-types",
                         action=ListMem, nargs=0,

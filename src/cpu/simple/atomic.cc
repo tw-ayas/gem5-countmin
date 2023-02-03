@@ -228,9 +228,12 @@ AtomicSimpleCPU::activateContext(ThreadID thread_num)
     Cycles delta = ticksToCycles(threadInfo[thread_num]->thread->lastActivate -
                                  threadInfo[thread_num]->thread->lastSuspend);
     baseStats.numCycles += delta;
-//    std::cout << name() << ".baseStats.numCycles += delta" << delta << " " << baseStats.numCycles.value() << std::endl;
-    baseStats.countMinNumCycles = system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), delta);
-    //baseStats.countMinNumCycles = system->count_min_structure_system[name()]->estimate("numCycles");
+
+    system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), delta);
+
+    if (std::fmod(baseStats.numCycles.value(), 1000) == 0 || delta >= 1000){
+        updateCountMinStats(); 
+    }
 
     if (!tickEvent.scheduled()) {
         //Make sure ticks are still on multiples of cycles
@@ -639,9 +642,13 @@ AtomicSimpleCPU::tick()
 
     for (int i = 0; i < width || locked; ++i) {
         baseStats.numCycles++;
-//        std::cout << name() << ".baseStats.numCycles++ " << baseStats.numCycles.value() << std::endl;
-        baseStats.countMinNumCycles = system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data());
-        //baseStats.countMinNumCycles = system->count_min_structure_system[name()]->estimate("numCycles");
+ 
+        system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data());
+
+        if (std::fmod(baseStats.numCycles.value(), 1000) == 0){
+            updateCountMinStats();
+        }
+  
         updateCycleCounters(BaseCPU::CPU_STATE_ON);
 
         if (!curStaticInst || !curStaticInst->isDelayedCommit()) {

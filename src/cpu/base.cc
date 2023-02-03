@@ -184,6 +184,8 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
 //    for(auto const& i : cpuList){
 //        std::cout << i->name() << " " << i->cpuId() << std::endl;
 //    }
+
+    registerExitCallback([this]() { updateCountMinStats(); });
 }
 
 void
@@ -677,8 +679,9 @@ BaseCPU::scheduleInstStop(ThreadID tid, Counter insts, const char *cause)
 {
     const Tick now(getCurrentInstCount(tid));
     Event *event(new LocalSimLoopExitEvent(cause, 0));
-
+    
     threadContexts[tid]->scheduleInstCountEvent(event, now + insts);
+
 }
 
 Tick
@@ -812,6 +815,29 @@ BaseCPU::GlobalStats::GlobalStats(statistics::Group *parent)
 
     countMinHostInstRate = countMinSimInsts / hostSeconds;
     countMinHostOpRate = countMinSimOps / hostSeconds;
+}
+
+void
+BaseCPU::updateCountMinStats(){
+
+    baseStats.countMinNumCycles = system->count_min_structure_system[name()]->estimate(std::string(name() + ".numCycles").data());
+
+//    std::cout << "Cycles count per 1000 => " << baseStats.numCycles.value() << std::endl;
+//    std::cout << find(std::string(name() + ".dcache").data())->name() << " Update CountMin Stats" << std::endl;
+    if ( find(std::string(name() + ".dcache").data()) )
+        find(std::string(name() + ".dcache").data())->updateCountMinStats();
+
+//    std::cout << find(std::string(name() + ".icache").data())->name() << " Update CountMin Stats" << std::endl;
+    if ( find(std::string(name() + ".icache").data()) )
+        find(std::string(name() + ".icache").data())->updateCountMinStats();
+    if ( find(std::string(name() + ".dtb_walker_cache").data()) )
+        find(std::string(name() + ".dtb_walker_cache").data())->updateCountMinStats();
+    if ( find(std::string(name() + ".itb_walker_cache").data()) )
+        find(std::string(name() + ".itb_walker_cache").data())->updateCountMinStats();
+    if ( find(std::string("system.l2").data() ))
+        find(std::string("system.l2").data())->updateCountMinStats();
+
+
 }
 
 } // namespace gem5

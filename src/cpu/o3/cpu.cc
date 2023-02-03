@@ -453,6 +453,13 @@ CPU::tick()
     assert(drainState() != DrainState::Drained);
 
     ++baseStats.numCycles;
+    
+    system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data());
+    
+    if( std::fmod(baseStats.numCycles.value(), 1000) == 0) {
+        updateCountMinStats();  
+    }
+ 
     updateCycleCounters(BaseCPU::CPU_STATE_ON);
 
 //    activity = false;
@@ -1409,6 +1416,7 @@ CPU::wakeCPU()
         --cycles;
         cpuStats.idleCycles += cycles;
         baseStats.numCycles += cycles;
+        system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), cycles);
     }
 
     schedule(tickEvent, clockEdge());

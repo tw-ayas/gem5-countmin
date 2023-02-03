@@ -92,10 +92,6 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
                                     name(), false,
                                     EventBase::Delayed_Writeback_Pri),
       blkSize(blk_size),
-//      probHwCounters(p.prob_hw_counters),
-//      probHwCountersEp(p.prob_hw_counters_ep),
-//      probHwCountersGamma(p.prob_hw_counters_gamma),
-//      countMinStructure(p.prob_hw_counters_ep, p.prob_hw_counters_gamma),
       lookupLatency(p.tag_latency),
       dataLatency(p.data_latency),
       forwardLatency(p.tag_latency),
@@ -143,7 +139,7 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     int first_pos= counter_name.find(".") + 1;
     int second_pos = counter_name.find(".", first_pos);
     counterName = counter_name.substr(0, second_pos);
-//    std::cout << counterName << " " << first_pos << " " << second_pos << " " << name() << std::endl;
+
     if (system->count_min_structure_system.count(counterName) == 0){
         system->addCounter(counterName);
     }
@@ -1711,10 +1707,7 @@ BaseCache::writebackBlk(CacheBlk *blk)
         (blk->isSet(CacheBlk::DirtyBit) || writebackClean));
 
     stats.writebacks[Request::wbRequestorId]++;
-    stats.countMinWriteBacks[Request::wbRequestorId] = system->count_min_structure_system[counterName]->increment(std::string(system->getRequestorName(Request::wbRequestorId) + ".writebacks").data());
-//    stats.writeBacksCountMin.increment((std::to_string(Request::wbRequestorId) + "writebacks").data());
-//    stats.countMinWriteBacks[Request::wbRequestorId] = stats.writeBacksCountMin.estimate((std::to_string(Request::wbRequestorId) + "writebacks").data());
-    //stats.writeBacksCountMin.print();
+    system->count_min_structure_system[counterName]->increment(std::string(system->getRequestorName(Request::wbRequestorId) + ".writebacks").data());
 
     RequestPtr req = std::make_shared<Request>(
         regenerateBlkAddr(blk), blkSize, 0, Request::wbRequestorId);
@@ -2248,7 +2241,10 @@ BaseCache::CacheCmdStatsCountMin::CacheCmdStatsCountMin(BaseCache &c,
                ("average " + name + " mshr miss latency").c_str()),
       ADD_STAT(avgMshrUncacheableLatency, statistics::units::Rate<
                     statistics::units::Tick, statistics::units::Count>::get(),
-               ("average " + name + " mshr uncacheable latency").c_str())
+               ("average " + name + " mshr uncacheable latency").c_str()),
+      hitsInUse((&c)->system->maxRequestors()),
+      missesInUse((&c)->system->maxRequestors()),
+      inUse(false)
 {
 }
 
@@ -2260,6 +2256,12 @@ BaseCache::CacheCmdStatsCountMin::regStatsFromParent()
     statistics::Group::regStats();
     System *system = cache.system;
     const auto max_requestors = system->maxRequestors();
+	
+    for (int i = 0; i < max_requestors; i++) {
+        hitsInUse[i] = false;
+        missesInUse[i] = false;
+    }    
+    //inUse = false;
 
     hits
         .init(max_requestors)
@@ -2464,10 +2466,7 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
     ADD_STAT(dataContractions, statistics::units::Count::get(),
              "number of data contractions"),
     cmd(MemCmd::NUM_MEM_CMDS),
-//    ADD_STAT(countMinWriteBacksOld, statistics::units::Count::get(),
-//             "countMinSketch based writeBacks"),
-//    writeBacksCountMin(0.00001, 0.001),
-    ADD_STAT(countMinDemandHits, statistics::units::Count::get(),
+/*    ADD_STAT(countMinDemandHits, statistics::units::Count::get(),
                "countMin number of demand (read+write) hits"),
     ADD_STAT(countMinOverallHits, statistics::units::Count::get(),
                "countMin number of overall hits"),
@@ -2541,6 +2540,13 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
                "countMin number of data expansions"),
     ADD_STAT(countMinDataContractions, statistics::units::Count::get(),
                "countMin number of data contractions"),
+*/
+    ADD_STAT(countMinWriteBacks, statistics::units::Count::get(),
+               "countMin number of writebacks"),
+    ADD_STAT(countMinCacheOverallHits, statistics::units::Count::get(),
+               "countMin number of overall Hits"),
+    ADD_STAT(countMinCacheOverallMisses, statistics::units::Count::get(),
+               "countMin number of overall Misses"),
     countMinCmd(MemCmd::NUM_MEM_CMDS)
 {
     for (int idx = 0; idx < MemCmd::NUM_MEM_CMDS; ++idx){
@@ -2696,15 +2702,6 @@ BaseCache::CacheStats::regStats()
         writebacks.subname(i, system->getRequestorName(i));
     }
 
-//    countMinWriteBacksOld
-//        .init(max_requestors)
-//        .flags(total | nozero | nonan)
-//        ;
-//    for (int i = 0; i < max_requestors; i++){
-//        countMinWriteBacksOld.subname(i, system->getRequestorName(i));
-//        countMinWriteBacksOld[i] = writeBacksCountMin.estimate(i);
-//    }
-
     demandMshrHits.flags(total | nozero | nonan);
     demandMshrHits = SUM_DEMAND(mshrHits);
     for (int i = 0; i < max_requestors; i++) {
@@ -2749,7 +2746,6 @@ BaseCache::CacheStats::regStats()
         overallMshrUncacheable.subname(i, system->getRequestorName(i));
     }
 
-
     overallMshrUncacheableLatency.flags(total | nozero | nonan);
     overallMshrUncacheableLatency =
         SUM_DEMAND(mshrUncacheableLatency) +
@@ -2793,6 +2789,7 @@ BaseCache::CacheStats::regStats()
     dataExpansions.flags(nozero | nonan);
     dataContractions.flags(nozero | nonan);
 
+/*
     countMinDemandHits.flags(total | nozero | nonan);
     countMinDemandHits = SUM_DEMAND_COUNTMIN(hits);
     for (int i = 0; i < max_requestors; i++){
@@ -2990,6 +2987,7 @@ BaseCache::CacheStats::regStats()
 
     countMinDataExpansions.flags(nozero | nonan);
     countMinDataContractions.flags(nozero | nonan);
+*/
 
 }
 
@@ -3001,6 +2999,44 @@ BaseCache::regProbePoints()
     ppFill = new ProbePointArg<PacketPtr>(this->getProbeManager(), "Fill");
     ppDataUpdate =
         new ProbePointArg<DataUpdate>(this->getProbeManager(), "Data Update");
+}
+
+void
+BaseCache::updateCountMinStats()
+{
+    /*const auto max_requestors = system->maxRequestors();
+
+    int idx = 0;
+    std::cout << counterName << " " << name() << std::endl; 
+    for (auto &cmcs: stats.countMinCmd) {
+        std::cout << idx << ": " << MemCmd(idx).toString() << " inUse: " << cmcs->inUse << std::endl;
+	if (cmcs->inUse) {
+            for (int i = 0; i < max_requestors; i++) {
+                std::cout << i << ": " << system->getRequestorName(i) << " hitsInUse: " << cmcs->hitsInUse[i] << " missesInUse: " << cmcs->missesInUse[i] << std::endl;            
+                if(cmcs->hitsInUse[i]) {
+                    cmcs->hits[i] = system->count_min_structure_system[counterName]->estimate(std::string(system->getRequestorName(i) + "." + MemCmd(idx).toString() + ".hits").data());
+                    std::cout << name() << ".hits" << i << ": " << std::string(system->getRequestorName(i) + "." + MemCmd(idx).toString() + ".hits").data() << " => " << cmcs->hits[i].value() << std::endl;
+                }
+                if (cmcs->missesInUse[i]) {
+                    cmcs->misses[i] = system->count_min_structure_system[counterName]->estimate(std::string(system->getRequestorName(i) + "." + MemCmd(idx).toString() + ".misses").data());
+                    std::cout << name() << ".misses" << i << ": " << std::string(system->getRequestorName(i) + "." + MemCmd(idx).toString() + ".misses").data() << " => " << cmcs->misses[i].value() << std::endl;     
+                }
+            }
+        }
+        ++idx;
+        std::cout << std::endl;
+    }*/
+   
+    stats.countMinCacheOverallHits = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".OverallHits").data());
+//    std::cout << name() << " " << stats.overallHits.total() << " " << std::string(name() + ".OverallHits") << " " << stats.countMinCacheOverallHits.value() << std::endl;
+
+    stats.countMinCacheOverallMisses = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".OverallMisses").data());
+//    std::cout << name() << " " << stats.overallMisses.total() << " " << std::string(name() + ".OverallMisses") << " " << stats.countMinCacheOverallMisses.value() << std::endl;    
+
+//    system->count_min_structure_system[counterName]->print();    
+
+    stats.countMinWriteBacks = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".writebacks").data());
+
 }
 
 ///////////////

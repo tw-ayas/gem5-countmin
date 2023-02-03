@@ -224,10 +224,12 @@ class BaseCPU : public ClockedObject
     uint32_t getPid() const { return _pid; }
     void setPid(uint32_t pid) { _pid = pid; }
 
-    inline void workItemBegin() { baseStats.numWorkItemsStarted++; baseStats.countMinNumWorkItemsStarted = system->count_min_structure_system[name()]->increment(std::string(name() + ".numWorkItemsStarted").data()); }
-    inline void workItemEnd() { baseStats.numWorkItemsCompleted++; baseStats.countMinNumWorkItemsCompleted = system->count_min_structure_system[name()]->increment(std::string(name() + ".numWorkItemsCompleted").data()); }
+    inline void workItemBegin() { baseStats.numWorkItemsStarted++; }
+    inline void workItemEnd() { baseStats.numWorkItemsCompleted++; }
     // @todo remove me after debugging with legion done
     Tick instCount() { return instCnt; }
+
+    void updateCountMinStats();
 
   protected:
     std::vector<BaseInterrupts*> interrupts;
