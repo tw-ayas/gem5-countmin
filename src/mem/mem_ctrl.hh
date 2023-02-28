@@ -212,7 +212,7 @@ class MemPacket
           bank(_bank), row(_row), bankId(bank_id), addr(_addr), size(_size),
           burstHelper(NULL), _qosValue(_pkt->qosValue())
     { }
-
+    
 };
 
 // The memory packets are store in a multiple dequeue structure,
@@ -616,6 +616,10 @@ class MemCtrl : public qos::MemCtrl
         // per-requestor raed and write average memory access latency
         statistics::Formula requestorReadAvgLat;
         statistics::Formula requestorWriteAvgLat;
+
+        /** CountMin Stats */
+        statistics::Scalar countMinReadReqs;
+        statistics::Scalar countMinWriteReqs;
     };
 
     CtrlStats stats;
@@ -773,6 +777,9 @@ class MemCtrl : public qos::MemCtrl
     virtual void init() override;
     virtual void startup() override;
     virtual void drainResume() override;
+    
+    /** Update CountMin Stats */
+    void updateCountMinStats();
 
   protected:
 

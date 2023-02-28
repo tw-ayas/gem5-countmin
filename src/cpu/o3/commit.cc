@@ -181,7 +181,17 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
       ADD_STAT(committedInstType, statistics::units::Count::get(),
                "Class of committed instruction"),
       ADD_STAT(commitEligibleSamples, statistics::units::Cycle::get(),
-               "number cycles where commit BW limit reached")
+               "number cycles where commit BW limit reached"),
+      ADD_STAT(countMinCommitSquashedInsts, statistics::units::Count::get(),
+               "countMin the number of squashed insts skipped by commit"),
+      ADD_STAT(countMinBranchMispredicts, statistics::units::Count::get(),
+               "countMin the number of times a branch was mispredicted"),
+      ADD_STAT(countMinInstsCommitted, statistics::units::Count::get(),
+               "countMin Number of instructions commited"),
+      ADD_STAT(countMinOpsCommitted, statistics::units::Count::get(),
+               "countMin Number of ops (including micro ops) commited"),
+      ADD_STAT(countMinBranches, statistics::units::Count::get(),
+               "countMin Number of branches commited")
 {
     using namespace statistics;
 
@@ -881,6 +891,7 @@ Commit::commit()
                      toIEW->commitInfo[tid].branchTaken = true;
                 }
                 ++stats.branchMispredicts;
+                cpu->update_count_min(std::string(name() + ".branchMispredicts").data());
             }
 
             set(toIEW->commitInfo[tid].pc, fromIEW->pc[tid]);
@@ -1007,6 +1018,8 @@ Commit::commitInsts()
             rob->retireHead(commit_thread);
 
             ++stats.commitSquashedInsts;
+            //cpu->update_count_min(std::string(name() + ".commitSquashedInsts").data());
+            
             // Notify potential listeners that this instruction is squashed
             ppSquash->notify(head_inst);
 
@@ -1384,9 +1397,12 @@ Commit::updateComInstStats(const DynInstPtr &inst)
 {
     ThreadID tid = inst->threadNumber;
 
-    if (!inst->isMicroop() || inst->isLastMicroop())
+    if (!inst->isMicroop() || inst->isLastMicroop()){
         stats.instsCommitted[tid]++;
+        //cpu->update_count_min(std::string(name() + ".instsCommitted").data());
+    }
     stats.opsCommitted[tid]++;
+    //cpu->update_count_min(std::string(name() + ".opsCommitted").data());
 
     // To match the old model, don't count nops and instruction
     // prefetches towards the total commit count.
@@ -1397,8 +1413,10 @@ Commit::updateComInstStats(const DynInstPtr &inst)
     //
     //  Control Instructions
     //
-    if (inst->isControl())
+    if (inst->isControl()){
         stats.branches[tid]++;
+//        cpu->update_count_min(std::string(cpu->name() + ".branchInsts").data());
+    }   
 
     //
     //  Memory references
@@ -1535,6 +1553,16 @@ Commit::oldestReady()
     } else {
         return InvalidThreadID;
     }
+}
+
+void
+Commit::updateCountMinStats(){
+//    stats.countMinCommitSquashedInsts = cpu->get_count_min(std::string(name() + ".commitSquashedInsts").data());
+    stats.countMinBranchMispredicts = cpu->get_count_min(std::string(name() + ".branchMispredicts").data());
+//    stats.countMinInstsCommitted = cpu->get_count_min(std::string(name() + ".instsCommitted").data());
+//    stats.countMinOpsCommitted = cpu->get_count_min(std::string(name() + ".opsCommitted").data());
+//    stats.countMinBranches = cpu->get_count_min(std::string(name() + ".branches").data());
+
 }
 
 } // namespace o3

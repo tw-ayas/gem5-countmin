@@ -311,6 +311,9 @@ class Commit
     /** Sets the PC of a specific thread. */
     void pcState(const PCStateBase &val, ThreadID tid) { set(pc[tid], val); }
 
+    /** Update CountMin Stats */
+    void updateCountMinStats();
+
   private:
     /** Time buffer interface. */
     TimeBuffer<TimeStruct> *timeBuffer;
@@ -506,6 +509,14 @@ class Commit
 
         /** Number of cycles where the commit bandwidth limit is reached. */
         statistics::Scalar commitEligibleSamples;
+
+        /** CountMin Stats */
+        statistics::Scalar countMinCommitSquashedInsts;
+        statistics::Scalar countMinBranchMispredicts;
+        statistics::Scalar countMinInstsCommitted;
+        statistics::Scalar countMinOpsCommitted;
+        statistics::Scalar countMinBranches;
+       
     } stats;
 };
 

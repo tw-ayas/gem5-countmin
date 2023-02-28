@@ -54,6 +54,7 @@
 #include "params/BranchPredictor.hh"
 #include "sim/probe/pmu.hh"
 #include "sim/sim_object.hh"
+#include "sim/system.hh"
 
 namespace gem5
 {
@@ -68,6 +69,9 @@ namespace branch_prediction
 class BPredUnit : public SimObject
 {
   public:
+    System *system;
+    std::string counterName;     
+
       typedef BranchPredictorParams Params;
     /**
      * @param params The params object, that has the size of the BP and BTB.
@@ -196,6 +200,9 @@ class BPredUnit : public SimObject
 
 
     void dump();
+
+    /** update countMinStats */
+    void updateCountMinStats();
 
   private:
     struct PredictorHistory
@@ -331,6 +338,10 @@ class BPredUnit : public SimObject
         statistics::Scalar indirectMisses;
         /** Stat for the number of indirect target mispredictions.*/
         statistics::Scalar indirectMispredicted;
+
+        /** countMin Stats */
+        statistics::Scalar countMinCondPredicted;
+        statistics::Scalar countMinCondIncorrect;
     } stats;
 
   protected:

@@ -94,7 +94,7 @@ Base::PrefetchListener::notify(const PacketPtr &pkt)
 }
 
 Base::Base(const BasePrefetcherParams &p)
-    : ClockedObject(p), listeners(), cache(nullptr), blkSize(p.block_size),
+    : ClockedObject(p), listeners(), cache(nullptr), system(p.sys), blkSize(p.block_size),
       lBlkSize(floorLog2(blkSize)), onMiss(p.on_miss), onRead(p.on_read),
       onWrite(p.on_write), onData(p.on_data), onInst(p.on_inst),
       requestorId(p.sys->getRequestorId(this)),
@@ -105,6 +105,12 @@ Base::Base(const BasePrefetcherParams &p)
       prefetchStats(this), issuedPrefetches(0),
       usefulPrefetches(0), tlb(nullptr)
 {
+
+    std::string counter_name = name();
+    int first_pos= counter_name.find(".") + 1;
+    int second_pos = counter_name.find(".", first_pos);
+    counterName = counter_name.substr(0, second_pos);
+
 }
 
 void
@@ -142,7 +148,19 @@ Base::StatGroup::StatGroup(statistics::Group *parent)
     ADD_STAT(pfHitInWB, statistics::units::Count::get(),
         "number of prefetches hit in the Write Buffer"),
     ADD_STAT(pfLate, statistics::units::Count::get(),
-        "number of late prefetches (hitting in cache, MSHR or WB)")
+        "number of late prefetches (hitting in cache, MSHR or WB)"),
+    ADD_STAT(countMinPfIssued, statistics::units::Count::get(), 
+        "countMin number of hwpf issued"),
+    ADD_STAT(countMinPfUnused, statistics::units::Count::get(),
+        "countMin number of HardPF blocks evicted w/o reference"),
+    ADD_STAT(countMinPfUseful, statistics::units::Count::get(), 
+        "countMin number of useful prefetch"),
+    ADD_STAT(countMinPfHitInCache, statistics::units::Count::get(), 
+        "countMin number of prefetches hitting in cache"),
+    ADD_STAT(countMinPfHitInMSHR, statistics::units::Count::get(), 
+        "countMin number of prefetches hitting in a MSHR"),
+    ADD_STAT(countMinPfHitInWB, statistics::units::Count::get(), 
+        "countMin number of prefetches hitting in the write Buffer")
 {
     using namespace statistics;
 
@@ -303,6 +321,13 @@ Base::addTLB(BaseTLB *t)
 {
     fatal_if(tlb != nullptr, "Only one TLB can be registered");
     tlb = t;
+}
+
+void
+Base::updateCountMinStats()
+{
+//    std::cout << "Update Prefetcher CountMinStats" << std::endl;
+    prefetchStats.countMinPfIssued = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".pfIssued").data());
 }
 
 } // namespace prefetch

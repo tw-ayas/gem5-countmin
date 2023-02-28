@@ -819,6 +819,11 @@ BaseCPU::GlobalStats::GlobalStats(statistics::Group *parent)
 
 void
 BaseCPU::updateCountMinStats(){
+    
+    if (!system->probHwCounters)
+        return;
+    
+//    std::cout << "Updating all the Stats, CPU, Cacahe, Others, etc" << std::endl;   
 
     baseStats.countMinNumCycles = system->count_min_structure_system[name()]->estimate(std::string(name() + ".numCycles").data());
 
@@ -836,6 +841,14 @@ BaseCPU::updateCountMinStats(){
         find(std::string(name() + ".itb_walker_cache").data())->updateCountMinStats();
     if ( find(std::string("system.l2").data() ))
         find(std::string("system.l2").data())->updateCountMinStats();
+
+    if ( find(std::string(name() + ".mmu.dtb").data()) )
+        find(std::string(name() + ".mmu.dtb").data())->updateCountMinStats();
+    if ( find(std::string(name() + ".mmu.itb").data()) ) 
+        find(std::string(name() + ".mmu.itb").data())->updateCountMinStats();
+
+    if ( find(std::string("system.mem_ctrls").data()))
+        find(std::string("system.mem_ctrls").data())->updateCountMinStats();
 
 
 }

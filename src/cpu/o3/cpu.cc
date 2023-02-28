@@ -368,7 +368,27 @@ CPU::CPUStats::CPUStats(CPU *cpu)
       ADD_STAT(miscRegfileReads, statistics::units::Count::get(),
                "number of misc regfile reads"),
       ADD_STAT(miscRegfileWrites, statistics::units::Count::get(),
-               "number of misc regfile writes")
+               "number of misc regfile writes"),
+      ADD_STAT(countMinCommittedInsts, statistics::units::Count::get(),
+               "countMin number of committed instructions per Thread"),
+      ADD_STAT(countMinCpi, statistics::units::Rate<statistics::units::Cycle, statistics::units::Count>::get(),
+               "countMin CPI: Cycles Per Instruction"),
+      ADD_STAT(countMinTotalCpi, statistics::units::Rate<statistics::units::Cycle, statistics::units::Count>::get(),
+               "countMin CPI: Total CPI of All Threads"),
+      ADD_STAT(countMinIpc, statistics::units::Rate<statistics::units::Cycle, statistics::units::Count>::get(),
+               "countMin IPC: Instructions Per Cycle"),
+      ADD_STAT(countMinTotalIpc, statistics::units::Rate<statistics::units::Cycle, statistics::units::Count>::get(),
+               "countMin TotalIPC: Total Instructions Per Cycle of All Threads"),
+      ADD_STAT(countMinBranchInsts, statistics::units::Count::get(),
+               "number of branches encountered"),
+      ADD_STAT(countMinBranchMisses, statistics::units::Count::get(),
+               "countMin number of branch misses"),
+      ADD_STAT(countMinStalledCyclesFrontend, statistics::units::Count::get(),
+               "countMin number of stalled cycles frontend fetch.icacheStalledCycles + fetch.miscStalledCycles"),
+      ADD_STAT(countMinStalledCyclesBackend, statistics::units::Count::get(),
+               "countMin number of stalled cycles backend"),
+      ADD_STAT(countMinFlushCycles, statistics::units::Count::get(),
+               "countMin number of cycles flushed")
 {
     // Register any of the O3CPU's stats here.
     timesIdled
@@ -443,6 +463,28 @@ CPU::CPUStats::CPUStats(CPU *cpu)
 
     miscRegfileWrites
         .prereq(miscRegfileWrites);
+
+    /** CountMin Stats */
+    countMinCommittedInsts
+        .init(cpu->numThreads)
+        .flags(statistics::total);
+
+    countMinCpi
+        .precision(6);
+    countMinCpi = cpu->baseStats.countMinNumCycles / countMinCommittedInsts;
+
+    countMinTotalCpi
+        .precision(6);
+    countMinTotalCpi = cpu->baseStats.countMinNumCycles / sum(countMinCommittedInsts);
+
+    countMinIpc
+        .precision(6);
+    countMinIpc = countMinCommittedInsts / cpu->baseStats.countMinNumCycles;
+
+    countMinTotalIpc
+        .precision(6);
+    countMinTotalIpc = sum(countMinCommittedInsts) / cpu->baseStats.countMinNumCycles;
+ 
 }
 
 void
@@ -1233,6 +1275,7 @@ CPU::instDone(ThreadID tid, const DynInstPtr &inst)
         thread[tid]->numInst++;
         thread[tid]->threadStats.numInsts++;
         cpuStats.committedInsts[tid]++;
+        system->count_min_structure_system[name()]->increment(std::string(name() + ".committedInsts::" + std::to_string(tid)).data());
 
         // Check for instruction-count-based events.
         thread[tid]->comInstEventQueue.serviceEvents(thread[tid]->numInst);
@@ -1564,6 +1607,39 @@ CPU::htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
     if (!iew.ldstQueue.getDataPort().sendTimingReq(abort_pkt)) {
         panic("HTM abort signal was not sent to the memory subsystem.");
     }
+}
+
+void
+CPU::updateCountMinStats(){
+    BaseCPU::updateCountMinStats();
+ 
+    if (!system->probHwCounters)
+        return;   
+//    std::cout << "Updating O3 CPU Stats:" << std::endl;
+    for (ThreadID tid = 0; tid < numThreads; tid++) { 
+        cpuStats.countMinCommittedInsts[tid] = system->count_min_structure_system[name()]->estimate(std::string(name() + ".committedInsts::" + std::to_string(tid)).data());  
+    }
+    cpuStats.countMinBranchInsts = system->count_min_structure_system[name()]->estimate(std::string(name() + ".branchInsts").data());
+    cpuStats.countMinBranchMisses = system->count_min_structure_system[name()]->estimate(std::string(name() + ".branchMisses").data());
+    cpuStats.countMinStalledCyclesFrontend = system->count_min_structure_system[name()]->estimate(std::string(name() + ".stallCyclesFrontend").data());
+    cpuStats.countMinStalledCyclesBackend = system->count_min_structure_system[name()]->estimate(std::string(name() + ".stallCyclesBackend").data());
+    cpuStats.countMinFlushCycles = system->count_min_structure_system[name()]->estimate(std::string(name() + ".flushCycles").data());
+
+    fetch.updateCountMinStats();
+    decode.updateCountMinStats();
+    rename.updateCountMinStats();
+    iew.updateCountMinStats();
+    commit.updateCountMinStats();
+}
+
+void
+CPU::update_count_min(char *s){
+    system->count_min_structure_system[name()]->increment(s);
+}
+
+int 
+CPU::get_count_min(char *s){
+    return system->count_min_structure_system[name()]->estimate(s);
 }
 
 } // namespace o3

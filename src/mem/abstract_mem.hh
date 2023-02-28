@@ -198,6 +198,10 @@ class AbstractMemory : public ClockedObject
         statistics::Formula bwWrite;
         /** Total bandwidth from this memory */
         statistics::Formula bwTotal;
+
+        /** countMin Stats */
+        statistics::Vector countMinNumReads;
+        statistics::Vector countMinNumWrites;
     } stats;
 
 

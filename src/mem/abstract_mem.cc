@@ -140,7 +140,11 @@ AbstractMemory::MemStats::MemStats(AbstractMemory &_mem)
              "Write bandwidth from this memory"),
     ADD_STAT(bwTotal, statistics::units::Rate<
                 statistics::units::Byte, statistics::units::Second>::get(),
-             "Total bandwidth to/from this memory")
+             "Total bandwidth to/from this memory"),
+    ADD_STAT(countMinNumReads, statistics::units::Count::get(),
+             "countMin Number of read requests responded to by this memory"),
+    ADD_STAT(countMinNumWrites, statistics::units::Count::get(),
+             "countMin Number of write requests responded to by this memory")
 {
 }
 
@@ -243,6 +247,23 @@ AbstractMemory::MemStats::regStats()
     bwInstRead = bytesInstRead / simSeconds;
     bwWrite = bytesWritten / simSeconds;
     bwTotal = (bytesRead + bytesWritten) / simSeconds;
+
+    countMinNumReads
+        .init(max_requestors)
+        .flags(total | nozero | nonan)
+        ;
+    for (int i = 0; i < max_requestors; i++) {
+        countMinNumReads.subname(i , sys->getRequestorName(i));
+    }
+
+    countMinNumWrites
+        .init(max_requestors)
+        .flags(total | nozero | nonan)
+        ;
+    for (int i = 0; i < max_requestors; i++) {
+        countMinNumWrites.subname(i, sys->getRequestorName(i));
+    }
+
 }
 
 AddrRange
@@ -447,6 +468,7 @@ AbstractMemory::access(PacketPtr pkt)
         }
         TRACE_PACKET(pkt->req->isInstFetch() ? "IFetch" : "Read");
         stats.numReads[pkt->req->requestorId()]++;
+        stats.countMinNumReads[pkt->req->requestorId()] = system()->count_min_structure_system["system"]->increment(std::string(name() + ".numReads." + system()->getRequestorName(pkt->req->requestorId())).data());
         stats.bytesRead[pkt->req->requestorId()] += pkt->getSize();
         if (pkt->req->isInstFetch())
             stats.bytesInstRead[pkt->req->requestorId()] += pkt->getSize();
@@ -466,6 +488,7 @@ AbstractMemory::access(PacketPtr pkt)
             assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Write");
             stats.numWrites[pkt->req->requestorId()]++;
+            stats.countMinNumWrites[pkt->req->requestorId()] = system()->count_min_structure_system["system"]->increment(std::string(name() + ".numWrites." + system()->getRequestorName(pkt->req->requestorId())).data());
             stats.bytesWritten[pkt->req->requestorId()] += pkt->getSize();
         }
     } else {

@@ -614,12 +614,31 @@ class CPU : public BaseCPU
         //number of misc
         statistics::Scalar miscRegfileReads;
         statistics::Scalar miscRegfileWrites;
+
+        /** CountMinStats */
+        statistics::Vector countMinCommittedInsts;
+        statistics::Formula countMinCpi;
+        statistics::Formula countMinTotalCpi;
+        statistics::Formula countMinIpc;
+        statistics::Formula countMinTotalIpc;
+        statistics::Scalar countMinBranchInsts;
+        statistics::Scalar countMinBranchMisses;
+        statistics::Scalar countMinStalledCyclesFrontend;
+        statistics::Scalar countMinStalledCyclesBackend;
+        statistics::Scalar countMinFlushCycles;
     } cpuStats;
 
   public:
     // hardware transactional memory
     void htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
                             HtmFailureFaultCause cause) override;
+
+    void updateCountMinStats();    
+
+    void update_count_min(char *s);
+
+    int get_count_min(char *s);
+    
 };
 
 } // namespace o3

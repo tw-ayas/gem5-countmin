@@ -1114,7 +1114,7 @@ class BaseCache : public ClockedObject
             return *cmd[p->cmdToIndex()];
         }
 
-        CacheCmdStatsCountMin &countMinCmdStats(const PacketPtr p) {
+        CacheCmdStats &countMinCmdStats(const PacketPtr p) {
             return *countMinCmd[p->cmdToIndex()];
         }
 
@@ -1261,10 +1261,17 @@ class BaseCache : public ClockedObject
         statistics::Scalar countMinDataContractions;
 */       
         statistics::Scalar countMinWriteBacks;
-        statistics::Scalar countMinCacheOverallHits;
-        statistics::Scalar countMinCacheOverallMisses;         
+        statistics::Scalar countMinCacheDemandHits;
+        statistics::Scalar countMinCacheDemandMisses;
+        statistics::Formula countMinCacheDemandAccess;
+        statistics::Scalar countMinCacheNonDemandHits;
+        statistics::Scalar countMinCacheNonDemandMisses;
+        statistics::Formula countMinCacheNonDemandAccess;
+        statistics::Formula countMinCacheOverallHits;
+        statistics::Formula countMinCacheOverallMisses; 
+        statistics::Formula countMinCacheOverallAccess;        
 
-        std::vector<std::unique_ptr<CacheCmdStatsCountMin>> countMinCmd;
+        std::vector<std::unique_ptr<CacheCmdStats>> countMinCmd;
 
     } stats;
 
@@ -1424,14 +1431,16 @@ class BaseCache : public ClockedObject
         {
             case 1:
             case 4:
-            case 11:
-            case 12:
-            case 13:
             case 16:
             case 22:
             case 24:
             case 25:
-                isHitMissSum = 1;
+		isHitMissSum = 1;
+                break;
+            case 11:
+            case 12:
+            case 13:
+                isHitMissSum = 2;
                 break;
             default:
                 isHitMissSum = 0;
@@ -1446,14 +1455,17 @@ class BaseCache : public ClockedObject
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).misses[pkt->req->requestorId()]++;
 
-        stats.countMinCmdStats(pkt).inUse = true;
-        stats.countMinCmdStats(pkt).missesInUse[pkt->req->requestorId()] = true;
+        //stats.countMinCmdStats(pkt).inUse = true;
+        //stats.countMinCmdStats(pkt).missesInUse[pkt->req->requestorId()] = true;
         
-//        std::cout << counterName << " " << name() << ": " << pkt->cmdToIndex() << " inUse: " << stats.countMinCmdStats(pkt).inUse << std::string(system->getRequestorName(pkt->req->requestorId()) + "." + MemCmd(pkt->cmdToIndex()).toString() + ".misses: ").data() << pkt->req->requestorId() << " => " << " missesInUse: " << stats.countMinCmdStats(pkt).missesInUse[pkt->req->requestorId()] << std::endl;
+/*        std::cout << counterName << " " << name() << ": " << pkt->cmdToIndex() << " inUse: " << stats.countMinCmdStats(pkt).inUse << std::string(system->getRequestorName(pkt->req->requestorId()) + "." + MemCmd(pkt->cmdToIndex()).toString() + ".misses: ").data() << pkt->req->requestorId() << " => " << " missesInUse: " << stats.countMinCmdStats(pkt).missesInUse[pkt->req->requestorId()] << std::endl;*/
         
         std::string key = "";
-        if (isHitMissSumPkt(pkt)){
-            key = name() + ".OverallMisses";
+        if (isHitMissSumPkt(pkt) == 1){
+            key = name() + ".demandMisses";
+        }
+        else if(isHitMissSumPkt(pkt) == 2){
+            key = name() + ".nonDemandMisses";
         }
         else{
             key = system->getRequestorName(pkt->req->requestorId()) + "." + MemCmd(pkt->cmdToIndex()).toString() + ".misses";
@@ -1463,6 +1475,7 @@ class BaseCache : public ClockedObject
         stats.cmdStats(pkt).misses[pkt->req->requestorId()].value();
 
 	system->count_min_structure_system[counterName]->increment(key.data());            
+        stats.countMinCmdStats(pkt).misses[pkt->req->requestorId()] = system->count_min_structure_system[counterName]->increment(std::string(name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".misses").data());
         
         pkt->req->incAccessDepth();
         if (missCount) {
@@ -1478,14 +1491,17 @@ class BaseCache : public ClockedObject
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).hits[pkt->req->requestorId()]++;
 
-        stats.countMinCmdStats(pkt).inUse = true;
-        stats.countMinCmdStats(pkt).hitsInUse[pkt->req->requestorId()] = true;
+//        stats.countMinCmdStats(pkt).inUse = true;
+//        stats.countMinCmdStats(pkt).hitsInUse[pkt->req->requestorId()] = true;
 
-//        std::cout << counterName << " " << name() << ": " << pkt->cmdToIndex() << " inUse: " << stats.countMinCmdStats(pkt).inUse << std::string(system->getRequestorName(pkt->req->requestorId()) + "." + MemCmd(pkt->cmdToIndex()).toString() + ".hits: ").data() << pkt->req->requestorId() << " => " << " hitsInUse: " << stats.countMinCmdStats(pkt).hitsInUse[pkt->req->requestorId()] << std::endl;
+/*        std::cout << counterName << " " << name() << ": " << pkt->cmdToIndex() << " inUse: " << stats.countMinCmdStats(pkt).inUse << std::string(system->getRequestorName(pkt->req->requestorId()) + "." + MemCmd(pkt->cmdToIndex()).toString() + ".hits: ").data() << pkt->req->requestorId() << " => " << " hitsInUse: " << stats.countMinCmdStats(pkt).hitsInUse[pkt->req->requestorId()] << std::endl;*/
 
         std::string key = "";
-        if (isHitMissSumPkt(pkt)){
-            key = name() + ".OverallHits";
+        if (isHitMissSumPkt(pkt) == 1){
+            key = name() + ".demandHits";
+        }
+        else if (isHitMissSumPkt(pkt) == 2){
+            key = name() + ".nonDemandHits";
         }
         else{
            key = system->getRequestorName(pkt->req->requestorId()) + "." + MemCmd(pkt->cmdToIndex()).toString() + ".hits";   
@@ -1495,7 +1511,8 @@ class BaseCache : public ClockedObject
         stats.cmdStats(pkt).hits[pkt->req->requestorId()].value();
         
         system->count_min_structure_system[counterName]->increment(key.data());
-//        std::cout.flush();
+        stats.countMinCmdStats(pkt).hits[pkt->req->requestorId()] = system->count_min_structure_system[counterName]->increment(std::string(name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".hits").data());
+
     }
 
     void updateCountMinStats();

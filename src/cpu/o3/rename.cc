@@ -143,7 +143,9 @@ Rename::RenameStats::RenameStats(statistics::Group *parent)
       ADD_STAT(tempSerializing, statistics::units::Count::get(),
                "count of temporary serializing insts renamed"),
       ADD_STAT(skidInsts, statistics::units::Count::get(),
-               "count of insts added to the skid buffer")
+               "count of insts added to the skid buffer"),
+      ADD_STAT(countMinSquashCycles, statistics::units::Count::get(),
+               "countMin Number of cycles rename is squashing")
 {
     squashCycles.prereq(squashCycles);
     idleCycles.prereq(idleCycles);
@@ -462,6 +464,7 @@ Rename::rename(bool &status_change, ThreadID tid)
         ++stats.blockCycles;
     } else if (renameStatus[tid] == Squashing) {
         ++stats.squashCycles;
+        cpu->update_count_min(std::string(name() + ".squashCycles").data());
     } else if (renameStatus[tid] == SerializeStall) {
         ++stats.serializeStallCycles;
         // If we are currently in SerializeStall and resumeSerialize
@@ -1420,6 +1423,11 @@ Rename::dumpHistory()
             buf_it++;
         }
     }
+}
+
+void
+Rename::updateCountMinStats(){
+    stats.countMinSquashCycles = cpu->get_count_min(std::string(name() + ".squashCycles").data());
 }
 
 } // namespace o3

@@ -291,6 +291,8 @@ class IEW
      * Writeback to run for one cycle.
      */
     void tick();
+    
+    void updateCountMinStats();
 
   private:
     /** Updates execution stats based on the instruction. */
@@ -453,11 +455,7 @@ class IEW
         /** Stat for total number of mispredicted branches detected at
          *  execute. */
         statistics::Formula branchMispredicts;
-
-        /** countMin Stats */
-        statistics::Scalar countMinIqFullEvents;
-        statistics::Scalar countMinLsqFullEvents;
-
+ 
         struct ExecutedInstStats : public statistics::Group
         {
             ExecutedInstStats(CPU *cpu);
@@ -499,6 +497,14 @@ class IEW
         statistics::Formula wbRate;
         /** Average number of woken instructions per writeback. */
         statistics::Formula wbFanout;
+
+        /** countMin Stats */
+        statistics::Scalar countMinIqFullEvents;
+        statistics::Scalar countMinLsqFullEvents;
+        statistics::Scalar countMinStallBackendCycles;
+        statistics::Scalar countMinBranchMispredicts;
+        statistics::Scalar countMinSquashCycles;
+
     } iewStats;
 };
 

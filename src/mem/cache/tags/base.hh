@@ -382,6 +382,10 @@ class BaseTags : public ClockedObject
      * @param blk The input block
      */
     void computeStatsVisitor(CacheBlk &blk);
+
+  public:
+    void updateCountMinStats();
+
 };
 
 } // namespace gem5

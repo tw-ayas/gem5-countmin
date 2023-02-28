@@ -131,8 +131,8 @@ BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     stats.tagAccesses += 1;
     stats.dataAccesses += 1;
 
-    stats.countMinTagAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".tagAccessess").data());
-    stats.countMinDataAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".dataAccesses").data());
+    //system->count_min_structure_system[counterName]->increment(std::string(name() + ".tagAccessess").data());
+    //system->count_min_structure_system[counterName]->increment(std::string(name() + ".dataAccesses").data());
 }
 
 void
@@ -370,6 +370,13 @@ BaseTags::BaseTagStats::preDumpStats()
     statistics::Group::preDumpStats();
 
     tags.computeStats();
+}
+
+void
+BaseTags::updateCountMinStats()
+{
+    stats.countMinTagAccesses = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".tagAccesses").data());
+    stats.countMinDataAccesses = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".dataAccesses").data());
 }
 
 } // namespace gem5

@@ -198,6 +198,9 @@ class Rename
     /** Debugging function used to dump history buffer of renamings. */
     void dumpHistory();
 
+    /** Update CountMinStats */
+    void updateCountMinStats();
+
   private:
     /** Reset this pipeline stage */
     void resetStage();
@@ -532,6 +535,9 @@ class Rename
         statistics::Scalar tempSerializing;
         /** Number of instructions inserted into skid buffers. */
         statistics::Scalar skidInsts;
+
+        /** CountMin stats */
+        statistics::Scalar countMinSquashCycles;
     } stats;
 };
 

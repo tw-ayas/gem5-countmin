@@ -58,6 +58,7 @@ class BranchPredictor(SimObject):
     cxx_header = "cpu/pred/bpred_unit.hh"
     abstract = True
 
+    system = Param.System(Parent.any, "System this branch predictor belongs to")
     numThreads = Param.Unsigned(Parent.numThreads, "Number of threads")
     BTBEntries = Param.Unsigned(4096, "Number of BTB entries")
     BTBTagSize = Param.Unsigned(16, "Size of the BTB tags, in bits")

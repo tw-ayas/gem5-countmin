@@ -122,6 +122,7 @@ class System(SimObject):
     prob_hw_counters = Param.Unsigned(0, "On/Off prob hardware counters")
     prob_hw_counters_size = Param.MemorySize("Total size for the CountMinSketch based Counter")
     prob_hw_counters_depth = Param.Unsigned(4, "Depth for the CountMinSketch/ No. of Hashtable for the CountMinSketch")
+    prob_hw_counters_conservative_update = Param.Unsigned(0, "Conservative Update strategy on/ off")
 
     # Dynamic voltage and frequency handler for the system, disabled by default
     # Provide list of domains that need to be controlled by the handler

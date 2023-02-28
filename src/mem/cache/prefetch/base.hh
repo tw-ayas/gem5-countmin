@@ -58,6 +58,7 @@
 #include "sim/byteswap.hh"
 #include "sim/clocked_object.hh"
 #include "sim/probe/probe.hh"
+#include "sim/system.hh"
 
 namespace gem5
 {
@@ -89,6 +90,8 @@ class Base : public ClockedObject
     std::vector<PrefetchListener *> listeners;
 
   public:
+    /** countMin addition */
+    System *system;
 
     /**
      * Class containing the information needed by the prefetch to train and
@@ -357,6 +360,14 @@ class Base : public ClockedObject
         /** The number of times a HW-prefetch is late
          * (hit in cache, MSHR, WB). */
         statistics::Formula pfLate;
+
+        /** CountMin Stats */
+        statistics::Scalar countMinPfIssued;
+        statistics::Scalar countMinPfUnused;
+        statistics::Scalar countMinPfUseful;
+        statistics::Scalar countMinPfHitInCache;
+        statistics::Scalar countMinPfHitInMSHR;
+        statistics::Scalar countMinPfHitInWB;
     } prefetchStats;
 
     /** Total prefetches issued */
@@ -443,6 +454,11 @@ class Base : public ClockedObject
      * @param tlb pointer to the BaseTLB object to add
      */
     void addTLB(BaseTLB *tlb);
+
+    std::string counterName;
+    
+    void updateCountMinStats();
+
 };
 
 } // namespace prefetch

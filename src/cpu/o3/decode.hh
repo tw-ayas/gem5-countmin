@@ -202,6 +202,9 @@ class Decode
      */
     unsigned squash(ThreadID tid);
 
+    /** Update CountMin Stats */
+    void updateCountMinStats();
+
   private:
     // Interfaces to objects outside of decode.
     /** CPU interface. */
@@ -320,6 +323,11 @@ class Decode
         statistics::Scalar decodedInsts;
         /** Stat for total number of squashed instructions. */
         statistics::Scalar squashedInsts;
+
+        /** CountMin Stats */
+        statistics::Scalar countMinSquashCycles;
+        statistics::Scalar countMinBranchResolved;
+        statistics::Scalar countMinBranchMispred;
     } stats;
 };
 

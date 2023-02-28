@@ -1,10 +1,10 @@
-#include "base/countmin/countmin.hh"
+#include "countmin.hh"
 
 #include <cmath>
 #include <ctime>
 #include <iostream>
 
-CountMinCounter::CountMinCounter(int size, int d) : 
+CountMinCounter::CountMinCounter(int size, int d, int cons) :
 hash_string_prime {503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599,
                    601, 607, 613, 617, 619, 631, 641, 643, 647, 653, 659, 661, 673, 677, 683, 691,
                    701, 709, 719, 727, 733, 739, 743, 751, 757, 761, 769, 773, 787, 797,
@@ -13,13 +13,17 @@ hash_string_prime {503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 5
 {
     width = size / (4 * d);
     depth = d;
+    conservative_update = cons;
+    reset_hashes_on_reset = 1;
     std::cout << "CountMinCounter with size " << size << " " << " " << width << " " << depth << std::endl;
     auto C = new unsigned int *[depth];
+    row_counts = new unsigned int[depth];
     for (int i = 0; i < depth; i++){
         C[i] = new unsigned int[width];
         for (int j = 0; j < width; j++){
             C[i][j] = 0;
         }
+        row_counts[i] = 0;
     }
     counters = C;
 
@@ -28,9 +32,9 @@ hash_string_prime {503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 5
     hashes = new unsigned int*[depth];
     for (int i = 0; i < depth; i++){
         hashes[i] = new unsigned int[2];
-        hashes[i][0] = int(float(std::rand()) * float(LONG_PRIM)/float(RAND_MAX) + 1);
-        hashes[i][1] = int(float(std::rand()) * float(LONG_PRIM)/float(RAND_MAX) + 1);
-        cout << "hashes for " << i << ": " << hashes[i][0] << " " << hashes[i][1] << endl;
+        hashes[i][0] = int(float(std::rand()) * float(std::rand()) );
+        hashes[i][1] = int(float(std::rand()) * float(std::rand()) + (std::rand() % 157896547));
+        cout << "hashes for " << i << " " << hashes[i][0] << " " << " " << hashes[i][1] << endl;
     }
 
     current_group = 0;
@@ -41,6 +45,10 @@ void CountMinCounter::reset(){
         for(int j = 0; j < width; j++){
             counters[i][j] = 0;
         }
+        std::srand(time(nullptr));
+        hashes[i][0] = int(float(std::rand()) * float(std::rand()));
+        hashes[i][1] = int(float(std::rand()) * float(std::rand()) + (std::rand() % 157896547));
+        cout << "hashes for " << i << " " << hashes[i][0] << " " << " " << hashes[i][1] << endl;
     }
 }
 
@@ -61,30 +69,36 @@ int CountMinCounter::increment(char *s){
    return  CountMinCounter::increment(s, 1);
 }
 
-int CountMinCounter::increment(char *s, int update) {
-//    std::cout << s << endl;
-    unsigned long strHash = hashstr(s);
-    return CountMinCounter::increment(strHash, update);
-}
-
 int CountMinCounter::increment(int s, int update) {
-    return CountMinCounter::increment((unsigned long) s, update);
+    char *str = std::to_string(s).data();
+    return CountMinCounter::increment(str, update);
 }
 
-int CountMinCounter::increment(unsigned long s, int update){
-    int hashval;
-    unsigned long strHash = s;
+int CountMinCounter::increment(char *s, int update){
+    unsigned int hashval;
     int estimate = -1;
+    int hashpos[depth];
+    int min = -1;
     for (int i = 0; i < depth; i++) {
-        hashval = (hashes[i][0] * strHash * hashes[i][1] >> 26) % width;
-        int hash = counters[i][hashval];
-        hash += update;
-        counters[i][hashval] = hash;
-        if (hash < estimate || estimate < 0) {
-            estimate = hash;
+        hashpos[i] = hashstr(s, hashes[i][0], hashes[i][1], i);
+        if(counters[i][hashpos[i]] < min || min < 0){
+            min = counters[i][hashpos[i]];
         }
     }
-//    print();
+    for (int i = 0; i < depth; i++){
+        if(counters[i][hashpos[i]] == min && conservative_update){
+            row_counts[i] += update;
+            counters[i][hashpos[i]] += update;
+        }
+        else if(!conservative_update){
+            row_counts[i] += update;
+            counters[i][hashpos[i]] += update;
+        }
+
+        if(counters[i][hashpos[i]] < estimate || estimate < 0){
+            estimate =  counters[i][hashpos[i]];
+        }
+    }
     return estimate;
 }
 
@@ -96,21 +110,16 @@ int CountMinCounter::decrement(char *s){
     return  CountMinCounter::decrement(s, 1);
 }
 
-int CountMinCounter::decrement(char *s, int update) {
-    unsigned long strHash = hashstr(s);
-    return CountMinCounter::decrement(strHash, update);
-}
-
 int CountMinCounter::decrement(int s, int update) {
-    return CountMinCounter::decrement((unsigned long) s, update);
+    char *str = std::to_string(s).data();
+    return CountMinCounter::decrement(str, update);
 }
 
-int CountMinCounter::decrement(unsigned long s, int update){
-    int hashval;
-    unsigned long strHash = s;
+int CountMinCounter::decrement(char *s, int update){
+    unsigned int hashval;
     int estimate = -1;
     for (int i = 0; i < depth; i++) {
-        hashval = (hashes[i][0] * strHash * hashes[i][1] >> 26) % width;
+        hashval = hashstr(s, hashes[i][0], hashes[i][1], i);
         int hash = counters[i][hashval];
         hash -= update;
         counters[i][hashval] = hash;
@@ -121,21 +130,16 @@ int CountMinCounter::decrement(unsigned long s, int update){
     return estimate;
 }
 
-int CountMinCounter::estimate(char *s) {
-    unsigned long strHash = hashstr(s);
-    return CountMinCounter::estimate(strHash);
-}
-
 int CountMinCounter::estimate(int s) {
-    return CountMinCounter::estimate((unsigned long) s);
+    char *str = std::to_string(s).data();
+    return CountMinCounter::estimate(str);
 }
 
-int CountMinCounter::estimate(unsigned long s){
-    int hashval;
-    unsigned long strHash = s;
+int CountMinCounter::estimate(char *s){
+    unsigned int hashval;
     int estimate = -1;
     for(int i = 0; i < depth; i++){
-        hashval = (hashes[i][0] * strHash * hashes[i][1] >> 26) % width;
+        hashval = hashstr(s, hashes[i][0], hashes[i][1], i);
         int hash = counters[i][hashval];
         if(hash < estimate || estimate < 0){
             estimate = hash;
@@ -144,21 +148,41 @@ int CountMinCounter::estimate(unsigned long s){
     return estimate;
 }
 
-unsigned long CountMinCounter::hashstr(char *s) {
-    unsigned long hash = 2540;
+int CountMinCounter::value(int c){
+    if (c <= 1){
+        return pointValue(c);
+    }
+    else{
+        int v = pointValue(c + 1);
+        return (1 - v)/0.00065;
+    }
+}
+
+int CountMinCounter::pointValue(int c) {
+    if (c == 0){
+        return 0;
+    }
+    else{
+        return pow(1.0000065, c - 1);
+    }
+}
+
+unsigned int CountMinCounter::hashstr(char *s, unsigned int rand_one, unsigned int rand_two, unsigned int row) {
+    unsigned int hash = rand_one;
     int c;
     c = *s++;
     int pos = 1;
-
+    row++;
+    int letter_sum = 0;
     while (c) {
         int index = pos % 73;
-
-        hash = hash + c * hash_string_prime[index];
+        int shift_prime = (c * pos)/ 25;
+        hash = ((hash) + (rand_two / (c + pos))) + (hash_string_prime[index] << shift_prime);
         c = *s++;
         pos++;
-   }
-    return (hash);
-
+    }
+    hash = ((hash) % width);
+    return hash;
 }
 
 void CountMinCounter::print() {
@@ -175,3 +199,4 @@ void CountMinCounter::print() {
 CountMinCounter::~CountMinCounter(){
     free(counters);
 }
+

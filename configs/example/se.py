@@ -273,6 +273,8 @@ if args.prob_hw_counters_size:
     system.prob_hw_counters_size = args.prob_hw_counters_size
 if args.prob_hw_counters_depth:
     system.prob_hw_counters_depth = args.prob_hw_counters_depth
+if args.prob_hw_counters_conservative_update:
+    system.prob_hw_counters_conservative_update = args.prob_hw_counters_depth
 
 root = Root(full_system = False, system = system)
 Simulation.run(args, root, system, FutureClass)

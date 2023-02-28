@@ -360,6 +360,9 @@ class Fetch
 
     RequestPort &getInstPort() { return icachePort; }
 
+    /** Update CountMinStats */
+    void updateCountMinStats();
+
   private:
     DynInstPtr buildInst(ThreadID tid, StaticInstPtr staticInst,
             StaticInstPtr curMacroop, const PCStateBase &this_pc,
@@ -586,6 +589,16 @@ class Fetch
         statistics::Formula branchRate;
         /** Number of instruction fetched per cycle. */
         statistics::Formula rate;
+
+        /** Count_Min Statistics */
+        statistics::Scalar countMinIcacheStallCycles;
+        statistics::Scalar countMinMiscStallCycles;
+        statistics::Scalar countMinBranches;
+        statistics::Scalar countMinPredictedBranches;
+        statistics::Scalar countMinSquashCycles;
+
+        statistics::Formula countMinStallCyclesFrontend;
+        statistics::Formula stallCyclesFrontend;
     } fetchStats;
 };
 

@@ -64,7 +64,7 @@ namespace X86ISA {
 
 TLB::TLB(const Params &p)
     : BaseTLB(p), configAddress(0), size(p.size),
-      tlb(size), lruSeq(0), m5opRange(p.system->m5opRange()), stats(this)
+      tlb(size), lruSeq(0), system(p.system), m5opRange(p.system->m5opRange()), stats(this)
 {
     if (!size)
         fatal("TLBs must have a non-zero size.\n");
@@ -76,6 +76,17 @@ TLB::TLB(const Params &p)
 
     walker = p.walker;
     walker->setTLB(this);
+
+    /** Setup parameters for countMin */
+    std::string counter_name = name();
+    int first_pos= counter_name.find(".") + 1;
+    int second_pos = counter_name.find(".", first_pos);
+    counterName = counter_name.substr(0, second_pos);
+
+    if (system->count_min_structure_system.count(counterName) == 0){
+        system->addCounter(counterName);
+    }
+    std::cout << "Cache: " << name() << " with CounterName: " << counterName << std::endl;
 }
 
 void
@@ -393,8 +404,10 @@ TLB::translate(const RequestPtr &req,
             TlbEntry *entry = lookup(vaddr);
             if (mode == BaseMMU::Read) {
                 stats.rdAccesses++;
+                system->count_min_structure_system[counterName]->increment(std::string(name() + ".rdAccesses").data());
             } else {
                 stats.wrAccesses++;
+                system->count_min_structure_system[counterName]->increment(std::string(name() + ".wrAccesses").data());
             }
             if (!entry) {
                 DPRINTF(TLB, "Handling a TLB miss for "
@@ -402,8 +415,10 @@ TLB::translate(const RequestPtr &req,
                         vaddr, tc->pcState().instAddr());
                 if (mode == BaseMMU::Read) {
                     stats.rdMisses++;
+                    system->count_min_structure_system[counterName]->increment(std::string(name() + ".rdMisses").data());
                 } else {
                     stats.wrMisses++;
+                    system->count_min_structure_system[counterName]->increment(std::string(name() + ".wrMisses").data());
                 }
                 if (FullSystem) {
                     Fault fault = walker->start(tc, translation, req, mode);
@@ -548,7 +563,15 @@ TLB::TlbStats::TlbStats(statistics::Group *parent)
     ADD_STAT(rdMisses, statistics::units::Count::get(),
              "TLB misses on read requests"),
     ADD_STAT(wrMisses, statistics::units::Count::get(),
-             "TLB misses on write requests")
+             "TLB misses on write requests"),
+    ADD_STAT(countMinRdAccesses, statistics::units::Count::get(),
+             "countMin Stat for TLB accesses on read requests"),
+    ADD_STAT(countMinWrAccesses, statistics::units::Count::get(),
+             "countMin Stat for TLB accesses on write requests"),
+    ADD_STAT(countMinRdMisses, statistics::units::Count::get(),
+             "countMin Stat for TLB misses on read requests"),
+    ADD_STAT(countMinWrMisses, statistics::units::Count::get(),
+             "countMin Stat for TLB misses on write requests")
 {
 }
 
@@ -593,6 +616,15 @@ Port *
 TLB::getTableWalkerPort()
 {
     return &walker->getPort("port");
+}
+
+void 
+TLB::updateCountMinStats()
+{
+    stats.countMinRdAccesses = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".rdAccesses").data());
+    stats.countMinWrAccesses = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".wrAccesses").data());
+    stats.countMinRdMisses = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".rdMisses").data());
+    stats.countMinWrMisses = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".wrMisses").data());
 }
 
 } // namespace X86ISA

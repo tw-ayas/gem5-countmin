@@ -2543,15 +2543,29 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
 */
     ADD_STAT(countMinWriteBacks, statistics::units::Count::get(),
                "countMin number of writebacks"),
+    ADD_STAT(countMinCacheDemandHits, statistics::units::Count::get(),
+               "countMin number of demand Hits"),
+    ADD_STAT(countMinCacheDemandMisses, statistics::units::Count::get(),
+               "countMin number of demand Misses"),
+    ADD_STAT(countMinCacheDemandAccess, statistics::units::Count::get(),
+               "countMin number of demand Access"),
+    ADD_STAT(countMinCacheNonDemandHits, statistics::units::Count::get(),
+               "countMin number of non demand Hits"),
+    ADD_STAT(countMinCacheNonDemandMisses, statistics::units::Count::get(),
+               "countMin number of non demand Misses"),
+    ADD_STAT(countMinCacheNonDemandAccess, statistics::units::Count::get(),
+               "countMin number of non demand Access"), 
     ADD_STAT(countMinCacheOverallHits, statistics::units::Count::get(),
                "countMin number of overall Hits"),
     ADD_STAT(countMinCacheOverallMisses, statistics::units::Count::get(),
                "countMin number of overall Misses"),
+    ADD_STAT(countMinCacheOverallAccess, statistics::units::Count::get(),
+               "countMin number of overall cache Access"),
     countMinCmd(MemCmd::NUM_MEM_CMDS)
 {
     for (int idx = 0; idx < MemCmd::NUM_MEM_CMDS; ++idx){
         cmd[idx].reset(new CacheCmdStats(c, MemCmd(idx).toString()));
-        countMinCmd[idx].reset(new CacheCmdStatsCountMin(c, "countMin_"+MemCmd(idx).toString()));
+        countMinCmd[idx].reset(new CacheCmdStats(c, "countMin_"+MemCmd(idx).toString()));
     }
 }
 
@@ -2679,6 +2693,7 @@ BaseCache::CacheStats::regStats()
     blockedCycles
         .subname(Blocked_NoMSHRs, "no_mshrs")
         .subname(Blocked_NoTargets, "no_targets")
+        .subname(Blocked_NoWBBuffers, "no_wb_buffers")
         ;
 
 
@@ -2686,11 +2701,13 @@ BaseCache::CacheStats::regStats()
     blockedCauses
         .subname(Blocked_NoMSHRs, "no_mshrs")
         .subname(Blocked_NoTargets, "no_targets")
+        .subname(Blocked_NoWBBuffers, "no_wb_buffers")
         ;
 
     avgBlocked
         .subname(Blocked_NoMSHRs, "no_mshrs")
         .subname(Blocked_NoTargets, "no_targets")
+        .subname(Blocked_NoWBBuffers, "no_wb_buffers")
         ;
     avgBlocked = blockedCycles / blockedCauses;
 
@@ -2788,6 +2805,21 @@ BaseCache::CacheStats::regStats()
 
     dataExpansions.flags(nozero | nonan);
     dataContractions.flags(nozero | nonan);
+
+    countMinCacheDemandAccess.flags(total | nozero | nonan);
+    countMinCacheDemandAccess = countMinCacheDemandHits + countMinCacheDemandMisses;
+
+    countMinCacheNonDemandAccess.flags(total | nozero| nonan);
+    countMinCacheNonDemandAccess = countMinCacheNonDemandHits + countMinCacheNonDemandMisses;
+
+    countMinCacheOverallHits.flags(total | nozero| nonan);
+    countMinCacheOverallHits = countMinCacheDemandHits + countMinCacheNonDemandHits;
+
+    countMinCacheOverallMisses.flags(total | nozero| nonan);
+    countMinCacheOverallMisses = countMinCacheDemandMisses + countMinCacheNonDemandMisses;
+
+    countMinCacheOverallAccess.flags(total | nozero| nonan);
+    countMinCacheOverallAccess = countMinCacheOverallHits + countMinCacheOverallMisses;
 
 /*
     countMinDemandHits.flags(total | nozero | nonan);
@@ -3027,15 +3059,23 @@ BaseCache::updateCountMinStats()
         std::cout << std::endl;
     }*/
    
-    stats.countMinCacheOverallHits = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".OverallHits").data());
-//    std::cout << name() << " " << stats.overallHits.total() << " " << std::string(name() + ".OverallHits") << " " << stats.countMinCacheOverallHits.value() << std::endl;
+    stats.countMinCacheDemandHits = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".demandHits").data());
 
-    stats.countMinCacheOverallMisses = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".OverallMisses").data());
-//    std::cout << name() << " " << stats.overallMisses.total() << " " << std::string(name() + ".OverallMisses") << " " << stats.countMinCacheOverallMisses.value() << std::endl;    
+    stats.countMinCacheDemandMisses = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".demandMisses").data());
+//    stats.countMinCacheDemandAccess = stats.countMinCacheDemandHits.value() + stats.countMinCacheDemandMisses.value();
+
+    stats.countMinCacheNonDemandHits = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".nonDemandHits").data());
+    stats.countMinCacheNonDemandMisses = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".nonDemandMisses").data());
+//    stats.countMinCacheNonDemandAccess = stats.countMinCacheNonDemandHits.value() + stats.countMinCacheNonDemandMisses.value();
 
 //    system->count_min_structure_system[counterName]->print();    
 
     stats.countMinWriteBacks = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".writebacks").data());
+
+    tags->updateCountMinStats();
+    //std::cout << prefetcher << std::endl;
+    if (prefetcher)
+        prefetcher->updateCountMinStats();
 
 }
 

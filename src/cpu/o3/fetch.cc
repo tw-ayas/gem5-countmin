@@ -208,7 +208,22 @@ Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)
     ADD_STAT(rate, statistics::units::Rate<
                     statistics::units::Count, statistics::units::Cycle>::get(),
              "Number of inst fetches per cycle",
-             insts / cpu->baseStats.numCycles)
+             insts / cpu->baseStats.numCycles),
+    ADD_STAT(countMinIcacheStallCycles, statistics::units::Cycle::get(),
+             "countMin Number of cycles fetch is stalled on an Icache miss"),
+    ADD_STAT(countMinMiscStallCycles, statistics::units::Cycle::get(),
+             "countMin Number of cycles fetch has spent waiting on interrupts, or bad"
+             "addresses, or out of MSHRs"),
+    ADD_STAT(countMinBranches, statistics::units::Count::get(),
+             "countMin Number of branches that fetch encountered"),
+    ADD_STAT(countMinPredictedBranches, statistics::units::Count::get(),
+             "countMin Number of branches that fetch has predicted taken"),
+    ADD_STAT(countMinSquashCycles, statistics::units::Cycle::get(),
+             "countMin Number of cycles fetch has spend squashing"),
+    ADD_STAT(countMinStallCyclesFrontend, statistics::units::Cycle::get(),
+             "countMin Number of cycles stalled frontend, sum of icacheStallCycles and miscStallCycles"),
+    ADD_STAT(stallCyclesFrontend, statistics::units::Cycle::get(),
+             "Number of cycles stalled frontend, sum of icacheStallCycles and miscStallCycles")
 {
         icacheStallCycles
             .prereq(icacheStallCycles);
@@ -257,6 +272,12 @@ Fetch::FetchStatGroup::FetchStatGroup(CPU *cpu, Fetch *fetch)
             .flags(statistics::total);
         rate
             .flags(statistics::total);
+
+        countMinStallCyclesFrontend.flags(statistics::total);
+        countMinStallCyclesFrontend = countMinIcacheStallCycles + countMinMiscStallCycles;
+
+        stallCyclesFrontend.flags(statistics::total);
+        stallCyclesFrontend = icacheStallCycles + miscStallCycles;
 }
 void
 Fetch::setTimeBuffer(TimeBuffer<TimeStruct> *time_buffer)
@@ -542,9 +563,11 @@ Fetch::lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &next_pc)
     inst->setPredTaken(predict_taken);
 
     ++fetchStats.branches;
+//    cpu->update_count_min(std::string(cpu->name() + ".branchInsts").data());
 
     if (predict_taken) {
         ++fetchStats.predictedBranches;
+        cpu->update_count_min(std::string(cpu->name() + ".predictedBranches").data());
     }
 
     return predict_taken;
@@ -755,6 +778,7 @@ Fetch::doSquash(const PCStateBase &new_pc, const DynInstPtr squashInst,
     delayedCommit[tid] = true;
 
     ++fetchStats.squashCycles;
+    cpu->update_count_min(std::string(name() + ".squashCycles").data());
 }
 
 void
@@ -1146,12 +1170,17 @@ Fetch::fetch(bool &status_change)
 
             fetchCacheLine(fetchAddr, tid, this_pc.instAddr());
 
-            if (fetchStatus[tid] == IcacheWaitResponse)
+            if (fetchStatus[tid] == IcacheWaitResponse){
                 ++fetchStats.icacheStallCycles;
-            else if (fetchStatus[tid] == ItlbWait)
+                cpu->update_count_min(std::string(cpu->name() + ".stallCyclesFrontend").data());
+            }
+            else if (fetchStatus[tid] == ItlbWait){
                 ++fetchStats.tlbCycles;
-            else
+            } 
+            else{
                 ++fetchStats.miscStallCycles;
+                cpu->update_count_min(std::string(cpu->name() + ".stallCyclesFrontend").data());
+            }    
             return;
         } else if (checkInterrupt(this_pc.instAddr()) &&
                 !delayedCommit[tid]) {
@@ -1159,6 +1188,7 @@ Fetch::fetch(bool &status_change)
             // an delayed commit micro-op currently (delayed commit
             // instructions are not interruptable by interrupts, only faults)
             ++fetchStats.miscStallCycles;
+            cpu->update_count_min(std::string(cpu->name() + ".stallCyclesFrontend").data());
             DPRINTF(Fetch, "[tid:%i] Fetch is stalled!\n", tid);
             return;
         }
@@ -1571,9 +1601,11 @@ Fetch::profileStall(ThreadID tid)
         DPRINTF(Fetch, "[tid:%i] Fetch is blocked!\n", tid);
     } else if (fetchStatus[tid] == Squashing) {
         ++fetchStats.squashCycles;
+        cpu->update_count_min(std::string(name() + ".squashCycles").data());
         DPRINTF(Fetch, "[tid:%i] Fetch is squashing!\n", tid);
     } else if (fetchStatus[tid] == IcacheWaitResponse) {
         ++fetchStats.icacheStallCycles;
+        cpu->update_count_min(std::string(cpu->name() + ".stallCyclesFrontend").data());
         DPRINTF(Fetch, "[tid:%i] Fetch is waiting cache response!\n",
                 tid);
     } else if (fetchStatus[tid] == ItlbWait) {
@@ -1618,6 +1650,18 @@ void
 Fetch::IcachePort::recvReqRetry()
 {
     fetch->recvReqRetry();
+}
+
+void
+Fetch::updateCountMinStats(){
+    fetchStats.countMinIcacheStallCycles = cpu->get_count_min(std::string(name() + ".icacheStallCycles").data());
+    fetchStats.countMinMiscStallCycles = cpu->get_count_min(std::string(name() + ".miscStallCycles").data());
+    fetchStats.countMinBranches = cpu->get_count_min(std::string(name() + ".branches").data());
+    fetchStats.countMinPredictedBranches = cpu->get_count_min(std::string(name() + ".predictedBranches").data());
+    fetchStats.countMinSquashCycles = cpu->get_count_min(std::string(name() + ".squashCycles").data());  
+
+    if (branchPred)
+        branchPred->updateCountMinStats();
 }
 
 } // namespace o3

@@ -450,6 +450,7 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
                 schedule(nextReqEvent, curTick());
             }
             stats.writeReqs++;
+            system()->count_min_structure_system["system"]->increment(std::string(name() + ".writeReqs").data());
             stats.bytesWrittenSys += size;
         }
     } else {
@@ -471,6 +472,7 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
                 }
             }
             stats.readReqs++;
+            system()->count_min_structure_system["system"]->increment(std::string(name() + ".readReqs").data());
             stats.bytesReadSys += size;
         }
     }
@@ -1252,7 +1254,11 @@ MemCtrl::CtrlStats::CtrlStats(MemCtrl &_ctrl)
              "Per-requestor read average memory access latency"),
     ADD_STAT(requestorWriteAvgLat, statistics::units::Rate<
                 statistics::units::Tick, statistics::units::Count>::get(),
-             "Per-requestor write average memory access latency")
+             "Per-requestor write average memory access latency"),
+    ADD_STAT(countMinReadReqs, statistics::units::Count::get(),
+             "countMin Number of read requests accepted"),
+    ADD_STAT(countMinWriteReqs, statistics::units::Count::get(),
+             "countMin Number of write requests accepted")
 {
 }
 
@@ -1489,6 +1495,13 @@ MemCtrl::MemoryPort::recvTimingReq(PacketPtr pkt)
 {
     // pass it to the memory controller
     return ctrl.recvTimingReq(pkt);
+}
+
+void
+MemCtrl::updateCountMinStats(){
+//    std::cout << "Update MemCtrl Stats" << std::endl;
+    stats.countMinReadReqs = system()->count_min_structure_system["system"]->estimate(std::string(name() + ".readReqs").data());
+    stats.countMinWriteReqs = system()->count_min_structure_system["system"]->estimate(std::string(name() + ".writeReqs").data());
 }
 
 } // namespace memory

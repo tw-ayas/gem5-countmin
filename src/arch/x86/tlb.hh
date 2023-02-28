@@ -92,6 +92,10 @@ namespace X86ISA
 
         void demapPage(Addr va, uint64_t asn) override;
 
+	/** Added for accesssing system counters */
+        System *system;
+        std::string counterName; //countMinCounter Hashmap is in the Systems Object accessed through the counterName for the corresponding CPU
+
       protected:
         uint32_t size;
 
@@ -112,6 +116,12 @@ namespace X86ISA
             statistics::Scalar wrAccesses;
             statistics::Scalar rdMisses;
             statistics::Scalar wrMisses;
+
+            /** countMin Stats */
+            statistics::Scalar countMinRdAccesses;
+            statistics::Scalar countMinWrAccesses;
+            statistics::Scalar countMinRdMisses;
+            statistics::Scalar countMinWrMisses;
         } stats;
 
         Fault translateInt(bool read, RequestPtr req, ThreadContext *tc);
@@ -173,6 +183,9 @@ namespace X86ISA
          * @return A pointer to the walker port
          */
         Port *getTableWalkerPort() override;
+
+        void updateCountMinStats();
+
     };
 
 } // namespace X86ISA

@@ -5,7 +5,8 @@
 #ifndef __MEM_CACHE_COUNTMIN_HH__
 #define __MEM_CACHE_COUNTMIN_HH__
 
-#define LONG_PRIM (1 << 30)
+#define LONG_PRIM_1 (1 << 30)
+#define LONG_PRIM_2 (1 << 29)
 
 #include <random>
 
@@ -16,33 +17,36 @@ class CountMinCounter
     private:
         unsigned int width;
         unsigned int depth;
+        unsigned int conservative_update;
+        unsigned int reset_hashes_on_reset;
         unsigned int **counters;
         unsigned int **hashes;
-	unsigned int hash_string_prime[73];
+	unsigned int *row_counts;
+        unsigned int hash_string_prime[73];
         unsigned int current_group;
+        int value(int c);
+        int pointValue(int c);
 
     public:
-        CountMinCounter(int w, int d);
+        CountMinCounter(int w, int d, int cons);
         ~CountMinCounter();
-        unsigned long hashstr(char *s);
+        unsigned int hashstr(char *s, unsigned int, unsigned int, unsigned int row);
         void print();
         void reset();
         void change_group_context();
         int increment(int s);
         int increment(char *s);
         int increment(int s, int update);
-        int increment(unsigned long s, int update);
         int increment(char *s, int update);
         int decrement(int s);
         int decrement(char *s);
         int decrement(int s, int update);
-        int decrement(unsigned long s, int update);
         int decrement(char *s, int update);
 
         int estimate(int s);
         int estimate(char *s);
-        int estimate(unsigned long s);
 };
 
 #endif //__MEM_CACHE_COUNTMIN_HH__
+
 

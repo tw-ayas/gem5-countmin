@@ -58,6 +58,7 @@ namespace branch_prediction
 
 BPredUnit::BPredUnit(const Params &params)
     : SimObject(params),
+      system(params.system),
       numThreads(params.numThreads),
       predHist(numThreads),
       BTB(params.BTBEntries,
@@ -71,6 +72,13 @@ BPredUnit::BPredUnit(const Params &params)
 {
     for (auto& r : RAS)
         r.init(params.RASSize);
+
+    std::cout << name() << std::endl;
+    std::string counter_name = name();
+    int first_pos= counter_name.find(".") + 1;
+    int second_pos = counter_name.find(".", first_pos);
+    counterName = counter_name.substr(0, second_pos);
+
 }
 
 BPredUnit::BPredUnitStats::BPredUnitStats(statistics::Group *parent)
@@ -97,7 +105,11 @@ BPredUnit::BPredUnitStats::BPredUnitStats(statistics::Group *parent)
       ADD_STAT(indirectMisses, statistics::units::Count::get(),
                "Number of indirect misses."),
       ADD_STAT(indirectMispredicted, statistics::units::Count::get(),
-               "Number of mispredicted indirect branches.")
+               "Number of mispredicted indirect branches."),
+      ADD_STAT(countMinCondPredicted, statistics::units::Count::get(),
+               "countMin Number of conditional branches predicted"),
+      ADD_STAT(countMinCondIncorrect, statistics::units::Count::get(),
+               "countMin Number of conditional branches incorrect")
 {
     BTBHitRatio.precision(6);
 }
@@ -153,6 +165,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
         uncondBranch(tid, pc.instAddr(), bp_history);
     } else {
         ++stats.condPredicted;
+        system->count_min_structure_system[counterName]->increment(std::string(name() + ".condPredicted").data());
         pred_taken = lookup(tid, pc.instAddr(), bp_history);
 
         DPRINTF(Branch, "[tid:%i] [sn:%llu] "
@@ -396,6 +409,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
     History &pred_hist = predHist[tid];
 
     ++stats.condIncorrect;
+    system->count_min_structure_system[counterName]->increment(std::string(name() + ".condIncorrect").data());
     ppMisses->notify(1);
 
     DPRINTF(Branch, "[tid:%i] Squashing from sequence number %i, "
@@ -530,6 +544,13 @@ BPredUnit::dump()
             cprintf("\n");
         }
     }
+}
+
+void
+BPredUnit::updateCountMinStats()
+{
+    stats.countMinCondPredicted = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".condPredicted").data());
+    stats.countMinCondIncorrect = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".condIncorrect").data());
 }
 
 } // namespace branch_prediction

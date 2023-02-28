@@ -541,6 +541,9 @@ class InstructionQueue
         statistics::Vector fuBusy;
         /** Number of times the FU was busy per instruction issued. */
         statistics::Formula fuBusyRate;
+
+        /** CountMinStas */
+        statistics::Scalar countMinBranchInstsIssued;
     } iqStats;
 
    public:
