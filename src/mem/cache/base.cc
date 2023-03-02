@@ -2515,23 +2515,23 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
                "countMin number of replacements"),
     ADD_STAT(countMinWriteBacks, statistics::units::Count::get(),
                "countMin number of writebacks"),
-    ADD_STAT(countMinCacheDemandHits, statistics::units::Count::get(),
+    ADD_STAT(countMinDemandHits, statistics::units::Count::get(),
                "countMin number of demand Hits"),
-    ADD_STAT(countMinCacheDemandMisses, statistics::units::Count::get(),
+    ADD_STAT(countMinDemandMisses, statistics::units::Count::get(),
                "countMin number of demand Misses"),
-    ADD_STAT(countMinCacheDemandAccess, statistics::units::Count::get(),
+    ADD_STAT(countMinDemandAccesses, statistics::units::Count::get(),
                "countMin number of demand Access"),
-    ADD_STAT(countMinCacheNonDemandHits, statistics::units::Count::get(),
+    ADD_STAT(countMinNonDemandHits, statistics::units::Count::get(),
                "countMin number of non demand Hits"),
-    ADD_STAT(countMinCacheNonDemandMisses, statistics::units::Count::get(),
+    ADD_STAT(countMinNonDemandMisses, statistics::units::Count::get(),
                "countMin number of non demand Misses"),
-    ADD_STAT(countMinCacheNonDemandAccess, statistics::units::Count::get(),
+    ADD_STAT(countMinNonDemandAccesses, statistics::units::Count::get(),
                "countMin number of non demand Access"), 
-    ADD_STAT(countMinCacheOverallHits, statistics::units::Count::get(),
+    ADD_STAT(countMinOverallHits, statistics::units::Count::get(),
                "countMin number of overall Hits"),
-    ADD_STAT(countMinCacheOverallMisses, statistics::units::Count::get(),
+    ADD_STAT(countMinOverallMisses, statistics::units::Count::get(),
                "countMin number of overall Misses"),
-    ADD_STAT(countMinCacheOverallAccess, statistics::units::Count::get(),
+    ADD_STAT(countMinOverallAccesses, statistics::units::Count::get(),
                "countMin number of overall cache Access"),
     countMinCmd(MemCmd::NUM_MEM_CMDS)
 {
@@ -2803,20 +2803,20 @@ BaseCache::CacheStats::regStats()
         countMinOverallMisses.subname(i, system->getRequestorName(i));
     }
 
-    countMinCacheDemandAccess.flags(total | nozero | nonan);
-    countMinCacheDemandAccess = countMinCacheDemandHits + countMinCacheDemandMisses;
+    countMinDemandAccesses.flags(total | nozero | nonan);
+    countMinDemandAccesses = countMinDemandHits + countMinDemandMisses;
 
-    countMinCacheNonDemandAccess.flags(total | nozero| nonan);
-    countMinCacheNonDemandAccess = countMinCacheNonDemandHits + countMinCacheNonDemandMisses;
+    countMinNonDemandAccess.flags(total | nozero| nonan);
+    countMinNonDemandAccess = countMinNonDemandHits + countMinNonDemandMisses;
 
-    countMinCacheOverallHits.flags(total | nozero| nonan);
-    countMinCacheOverallHits = countMinCacheDemandHits + countMinCacheNonDemandHits;
+    countMinOverallHits.flags(total | nozero| nonan);
+    countMinOverallHits = countMinDemandHits + countMinNonDemandHits;
 
-    countMinCacheOverallMisses.flags(total | nozero| nonan);
-    countMinCacheOverallMisses = countMinCacheDemandMisses + countMinCacheNonDemandMisses;
+    countMinOverallMisses.flags(total | nozero| nonan);
+    countMinOverallMisses = countMinDemandMisses + countMinNonDemandMisses;
 
-    countMinCacheOverallAccess.flags(total | nozero| nonan);
-    countMinCacheOverallAccess = countMinCacheOverallHits + countMinCacheOverallMisses;
+    countMinOverallAccesses.flags(total | nozero| nonan);
+    countMinOverallAccesses = countMinOverallHits + countMinOverallMisses;
 
     countMinDemandMshrHits.flags(total | nozero | nonan);
     countMinDemandMshrHits = SUM_DEMAND_COUNTMIN(mshrHits);

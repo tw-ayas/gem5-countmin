@@ -146,9 +146,8 @@ int CountMinCounter::increment(char *s, int group, int update)
             {
                 return 0;
             }
-        default:
-
     }
+
     unsigned int hashval;
     int estimate = -1;
     int hashpos[depth];
@@ -210,7 +209,7 @@ int CountMinCounter::decrement(char *s, int update){
 
 int CountMinCounter::estimate(int s, int group) {
     char *str = std::to_string(s).data();
-    return CountMinCounter::estimate(str);
+    return CountMinCounter::estimate(str, group);
 }
 
 int CountMinCounter::estimate(char *s, int group){
@@ -273,8 +272,6 @@ int CountMinCounter::estimate(char *s, int group){
             {
                 return 0;
             }
-        default:
-
     }
 
     unsigned int hashval;

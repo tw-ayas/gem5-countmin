@@ -1237,17 +1237,13 @@ class BaseCache : public ClockedObject
 
         statistics::Scalar countMinReplacements;
         statistics::Scalar countMinWriteBacks;
+     
+        statistics::Formula countMinDemandAccesses;
+        statistics::Scalar countMinNonDemandHits;
+        statistics::Scalar countMinNonDemandMisses;
+        statistics::Formula countMinNonDemandAccesses;
 
-        statistics::Scalar countMinCacheDemandHits;
-        statistics::Scalar countMinCacheDemandMisses;
-        statistics::Formula countMinCacheDemandAccess;
-        statistics::Scalar countMinCacheNonDemandHits;
-        statistics::Scalar countMinCacheNonDemandMisses;
-        statistics::Formula countMinCacheNonDemandAccess;
-
-        statistics::Formula countMinCacheOverallHits;
-        statistics::Formula countMinCacheOverallMisses; 
-        statistics::Formula countMinCacheOverallAccess;        
+        statistics::Formula countMinOverallAccesses;        
 
         std::vector<std::unique_ptr<CacheCmdStats>> countMinCmd;
 
