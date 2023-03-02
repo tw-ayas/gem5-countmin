@@ -251,7 +251,24 @@ IEW::IEWStats::ExecutedInstStats::ExecutedInstStats(CPU *cpu)
                 statistics::units::Count, statistics::units::Cycle>::get(),
              "Inst execution rate", numInsts / cpu->baseStats.numCycles),
     ADD_STAT(countMinNumBranches, statistics::units::Count::get(),
-             "countMin Number of branches executed")
+             "countMin Number of branches executed"),
+    ADD_STAT(countMinNumInsts, statistics::units::Count::get(),
+             "countMin Number of executed instructions"),
+    ADD_STAT(countMinNumLoadInsts, statistics::units::Count::get(),
+             "countMin Number of load instructions executed"),
+    ADD_STAT(countMinNumSquashedInsts, statistics::units::Count::get(),
+             "countMin Number of squashed instructions skipped in execute"),
+    ADD_STAT(countMinNumSwp, statistics::units::Count::get(),
+             "countMin Number of swp insts executed"),
+    ADD_STAT(countMinNumNop, statistics::units::Count::get(),
+             "countMin Number of nop insts executed"),
+    ADD_STAT(countMinNumRefs, statistics::units::Count::get(),
+             "countMin Number of memory reference insts executed"),
+    ADD_STAT(countMinNumStoreInsts, statistics::units::Count::get(),
+             "countMin Number of stores executed"),
+    ADD_STAT(countMinNumRate, statistics::units::Rate<
+                statistics::units::Count, statistics::units::Cycle>::get(),
+             "countMin Inst execution rate", countMinNumInsts / cpu->baseStats.countMinNumCycles)
 {
     numLoadInsts
         .init(cpu->numThreads)
@@ -279,6 +296,34 @@ IEW::IEWStats::ExecutedInstStats::ExecutedInstStats(CPU *cpu)
 
     numRate
         .flags(statistics::total);
+
+    countMinNumLoadInsts
+        .init(cpu->numThreads)
+        .flags(statistics::total);
+
+    countMinNumSwp
+        .init(cpu->numThreads)
+        .flags(statistics::total);
+
+    countMinNumNop
+        .init(cpu->numThreads)
+        .flags(statistics::total);
+
+    countMinNumRefs
+        .init(cpu->numThreads)
+        .flags(statistics::total);
+
+    countMinNumBranches
+        .init(cpu->numThreads)
+        .flags(statistics::total);
+
+    countMinNumStoreInsts
+        .flags(statistics::total);
+    countMinNumStoreInsts = countMinNumRefs - countMinNumLoadInsts;
+
+    countMinNumRate
+        .flags(statistics::total);
+
 }
 
 void
@@ -1073,6 +1118,7 @@ IEW::dispatchInsts(ThreadID tid)
             instQueue.recordProducer(inst);
 
             iewStats.executedInstStats.numNop[tid]++;
+            iewStats.executedInstStats.countMinNumNop[tid] = cpu->update_count_min(std::string(name() + ".numNop::" + std::to_string(tid)).data());
 
             add_to_iq = false;
         } else {
@@ -1200,6 +1246,7 @@ IEW::executeInsts()
             inst->setCanCommit();
 
             ++iewStats.executedInstStats.numSquashedInsts;
+            iewStats.executedInstStats.countMinNumSquashedInsts = cpu->update_count_min(std::string(name() + ".numLoadInsts").data());             
 
             continue;
         }
@@ -1336,7 +1383,7 @@ IEW::executeInsts()
                     iewStats.predictedNotTakenIncorrect++;
                 }
                 //Update branchMispredict for count_min
-                cpu->update_count_min(std::string(cpu->name() + ".branchMisses").data());
+                cpu->update_count_min(std::string(cpu->name() + ".branchMispredicts").data());
  
             } else if (ldstQueue.violation(tid)) {
                 assert(inst->isMemRef());
@@ -1584,7 +1631,8 @@ IEW::updateExeInstStats(const DynInstPtr& inst)
     ThreadID tid = inst->threadNumber;
 
     iewStats.executedInstStats.numInsts++;
-
+    cpu->update_count_min(std::string(name() + ".numInsts").data());
+    
 #if TRACING_ON
     if (debug::O3PipeView) {
         inst->completeTick = curTick() - inst->fetchTick;
@@ -1596,7 +1644,7 @@ IEW::updateExeInstStats(const DynInstPtr& inst)
     //
     if (inst->isControl()) {
         iewStats.executedInstStats.numBranches[tid]++;
-        cpu->update_count_min(std::string(cpu->name() + ".branchInsts").data());
+        iewStats.executedInstStats.countMinNumBranches[tid] = cpu->update_count_min(std::string(name() + ".numBranches::" + std::to_string(tid)).data());
     }
 
     //
@@ -1604,9 +1652,11 @@ IEW::updateExeInstStats(const DynInstPtr& inst)
     //
     if (inst->isMemRef()) {
         iewStats.executedInstStats.numRefs[tid]++;
+        iewStats.executedInstStats.countMinNumRefs[tid] = cpu->update_count_min(std::string(name() + ".numRefs::" + std::to_string(tid)).data());
 
         if (inst->isLoad()) {
             iewStats.executedInstStats.numLoadInsts[tid]++;
+            iewStats.executedInstStats.countMinNumLoadInsts[tid] = cpu->update_count_min(std::string(name() + ".numLoadInsts::" + std::to_string(tid)).data());
         }
     }
 }
@@ -1641,7 +1691,7 @@ IEW::checkMisprediction(const DynInstPtr& inst)
             }
 
             //Update branchMispredicts for count_min
-            cpu->update_count_min(std::string(cpu->name() + ".branchMisses").data());
+            cpu->update_count_min(std::string(cpu->name() + ".branchMispredicts").data());
         }
     }
 }
@@ -1650,11 +1700,11 @@ void
 IEW::updateCountMinStats(){
     iewStats.countMinIqFullEvents = cpu->get_count_min(std::string(name() + ".iqFullEvents").data());
     iewStats.countMinLsqFullEvents = cpu->get_count_min(std::string(name() + ".lsqFullEvents").data());
-    iewStats.countMinStallBackendCycles = cpu->get_count_min(std::string(name() + ".blockCycles").data());
-//    iewStats.countMinBranchMispredicts = cpu->get_count_min(std::string(name() + ".branchMispredicts").data());
+    iewStats.countMinStallBackendCycles = cpu->get_count_min(std::string(name() + ".blockCycles").data()) + cpu->get_count_min(std::string(name() + ".squashCycles").data());
+    iewStats.countMinBranchMispredicts = cpu->get_count_min(std::string(name() + ".branchMispredicts").data());
     iewStats.countMinSquashCycles = cpu->get_count_min(std::string(name() + ".squashCycles").data());
 //    iewStats.executedInstStats.countMinNumBranches = cpu->get_count_min(std::string(name() + ".numBranches").data());
-
+    iewStats.executedInstStats.countMinNumInsts = cpu->get_count_min(std::string(name() + ".numInsts").data());
 }
 
 } // namespace o3

@@ -74,6 +74,11 @@ BaseTags::BaseTags(const Params &p)
     int second_pos = counter_name.find(".", first_pos);
 //    int third_pos = counter_name.find(".", second_pos);
     counterName = counter_name.substr(0, second_pos);
+
+    if (system->count_min_structure_system.count(counterName) == 0){
+        counterName = "system";
+    }
+
 }
 
 ReplaceableEntry*

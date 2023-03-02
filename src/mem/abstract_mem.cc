@@ -468,7 +468,10 @@ AbstractMemory::access(PacketPtr pkt)
         }
         TRACE_PACKET(pkt->req->isInstFetch() ? "IFetch" : "Read");
         stats.numReads[pkt->req->requestorId()]++;
-        stats.countMinNumReads[pkt->req->requestorId()] = system()->count_min_structure_system["system"]->increment(std::string(name() + ".numReads." + system()->getRequestorName(pkt->req->requestorId())).data());
+       
+        //update CountMinStats
+        stats.countMinNumReads[pkt->req->requestorId()] = system()->count_min_structure_system[getCpuCounterName(system()->getRequestorName(pkt->req->requestorId()))]->increment(std::string(name() + "::" + system()->getRequestorName(pkt->req->requestorId()) + ".numReads").data());
+
         stats.bytesRead[pkt->req->requestorId()] += pkt->getSize();
         if (pkt->req->isInstFetch())
             stats.bytesInstRead[pkt->req->requestorId()] += pkt->getSize();
@@ -488,7 +491,7 @@ AbstractMemory::access(PacketPtr pkt)
             assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Write");
             stats.numWrites[pkt->req->requestorId()]++;
-            stats.countMinNumWrites[pkt->req->requestorId()] = system()->count_min_structure_system["system"]->increment(std::string(name() + ".numWrites." + system()->getRequestorName(pkt->req->requestorId())).data());
+            stats.countMinNumWrites[pkt->req->requestorId()] = system()->count_min_structure_system[getCpuCounterName(system()->getRequestorName(pkt->req->requestorId()))]->increment(std::string(name() + "::" + system()->getRequestorName(pkt->req->requestorId()) + ".numWrites").data());
             stats.bytesWritten[pkt->req->requestorId()] += pkt->getSize();
         }
     } else {
@@ -532,6 +535,22 @@ AbstractMemory::functionalAccess(PacketPtr pkt)
         panic("AbstractMemory: unimplemented functional command %s",
               pkt->cmdString());
     }
+}
+
+std::string
+AbstractMemory::getCpuCounterName(std::string requestor)
+{
+    std::string counterName = "system";
+    std::string counter_name = requestor;
+    int first_pos= counter_name.find(".");
+    counter_name= counterName + "." + counter_name.substr(0, first_pos);
+
+    if (system()->count_min_structure_system.count(counter_name) == 0){
+//        system->addCounter(counterName);
+        counter_name = counterName;
+    }
+
+    return counter_name;
 }
 
 } // namespace memory

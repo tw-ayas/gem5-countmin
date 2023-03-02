@@ -61,6 +61,16 @@ void CountMinCounter::change_group_context(){
     }
 }
 
+int CountMinCounter::getNumberOfCounters()
+{
+    return countersAdded.size();
+}
+
+std::set<std::string> CountMinCounter::getCounterNames()
+{
+    return countersAdded;
+}
+
 int CountMinCounter::increment(int s){
    return CountMinCounter::increment(s, 1);
 }
@@ -75,10 +85,15 @@ int CountMinCounter::increment(int s, int update) {
 }
 
 int CountMinCounter::increment(char *s, int update){
+
     unsigned int hashval;
     int estimate = -1;
     int hashpos[depth];
     int min = -1;
+
+    std::string s_check(s);
+    countersAdded.insert(s_check);
+
     for (int i = 0; i < depth; i++) {
         hashpos[i] = hashstr(s, hashes[i][0], hashes[i][1], i);
         if(counters[i][hashpos[i]] < min || min < 0){

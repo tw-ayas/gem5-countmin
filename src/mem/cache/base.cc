@@ -141,7 +141,8 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     counterName = counter_name.substr(0, second_pos);
 
     if (system->count_min_structure_system.count(counterName) == 0){
-        system->addCounter(counterName);
+//        system->addCounter(counterName);
+        counterName = "system";
     }
     std::cout << "Cache: " << name() << " with CounterName: " << counterName << std::endl;
     
@@ -150,6 +151,20 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
 BaseCache::~BaseCache()
 {
     delete tempBlock;
+}
+
+std::string
+BaseCache::getCpuCounterName(std::string requestor){
+    std::string counter_name = requestor;
+    int first_pos= counter_name.find(".");
+    counter_name= counterName + "." + counter_name.substr(0, first_pos);
+
+    if (system->count_min_structure_system.count(counter_name) == 0){
+//        system->addCounter(counterName);
+        counter_name = counterName;
+    } 
+
+    return counter_name;
 }
 
 void
@@ -350,6 +365,9 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
                 assert(pkt->req->requestorId() < system->maxRequestors());
                 stats.cmdStats(pkt).mshrHits[pkt->req->requestorId()]++;
 
+                std::string key = name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".mshrHits";
+                stats.countMinCmdStats(pkt).mshrHits[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data());
+
                 // We use forward_time here because it is the same
                 // considering new targets. We have multiple
                 // requests for the same address here. It
@@ -373,6 +391,9 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
         // no MSHR
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).mshrMisses[pkt->req->requestorId()]++;
+        
+        std::string key = name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".mshrMisses";
+        stats.countMinCmdStats(pkt).mshrMisses[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data());
         if (prefetcher && pkt->isDemand())
             prefetcher->incrDemandMhsrMisses();
 
@@ -934,6 +955,8 @@ BaseCache::getNextQueueEntry()
                 // (hwpf_mshr_misses)
                 assert(pkt->req->requestorId() < system->maxRequestors());
                 stats.cmdStats(pkt).mshrMisses[pkt->req->requestorId()]++;
+                std::string key = name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".mshrMisses";
+                stats.countMinCmdStats(pkt).mshrMisses[pkt->req->requestorId()] = system->count_min_structure_system[counterName]->increment(key.data());
 
                 // allocate an MSHR and return it, note
                 // that we send the packet straight away, so do not
@@ -971,7 +994,7 @@ BaseCache::handleEvictions(std::vector<CacheBlk*> &evict_blks,
     // counter if a valid block is being replaced
     if (replacement) {
         stats.replacements++;
-
+        system->count_min_structure_system[counterName]->increment(std::string(name() + ".replacements").data());
         // Evict valid blocks associated to this victim block
         for (auto& blk : evict_blks) {
             if (blk->isValid()) {
@@ -1707,7 +1730,7 @@ BaseCache::writebackBlk(CacheBlk *blk)
         (blk->isSet(CacheBlk::DirtyBit) || writebackClean));
 
     stats.writebacks[Request::wbRequestorId]++;
-    system->count_min_structure_system[counterName]->increment(std::string(system->getRequestorName(Request::wbRequestorId) + ".writebacks").data());
+    system->count_min_structure_system[counterName]->increment(std::string(name() + ".writebacks").data());
 
     RequestPtr req = std::make_shared<Request>(
         regenerateBlkAddr(blk), blkSize, 0, Request::wbRequestorId);
@@ -2496,10 +2519,12 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
     ADD_STAT(countMinOverallAvgMissLatency, statistics::units::Rate<
                        statistics::units::Tick, statistics::units::Count>::get(),
                "countMin average overall miss latency"),
+*/
     ADD_STAT(countMinBlockedCycles, statistics::units::Cycle::get(),
                "countMin number of cycles access was blocked"),
     ADD_STAT(countMinBlockedCauses, statistics::units::Count::get(),
                "countMin number of times access was blocked"),
+/*
     ADD_STAT(countMinAvgBlocked, statistics::units::Rate<
                        statistics::units::Cycle, statistics::units::Count>::get(),
                "countMin average number of cycles each access was blocked"),
@@ -2534,9 +2559,9 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
     ADD_STAT(countMinOverallAvgMshrUncacheableLatency, statistics::units::Rate<
                 statistics::units::Tick, statistics::units::Count>::get(),
                "countMin average overall mshr uncacheable latency"),
-    ADD_STAT(countMinReplacements, statistics::units::Count::get(),
+*/    ADD_STAT(countMinReplacements, statistics::units::Count::get(),
                "countMin number of replacements"),
-    ADD_STAT(countMinDataExpansions, statistics::units::Count::get(),
+/*    ADD_STAT(countMinDataExpansions, statistics::units::Count::get(),
                "countMin number of data expansions"),
     ADD_STAT(countMinDataContractions, statistics::units::Count::get(),
                "countMin number of data contractions"),
@@ -2904,7 +2929,7 @@ BaseCache::CacheStats::regStats()
     for (int i = 0; i < max_requestors; i++) {
         countMinOverallAvgMissLatency.subname(i, system->getRequestorName(i));
     }
-
+*/
     countMinBlockedCycles.init(NUM_BLOCKED_CAUSES);
     countMinBlockedCycles
         .subname(Blocked_NoMSHRs, "no_mshrs")
@@ -2917,7 +2942,7 @@ BaseCache::CacheStats::regStats()
         .subname(Blocked_NoMSHRs, "no_mshrs")
         .subname(Blocked_NoTargets, "no_targets")
         ;
-
+/*
     countMinAvgBlocked
         .subname(Blocked_NoMSHRs, "no_mshrs")
         .subname(Blocked_NoTargets, "no_targets")
@@ -3071,7 +3096,7 @@ BaseCache::updateCountMinStats()
 //    system->count_min_structure_system[counterName]->print();    
 
     stats.countMinWriteBacks = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".writebacks").data());
-
+    stats.countMinReplacements = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".replacements").data());
     tags->updateCountMinStats();
     //std::cout << prefetcher << std::endl;
     if (prefetcher)

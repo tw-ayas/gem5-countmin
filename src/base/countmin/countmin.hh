@@ -9,6 +9,7 @@
 #define LONG_PRIM_2 (1 << 29)
 
 #include <random>
+#include <set>
 
 using namespace std;
 
@@ -26,7 +27,7 @@ class CountMinCounter
         unsigned int current_group;
         int value(int c);
         int pointValue(int c);
-
+        std::set<std::string> countersAdded;
     public:
         CountMinCounter(int w, int d, int cons);
         ~CountMinCounter();
@@ -45,6 +46,9 @@ class CountMinCounter
 
         int estimate(int s);
         int estimate(char *s);
+
+        int getNumberOfCounters();
+        std::set<std::string> getCounterNames();
 };
 
 #endif //__MEM_CACHE_COUNTMIN_HH__

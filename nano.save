@@ -1,0 +1,68 @@
+./src/mem/dram_interface.cc:69: // search for seamless row hits first, if no seamless row hit is ./src/mem/dram_interface.cc:113: // FCFS within the hits, 
+giving priority to ./src/mem/dram_interface.cc:501: // page open, but close it if there are no row hits, and there ./src/mem/dram_interface.cc:504: // page, 
+but closes it only if there are no row hits in the queue. ./src/mem/dram_interface.cc:506: // are no same page hits in the queue 
+./src/mem/dram_interface.cc:544: // 1) open_adaptive policy, we have not got any more hits, and ./src/mem/dram_interface.cc:546: // 2) close_adaptive policy 
+and we have not got any more hits ./src/mem/dram_interface.cc:1876: "Number of row buffer hits during reads"), ./src/mem/dram_interface.cc:1878: "Number of row 
+buffer hits during writes"), ./src/mem/mem_ctrl.hh:422: * hits and earliest bursts available in memory ./src/mem/cache/tags/fa_lru.cc:307: ADD_STAT(hits, 
+statistics::units::Count::get(), ./src/mem/cache/tags/fa_lru.cc:308: "The number of hits in each cache size."), ./src/mem/cache/tags/fa_lru.cc:319: hits 
+./src/mem/cache/tags/fa_lru.cc:327: hits.subname(i, size_str.str()); ./src/mem/cache/tags/fa_lru.cc:328: hits.subdesc(i, "Hits in a " + size_str.str() + " 
+cache"); ./src/mem/cache/tags/fa_lru.cc:445: hits[i]++; ./src/mem/cache/tags/fa_lru.cc:453: hits[numTrackedCaches]++; ./src/mem/cache/tags/fa_lru.hh:356: * 
+statistics track the hits and misses for different cache sizes. ./src/mem/cache/tags/fa_lru.hh:361: statistics::Vector hits; ./src/mem/cache/base.hh:1009: /** 
+Number of hits per thread for each type of command. ./src/mem/cache/base.hh:1011: statistics::Vector hits; ./src/mem/cache/base.hh:1063: /** Number of hits per 
+thread for each type of command. ./src/mem/cache/base.hh:1065: statistics::Vector hits; ./src/mem/cache/base.hh:1123: /** Number of hits for demand accesses. 
+*/ ./src/mem/cache/base.hh:1127: /** Total number of ticks spent waiting for demand hits. */ ./src/mem/cache/base.hh:1129: /** Total number of ticks spent 
+waiting for all hits. */ ./src/mem/cache/base.hh:1492: stats.cmdStats(pkt).hits[pkt->req->requestorId()]++; ./src/mem/cache/base.hh:1497:/* std::cout << 
+counterName << " " << name() << ": " << pkt->cmdToIndex() << " inUse: " << stats.countMinCmdStats(pkt).inUse << 
+std::string(system->getRequestorName(pkt->req->requestorId()) + "." + MemCmd(pkt->cmdToIndex()).toString() + ".hits: ").data() << pkt->req->requestorId() << " 
+=> " << " hitsInUse: " << stats.countMinCmdStats(pkt).hitsInUse[pkt->req->requestorId()] << std::endl;*/ ./src/mem/cache/base.hh:1507: key = 
+system->getRequestorName(pkt->req->requestorId()) + "." + MemCmd(pkt->cmdToIndex()).toString() + ".hits"; ./src/mem/cache/base.hh:1511: 
+stats.cmdStats(pkt).hits[pkt->req->requestorId()].value(); ./src/mem/cache/base.hh:1514: stats.countMinCmdStats(pkt).hits[pkt->req->requestorId()] = 
+system->count_min_structure_system[counterName]->increment(std::string(name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + 
+system->getRequestorName(pkt->req->requestorId()) + ".hits").data()); ./src/mem/cache/prefetch/access_map_pattern_matching.hh:131: * Number of raw cache hits 
+./src/mem/cache/prefetch/base.hh:350: /** The number of times a HW-prefetch hits in cache. */ ./src/mem/cache/prefetch/base.hh:353: /** The number of times a 
+HW-prefetch hits in a MSHR. */ ./src/mem/cache/prefetch/base.hh:356: /** The number of times a HW-prefetch hits 
+./src/mem/cache/prefetch/signature_path_v2.cc:124: // of them are unique, there are never "hits" in the GHR ./src/mem/cache/prefetch/base.cc:280: // This case 
+happens when a demand hits on a prefetched line ./src/mem/cache/base.cc:2040: ADD_STAT(hits, statistics::units::Count::get(), ./src/mem/cache/base.cc:2041: 
+("number of " + name + " hits").c_str()), ./src/mem/cache/base.cc:2049: ("number of " + name + " accesses(hits+misses)").c_str()), 
+./src/mem/cache/base.cc:2056: ("number of " + name + " MSHR hits").c_str()), ./src/mem/cache/base.cc:2085: hits ./src/mem/cache/base.cc:2090: hits.subname(i, 
+system->getRequestorName(i)); ./src/mem/cache/base.cc:2122: accesses = hits + misses; ./src/mem/cache/base.cc:2213: ADD_STAT(hits, 
+statistics::units::Count::get(), ./src/mem/cache/base.cc:2214: ("number of " + name + " hits").c_str()), ./src/mem/cache/base.cc:2222: ("number of " + name + " 
+accesses(hits+misses)").c_str()), ./src/mem/cache/base.cc:2229: ("number of " + name + " MSHR hits").c_str()), ./src/mem/cache/base.cc:2267: hits 
+./src/mem/cache/base.cc:2272: hits.subname(i, system->getRequestorName(i)); ./src/mem/cache/base.cc:2304: accesses = hits + misses; 
+./src/mem/cache/base.cc:2396: "number of demand (read+write) hits"), ./src/mem/cache/base.cc:2398: "number of overall hits"), ./src/mem/cache/base.cc:2435: 
+"number of demand (read+write) MSHR hits"), ./src/mem/cache/base.cc:2437: "number of overall MSHR hits"), ./src/mem/cache/base.cc:2471: "countMin number of 
+demand (read+write) hits"), ./src/mem/cache/base.cc:2473: "countMin number of overall hits"), ./src/mem/cache/base.cc:2510: "countMin number of demand 
+(read+write) MSHR hits"), ./src/mem/cache/base.cc:2512: "countMin number of overall MSHR hits"), ./src/mem/cache/base.cc:2611: demandHits = SUM_DEMAND(hits); 
+./src/mem/cache/base.cc:2617: overallHits = demandHits + SUM_NON_DEMAND(hits); ./src/mem/cache/base.cc:2827: countMinDemandHits = SUM_DEMAND_COUNTMIN(hits); 
+./src/mem/cache/base.cc:2833: countMinOverallHits = countMinDemandHits + SUM_NON_DEMAND_COUNTMIN(hits); ./src/mem/cache/base.cc:3050: cmcs->hits[i] = 
+system->count_min_structure_system[counterName]->estimate(std::string(system->getRequestorName(i) + "." + MemCmd(idx).toString() + ".hits").data()); 
+./src/mem/cache/base.cc:3051: std::cout << name() << ".hits" << i << ": " << std::string(system->getRequestorName(i) + "." + MemCmd(idx).toString() + 
+".hits").data() << " => " << cmcs->hits[i].value() << std::endl; ./src/mem/cache/cache.cc:1429: // We are sending this packet upwards, but if it hits we will 
+./src/mem/cache/replacement_policies/ReplacementPolicies.py:127: # Always make hits mark entries as last to be evicted 
+./src/mem/cache/replacement_policies/ship_rp.hh:106: * future lines brought by that signature will not receive any hits. 
+./src/mem/cache/replacement_policies/brrip_rp.hh:104: * hits over any cache entry that receives a hit, while the frequency ./src/mem/packet.hh:635: * Modified 
+or Owned state. Note that on snoop hits we always pass ./src/mem/packet.hh:741: * Set when a request hits in a cache and the cache is not going 
+./src/mem/ruby/structures/RubyPrefetcher.hh:110: * These functions are called by the cache when it hits(misses) 
+./src/mem/ruby/structures/RubyPrefetcher.hh:112: * hits in m_array we will continue prefetching the stream. ./src/mem/ruby/structures/RubyPrefetcher.hh:137: 
+uint32_t hits; ./src/mem/ruby/structures/RubyPrefetcher.hh:140: : addr(_addr), hits(0) ./src/mem/ruby/structures/RubyPrefetcher.hh:160: hits = 0; 
+./src/mem/ruby/structures/RubyPrefetcher.cc:275: entry.hits++; ./src/mem/ruby/structures/RubyPrefetcher.cc:276: if (entry.hits >= m_train_misses) { 
+./src/mem/ruby/structures/RubyPrefetcher.cc:310: entry.hits++; ./src/mem/ruby/structures/RubyPrefetcher.cc:311: if (entry.hits > m_train_misses) { 
+./src/mem/ruby/structures/RubyPrefetcher.cc:326: entry.hits = 0; ./src/mem/ruby/structures/RubyPrefetcher.cc:365: << entry.hits << std::endl; 
+./src/mem/ruby/structures/CacheMemory.cc:539: ADD_STAT(m_demand_hits, "Number of cache demand hits"), ./src/mem/ruby/structures/CacheMemory.cc:543: 
+ADD_STAT(m_prefetch_hits, "Number of cache prefetch hits"), ./src/mem/ruby/structures/CacheMemory.hh:245: // These function increment the number of demand 
+hits/misses by one ./src/mem/ruby/protocol/MOESI_hammer-cache.sm:1272: action(uu_profileL1DataHit, "\udh", desc="Profile the demand hits") { 
+./src/mem/ruby/protocol/MOESI_hammer-cache.sm:1280: action(uu_profileL1InstHit, "\uih", desc="Profile the demand hits") { 
+./src/mem/ruby/protocol/MOESI_hammer-cache.sm:1288: action(uu_profileL2Hit, "\uh", desc="Profile the demand hits") { 
+./src/mem/ruby/protocol/MOESI_AMD_Base-L3cache.sm:900: ut_updateTag; // update tag on writeback hits. ./src/mem/ruby/protocol/MOESI_AMD_Base-L3cache.sm:908: 
+ut_updateTag; // update tag on writeback hits. ./src/mem/ruby/protocol/MOESI_AMD_Base-L3cache.sm:916: ut_updateTag; // update tag on writeback hits. 
+./src/mem/ruby/protocol/MOESI_AMD_Base-L3cache.sm:924: ut_updateTag; // update tag on writeback hits. ./src/mem/ruby/protocol/MOESI_AMD_Base-L3cache.sm:932: 
+ut_updateTag; // update tag on writeback hits. ./src/mem/ruby/protocol/MOESI_AMD_Base-L3cache.sm:940: ut_updateTag; // update tag on writeback hits. 
+./src/mem/ruby/protocol/MOESI_AMD_Base-CorePair.sm:1812: // track hits, if implemented ./src/mem/ruby/protocol/MOESI_AMD_Base-CorePair.sm:1821: // track hits, 
+if implemented ./src/mem/ruby/protocol/MOESI_AMD_Base-CorePair.sm:1829: // track hits, if implemented ./src/mem/ruby/protocol/MOESI_AMD_Base-CorePair.sm:1837: 
+// track hits, if implemented
+./src/mem/ruby/protocol/MOESI_AMD_Base-Region-CorePair.sm:1863: // track hits, if implemented ./src/mem/ruby/protocol/MOESI_AMD_Base-Region-CorePair.sm:1870: 
+// track hits, if implemented
+./src/mem/ruby/protocol/MOESI_AMD_Base-Region-CorePair.sm:1876: // track hits, if implemented ./src/mem/ruby/protocol/MOESI_AMD_Base-Region-CorePair.sm:1882: 
+// track hits, if implemented
+./src/mem/ruby/protocol/chi/CHI-cache-transitions.sm:432:// Prefetch hits if either this cache or one of its upstream caches has a 
+./src/mem/ruby/protocol/MOESI_CMP_token-L1cache.sm:417: // NOTE: direct local hits should not call this function

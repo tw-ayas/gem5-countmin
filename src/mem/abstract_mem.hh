@@ -353,6 +353,9 @@ class AbstractMemory : public ClockedObject
      * @param pkt Packet performing the access
      */
     void functionalAccess(PacketPtr pkt);
+
+    std::string getCpuCounterName(std::string requestor);    
+
 };
 
 } // namespace memory

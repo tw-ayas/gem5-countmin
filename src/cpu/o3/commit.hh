@@ -513,9 +513,18 @@ class Commit
         /** CountMin Stats */
         statistics::Scalar countMinCommitSquashedInsts;
         statistics::Scalar countMinBranchMispredicts;
-        statistics::Scalar countMinInstsCommitted;
-        statistics::Scalar countMinOpsCommitted;
-        statistics::Scalar countMinBranches;
+        statistics::Vector countMinInstsCommitted;
+        statistics::Vector countMinOpsCommitted;
+        statistics::Vector countMinBranches;
+        statistics::Scalar countMinCommitNonSpecStalls;
+        statistics::Vector countMinLoads;
+        statistics::Vector countMinMemRefs;
+        statistics::Vector countMinVectorInstructions;
+        statistics::Vector countMinFloating;
+        statistics::Vector countMinInteger;
+        statistics::Vector countMinFunctionCalls;
+        statistics::Vector2d countMinCommittedInstType;
+        
        
     } stats;
 };

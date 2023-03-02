@@ -1632,9 +1632,9 @@ CPU::updateCountMinStats(){
     commit.updateCountMinStats();
 }
 
-void
+int
 CPU::update_count_min(char *s){
-    system->count_min_structure_system[name()]->increment(s);
+    return system->count_min_structure_system[name()]->increment(s);
 }
 
 int 

@@ -726,7 +726,7 @@ Decode::decodeInsts(ThreadID tid)
             std::unique_ptr<PCStateBase> target = inst->branchTarget();
             if (*target != inst->readPredTarg()) {
                 ++stats.branchMispred;
-                cpu->update_count_min(std::string(cpu->name() + ".branchMisses").data());
+                cpu->update_count_min(std::string(cpu->name() + ".branchMispred").data());
 
                 // Might want to set some sort of boolean and just do
                 // a check at the end
@@ -761,7 +761,7 @@ void
 Decode::updateCountMinStats(){
     stats.countMinSquashCycles = cpu->get_count_min(std::string(name() + ".squashCycles").data());
 //    stats.countMinBranchResolved = cpu->get_count_min(std::string(name() + ".branchResolved").data());
-//    stats.countMinBranchMispred = cpu->get_count_min(std::string(name() + ".branchMispred").data());
+    stats.countMinBranchMispred = cpu->get_count_min(std::string(name() + ".branchMispred").data());
 
 }
 

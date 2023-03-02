@@ -191,7 +191,23 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
       ADD_STAT(countMinOpsCommitted, statistics::units::Count::get(),
                "countMin Number of ops (including micro ops) commited"),
       ADD_STAT(countMinBranches, statistics::units::Count::get(),
-               "countMin Number of branches commited")
+               "countMin Number of branches commited"),
+      ADD_STAT(countMinCommitNonSpecStalls, statistics::units::Count::get(),
+               "countMin The number of times commit has been forced to stall to "
+               "communicate backwards"),
+      ADD_STAT(countMinMemRefs, statistics::units::Count::get(),
+               "countMin Number of memory references committed"),
+      ADD_STAT(countMinLoads, statistics::units::Count::get(), "countMin Number of loads committed"),
+      ADD_STAT(countMinVectorInstructions, statistics::units::Count::get(),
+               "countMin Number of committed Vector instructions."),
+      ADD_STAT(countMinFloating, statistics::units::Count::get(),
+               "countMin Number of committed floating point instructions."),
+      ADD_STAT(countMinInteger, statistics::units::Count::get(),
+               "countMinNumber of committed integer instructions."),
+      ADD_STAT(countMinFunctionCalls, statistics::units::Count::get(),
+               "countMin Number of function calls committed."),
+      ADD_STAT(countMinCommittedInstType, statistics::units::Count::get(),
+               "countMin Class of committed instruction")
 {
     using namespace statistics;
 
@@ -252,6 +268,51 @@ Commit::CommitStats::CommitStats(CPU *cpu, Commit *commit)
         .flags(total | pdf | dist);
 
     committedInstType.ysubnames(enums::OpClassStrings);
+
+    
+    countMinInstsCommitted
+        .init(cpu->numThreads)
+        .flags(total);
+
+    countMinOpsCommitted
+        .init(cpu->numThreads)
+        .flags(total);
+
+    countMinMemRefs
+        .init(cpu->numThreads)
+        .flags(total);
+
+    countMinLoads
+        .init(cpu->numThreads)
+        .flags(total);
+   
+    countMinBranches
+        .init(cpu->numThreads)
+        .flags(total);
+
+    countMinVectorInstructions
+        .init(cpu->numThreads)
+        .flags(total);
+
+    countMinFloating
+        .init(cpu->numThreads)
+        .flags(total);
+
+    countMinInteger
+        .init(cpu->numThreads)
+        .flags(total);
+
+    countMinFunctionCalls
+        .init(commit->numThreads)
+        .flags(total);
+
+    countMinCommittedInstType
+        .init(commit->numThreads,enums::Num_OpClass)
+        .flags(total | pdf | dist);
+
+    countMinCommittedInstType.ysubnames(enums::OpClassStrings);
+
+
 }
 
 void
@@ -1034,6 +1095,7 @@ Commit::commitInsts()
             if (commit_success) {
                 ++num_committed;
                 stats.committedInstType[tid][head_inst->opClass()]++;
+                stats.countMinCommittedInstType[tid][head_inst->opClass()] = cpu->update_count_min(std::string(name() + ".committedInstType::" + std::to_string(tid) + "::" + std::to_string(head_inst->opClass())).data());
                 ppCommit->notify(head_inst);
 
                 // hardware transactional memory
@@ -1198,6 +1260,7 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
             toIEW->commitInfo[tid].strictlyOrderedLoad = head_inst;
         } else {
             ++stats.commitNonSpecStalls;
+            stats.countMinCommitNonSpecStalls = cpu->update_count_min(std::string(name() + ".commitNonSpecStalls").data());
         }
 
         return false;
@@ -1399,10 +1462,10 @@ Commit::updateComInstStats(const DynInstPtr &inst)
 
     if (!inst->isMicroop() || inst->isLastMicroop()){
         stats.instsCommitted[tid]++;
-        //cpu->update_count_min(std::string(name() + ".instsCommitted").data());
+        stats.countMinInstsCommitted[tid] = cpu->update_count_min(std::string(name() + ".instsCommitted::" + std::to_string(tid)).data());
     }
     stats.opsCommitted[tid]++;
-    //cpu->update_count_min(std::string(name() + ".opsCommitted").data());
+    stats.countMinOpsCommitted[tid] = cpu->update_count_min(std::string(name() + ".opsCommitted::" + std::to_string(tid)).data());
 
     // To match the old model, don't count nops and instruction
     // prefetches towards the total commit count.
@@ -1415,7 +1478,7 @@ Commit::updateComInstStats(const DynInstPtr &inst)
     //
     if (inst->isControl()){
         stats.branches[tid]++;
-//        cpu->update_count_min(std::string(cpu->name() + ".branchInsts").data());
+        stats.countMinBranches[tid] = cpu->update_count_min(std::string(name() + ".branches::" + std::to_string(tid)).data());
     }   
 
     //
@@ -1423,9 +1486,11 @@ Commit::updateComInstStats(const DynInstPtr &inst)
     //
     if (inst->isMemRef()) {
         stats.memRefs[tid]++;
+        stats.countMinMemRefs[tid] = cpu->update_count_min(std::string(name() + ".memRefs::" + std::to_string(tid)).data());
 
         if (inst->isLoad()) {
             stats.loads[tid]++;
+            stats.countMinLoads[tid] = cpu->update_count_min(std::string(name() + ".loads::" + std::to_string(tid)).data());
         }
 
         if (inst->isAtomic()) {
@@ -1438,20 +1503,27 @@ Commit::updateComInstStats(const DynInstPtr &inst)
     }
 
     // Integer Instruction
-    if (inst->isInteger())
+    if (inst->isInteger()) {
         stats.integer[tid]++;
+        stats.countMinInteger[tid] = cpu->update_count_min(std::string(name() + ".integer::" + std::to_string(tid)).data());
+    }
 
     // Floating Point Instruction
-    if (inst->isFloating())
+    if (inst->isFloating()) {
         stats.floating[tid]++;
+        stats.countMinFloating[tid] = cpu->update_count_min(std::string(name() + ".floating::" + std::to_string(tid)).data());
+    }   
     // Vector Instruction
-    if (inst->isVector())
+    if (inst->isVector()) {
         stats.vectorInstructions[tid]++;
+        stats.countMinVectorInstructions[tid] = cpu->update_count_min(std::string(name() + ".vectorInstructions::" + std::to_string(tid)).data());
+    }
 
     // Function Calls
-    if (inst->isCall())
+    if (inst->isCall()) {
         stats.functionCalls[tid]++;
-
+        stats.countMinFunctionCalls[tid] = cpu->update_count_min(std::string(name() + ".functionCalls::" + std::to_string(tid)).data());
+    }
 }
 
 ////////////////////////////////////////

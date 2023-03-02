@@ -227,7 +227,17 @@ System::System(const Params &p)
     for (int x = 0; x < params().memories.size(); x++)
         params().memories[x]->system(this);
     
-    count_min_structure_system[std::string("system")] = new CountMinCounter(p.prob_hw_counters_size, p.prob_hw_counters_depth, p.prob_hw_counters_conservative_update);
+//   count_min_structure_system[std::string("system")] = new CountMinCounter(p.prob_hw_counters_size, p.prob_hw_counters_depth, p.prob_hw_counters_conservative_update);
+    addCounter("system");  
+    registerExitCallback([this]() {
+        for(auto const& [counterName, counters]: count_min_structure_system){
+            std::cout << "Counter " << counterName << " has " << counters->getNumberOfCounters() << " number of counter saved" << std::endl;
+            for(auto const& counter_name: counters->getCounterNames()){
+                std::cout << "    " << counter_name << std::endl;    
+            }
+            std::cout << std::endl;
+        }
+    });    
 
 }
 

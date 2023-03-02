@@ -635,7 +635,7 @@ class CPU : public BaseCPU
 
     void updateCountMinStats();    
 
-    void update_count_min(char *s);
+    int update_count_min(char *s);
 
     int get_count_min(char *s);
     

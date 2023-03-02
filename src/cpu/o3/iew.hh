@@ -481,8 +481,17 @@ class IEW
             statistics::Formula numRate;
         
             /** countMin Stats */
-            statistics::Scalar countMinNumBranches; 
+            statistics::Vector countMinNumBranches;
+            statistics::Scalar countMinNumInsts; 
 
+            statistics::Vector countMinNumLoadInsts;
+            statistics::Scalar countMinNumSquashedInsts;  
+            statistics::Vector countMinNumSwp;
+            statistics::Vector countMinNumNop;
+            statistics::Vector countMinNumRefs;
+            statistics::Formula countMinNumStoreInsts;
+            statistics::Formula countMinNumRate;
+           
         } executedInstStats;
 
         /** Number of instructions sent to commit. */
