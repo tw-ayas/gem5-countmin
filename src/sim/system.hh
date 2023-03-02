@@ -335,6 +335,7 @@ class System : public SimObject, public PCEventScope
     const int probHwCountersSize;
     const int probHwCountersDepth;
     const int probHwCountersConservativeUpdate;
+    const int probHwCountersGroup;
     std::map<std::string, CountMinCounter*> count_min_structure_system;
 
   public:
@@ -409,7 +410,7 @@ class System : public SimObject, public PCEventScope
     
     void addCounter(const std::string counterName){
         std::cout << "Adding new CountMin Counter: " << counterName << std::endl;
-	count_min_structure_system[counterName] = new CountMinCounter(probHwCountersSize, probHwCountersDepth, probHwCountersConservativeUpdate);
+	    count_min_structure_system[counterName] = new CountMinCounter(probHwCountersSize, probHwCountersDepth, probHwCountersConservativeUpdate, probHwCountersGroup);
     }
     
   protected:

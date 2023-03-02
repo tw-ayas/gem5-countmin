@@ -196,7 +196,8 @@ System::System(const Params &p)
       probHwCounters(p.prob_hw_counters),
       probHwCountersSize(p.prob_hw_counters_size),
       probHwCountersDepth(p.prob_hw_counters_depth),
-      probHwCountersConservativeUpdate(p.prob_hw_counters_conservative_update)
+      probHwCountersConservativeUpdate(p.prob_hw_counters_conservative_update),
+      probHwCountersGroup(p.prob_hw_counters_group)
 {
     panic_if(!workload, "No workload set for system %s "
             "(could use StubWorkload?).", name());

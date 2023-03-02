@@ -94,7 +94,7 @@ int CountMinCounter::increment(char *s, int group, int update)
             break;
         case 1:
             //count only General and some pipeline and cache
-            if ((group < 1 || group > 5) || group != 11 group != 17)
+            if ((group < 1 || group > 5) || group != 11 || group != 17)
             {
                 return 0;
             }
@@ -141,6 +141,11 @@ int CountMinCounter::increment(char *s, int group, int update)
                 return 0;
             }
             break;
+        case 8:
+            if ((group < 0 || group > 6) || (group < 11 || group > 20))
+            {
+                return 0;
+            }
         default:
 
     }
@@ -216,7 +221,7 @@ int CountMinCounter::estimate(char *s, int group){
             break;
         case 1:
             //count only General and some pipeline and cache
-            if ((group < 1 || group > 5) || group != 11 group != 17)
+            if ((group < 1 || group > 5) || group != 11 || group != 17)
             {
                 return 0;
             }
@@ -263,6 +268,11 @@ int CountMinCounter::estimate(char *s, int group){
                 return 0;
             }
             break;
+        case 8:
+            if ((group < 0 || group > 6) || (group < 11 || group > 20))
+            {
+                return 0;
+            }
         default:
 
     }
