@@ -313,6 +313,7 @@ class Commit
 
     /** Update CountMin Stats */
     void updateCountMinStats();
+    int default_group;
 
   private:
     /** Time buffer interface. */

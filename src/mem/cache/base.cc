@@ -139,10 +139,12 @@ BaseCache::BaseCache(const BaseCacheParams &p, unsigned blk_size)
     int first_pos= counter_name.find(".") + 1;
     int second_pos = counter_name.find(".", first_pos);
     counterName = counter_name.substr(0, second_pos);
+    default_group = 11;
 
     if (system->count_min_structure_system.count(counterName) == 0){
 //        system->addCounter(counterName);
         counterName = "system";
+        default_group = 16;
     }
     std::cout << "Cache: " << name() << " with CounterName: " << counterName << std::endl;
     
@@ -366,7 +368,7 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
                 stats.cmdStats(pkt).mshrHits[pkt->req->requestorId()]++;
 
                 std::string key = name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".mshrHits";
-                stats.countMinCmdStats(pkt).mshrHits[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data());
+                stats.countMinCmdStats(pkt).mshrHits[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data(), getSubGroupForCounter());
 
                 // We use forward_time here because it is the same
                 // considering new targets. We have multiple
@@ -393,7 +395,7 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
         stats.cmdStats(pkt).mshrMisses[pkt->req->requestorId()]++;
         
         std::string key = name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".mshrMisses";
-        stats.countMinCmdStats(pkt).mshrMisses[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data());
+        stats.countMinCmdStats(pkt).mshrMisses[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data(), getSubGroupForCounter());
         if (prefetcher && pkt->isDemand())
             prefetcher->incrDemandMhsrMisses();
 
@@ -956,7 +958,7 @@ BaseCache::getNextQueueEntry()
                 assert(pkt->req->requestorId() < system->maxRequestors());
                 stats.cmdStats(pkt).mshrMisses[pkt->req->requestorId()]++;
                 std::string key = name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".mshrMisses";
-                stats.countMinCmdStats(pkt).mshrMisses[pkt->req->requestorId()] = system->count_min_structure_system[counterName]->increment(key.data());
+                stats.countMinCmdStats(pkt).mshrMisses[pkt->req->requestorId()] = system->count_min_structure_system[counterName]->increment(key.data(), getSubGroupForCounter());
 
                 // allocate an MSHR and return it, note
                 // that we send the packet straight away, so do not
@@ -994,7 +996,7 @@ BaseCache::handleEvictions(std::vector<CacheBlk*> &evict_blks,
     // counter if a valid block is being replaced
     if (replacement) {
         stats.replacements++;
-        system->count_min_structure_system[counterName]->increment(std::string(name() + ".replacements").data());
+        system->count_min_structure_system[counterName]->increment(std::string(name() + ".replacements").data(), default_group);
         // Evict valid blocks associated to this victim block
         for (auto& blk : evict_blks) {
             if (blk->isValid()) {
@@ -1730,7 +1732,7 @@ BaseCache::writebackBlk(CacheBlk *blk)
         (blk->isSet(CacheBlk::DirtyBit) || writebackClean));
 
     stats.writebacks[Request::wbRequestorId]++;
-    system->count_min_structure_system[counterName]->increment(std::string(name() + ".writebacks").data());
+    system->count_min_structure_system[counterName]->increment(std::string(name() + ".writebacks").data(), default_group);
 
     RequestPtr req = std::make_shared<Request>(
         regenerateBlkAddr(blk), blkSize, 0, Request::wbRequestorId);
@@ -2489,47 +2491,18 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
     ADD_STAT(dataContractions, statistics::units::Count::get(),
              "number of data contractions"),
     cmd(MemCmd::NUM_MEM_CMDS),
-/*    ADD_STAT(countMinDemandHits, statistics::units::Count::get(),
-               "countMin number of demand (read+write) hits"),
-    ADD_STAT(countMinOverallHits, statistics::units::Count::get(),
-               "countMin number of overall hits"),
-    ADD_STAT(countMinDemandHitLatency, statistics::units::Tick::get(),
-               "countMin number of demand (read+write) hit ticks"),
-    ADD_STAT(countMinOverallHitLatency, statistics::units::Tick::get(),
-               "countMin number of overall hit ticks"),
     ADD_STAT(countMinDemandMisses, statistics::units::Count::get(),
                "countMin number of demand (read+write) misses"),
     ADD_STAT(countMinOverallMisses, statistics::units::Count::get(),
                "countMin number of overall misses"),
-    ADD_STAT(countMinDemandMissLatency, statistics::units::Tick::get(),
-               "countMin number of demand (read+write) miss ticks"),
-    ADD_STAT(countMinOverallMissLatency, statistics::units::Tick::get(),
-               "countMin number of overall miss ticks"),
     ADD_STAT(countMinDemandAccesses, statistics::units::Count::get(),
                "countMin number of demand (read+write) accesses"),
     ADD_STAT(countMinOverallAccesses, statistics::units::Count::get(),
                "countMin number of overall (read+write) accesses"),
-    ADD_STAT(countMinDemandMissRate, statistics::units::Ratio::get(),
-               "countMin miss rate for demand accesses"),
-    ADD_STAT(countMinOverallMissRate, statistics::units::Ratio::get(),
-               "countMin miss rate for overall accesses"),
-    ADD_STAT(countMinDemandAvgMissLatency, statistics::units::Rate<
-                       statistics::units::Tick, statistics::units::Count>::get(),
-               "countMin average overall miss latency in ticks"),
-    ADD_STAT(countMinOverallAvgMissLatency, statistics::units::Rate<
-                       statistics::units::Tick, statistics::units::Count>::get(),
-               "countMin average overall miss latency"),
-*/
     ADD_STAT(countMinBlockedCycles, statistics::units::Cycle::get(),
                "countMin number of cycles access was blocked"),
     ADD_STAT(countMinBlockedCauses, statistics::units::Count::get(),
                "countMin number of times access was blocked"),
-/*
-    ADD_STAT(countMinAvgBlocked, statistics::units::Rate<
-                       statistics::units::Cycle, statistics::units::Count>::get(),
-               "countMin average number of cycles each access was blocked"),
-    ADD_STAT(countMinWriteBacks, statistics::units::Count::get(),
-               "countMin number of writebacks"),
     ADD_STAT(countMinDemandMshrHits, statistics::units::Count::get(),
                "countMin number of demand (read+write) MSHR hits"),
     ADD_STAT(countMinOverallMshrHits, statistics::units::Count::get(),
@@ -2538,34 +2511,8 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
                "countMin number of demand (read+write) MSHR misses"),
     ADD_STAT(countMinOverallMshrMisses, statistics::units::Count::get(),
             "number of overall MSHR misses"),
-    ADD_STAT(countMinOverallMshrUncacheable, statistics::units::Count::get(),
-               "countMin number of overall MSHR uncacheable misses"),
-    ADD_STAT(countMinDemandMshrMissLatency, statistics::units::Tick::get(),
-               "countMin number of demand (read+write) MSHR miss ticks"),
-    ADD_STAT(countMinOverallMshrMissLatency, statistics::units::Tick::get(),
-               "countMin number of overall MSHR miss ticks"),
-    ADD_STAT(countMinOverallMshrUncacheableLatency, statistics::units::Tick::get(),
-               "countMin number of overall MSHR uncacheable ticks"),
-    ADD_STAT(countMinDemandMshrMissRate, statistics::units::Ratio::get(),
-               "countMin mshr miss ratio for demand accesses"),
-    ADD_STAT(countMinOverallMshrMissRate, statistics::units::Ratio::get(),
-               "countMin mshr miss ratio for overall accesses"),
-    ADD_STAT(countMinDemandAvgMshrMissLatency, statistics::units::Rate<
-                statistics::units::Tick, statistics::units::Count>::get(),
-               "countMin average overall mshr miss latency"),
-    ADD_STAT(countMinOverallAvgMshrMissLatency, statistics::units::Rate<
-                statistics::units::Tick, statistics::units::Count>::get(),
-               "countMin average overall mshr miss latency"),
-    ADD_STAT(countMinOverallAvgMshrUncacheableLatency, statistics::units::Rate<
-                statistics::units::Tick, statistics::units::Count>::get(),
-               "countMin average overall mshr uncacheable latency"),
-*/    ADD_STAT(countMinReplacements, statistics::units::Count::get(),
+    ADD_STAT(countMinReplacements, statistics::units::Count::get(),
                "countMin number of replacements"),
-/*    ADD_STAT(countMinDataExpansions, statistics::units::Count::get(),
-               "countMin number of data expansions"),
-    ADD_STAT(countMinDataContractions, statistics::units::Count::get(),
-               "countMin number of data contractions"),
-*/
     ADD_STAT(countMinWriteBacks, statistics::units::Count::get(),
                "countMin number of writebacks"),
     ADD_STAT(countMinCacheDemandHits, statistics::units::Count::get(),
@@ -2831,22 +2778,7 @@ BaseCache::CacheStats::regStats()
     dataExpansions.flags(nozero | nonan);
     dataContractions.flags(nozero | nonan);
 
-    countMinCacheDemandAccess.flags(total | nozero | nonan);
-    countMinCacheDemandAccess = countMinCacheDemandHits + countMinCacheDemandMisses;
 
-    countMinCacheNonDemandAccess.flags(total | nozero| nonan);
-    countMinCacheNonDemandAccess = countMinCacheNonDemandHits + countMinCacheNonDemandMisses;
-
-    countMinCacheOverallHits.flags(total | nozero| nonan);
-    countMinCacheOverallHits = countMinCacheDemandHits + countMinCacheNonDemandHits;
-
-    countMinCacheOverallMisses.flags(total | nozero| nonan);
-    countMinCacheOverallMisses = countMinCacheDemandMisses + countMinCacheNonDemandMisses;
-
-    countMinCacheOverallAccess.flags(total | nozero| nonan);
-    countMinCacheOverallAccess = countMinCacheOverallHits + countMinCacheOverallMisses;
-
-/*
     countMinDemandHits.flags(total | nozero | nonan);
     countMinDemandHits = SUM_DEMAND_COUNTMIN(hits);
     for (int i = 0; i < max_requestors; i++){
@@ -2871,91 +2803,20 @@ BaseCache::CacheStats::regStats()
         countMinOverallMisses.subname(i, system->getRequestorName(i));
     }
 
-    countMinDemandMissLatency.flags(total | nozero | nonan);
-    countMinDemandMissLatency = SUM_DEMAND_COUNTMIN(missLatency);
-    for (int i = 0; i < max_requestors; i++) {
-        countMinDemandMissLatency.subname(i, system->getRequestorName(i));
-    }
+    countMinCacheDemandAccess.flags(total | nozero | nonan);
+    countMinCacheDemandAccess = countMinCacheDemandHits + countMinCacheDemandMisses;
 
-    countMinOverallMissLatency.flags(total | nozero | nonan);
-    countMinOverallMissLatency = countMinDemandMissLatency + SUM_NON_DEMAND_COUNTMIN(missLatency);
-    for (int i = 0; i < max_requestors; i++) {
-        countMinOverallMissLatency.subname(i, system->getRequestorName(i));
-    }
+    countMinCacheNonDemandAccess.flags(total | nozero| nonan);
+    countMinCacheNonDemandAccess = countMinCacheNonDemandHits + countMinCacheNonDemandMisses;
 
-    countMinDemandHitLatency.flags(total | nozero | nonan);
-    countMinDemandHitLatency = SUM_DEMAND_COUNTMIN(hitLatency);
-    for (int i = 0; i < max_requestors; i++) {
-        countMinDemandHitLatency.subname(i, system->getRequestorName(i));
-    }
-    countMinOverallHitLatency.flags(total | nozero | nonan);
-    countMinOverallHitLatency = countMinDemandHitLatency + SUM_NON_DEMAND_COUNTMIN(hitLatency);
-    for (int i = 0; i < max_requestors; i++) {
-        countMinOverallHitLatency.subname(i, system->getRequestorName(i));
-    }
+    countMinCacheOverallHits.flags(total | nozero| nonan);
+    countMinCacheOverallHits = countMinCacheDemandHits + countMinCacheNonDemandHits;
 
-    countMinDemandAccesses.flags(total | nozero | nonan);
-    countMinDemandAccesses = countMinDemandHits + countMinDemandMisses;
-    for (int i = 0; i < max_requestors; i++) {
-        countMinDemandAccesses.subname(i, system->getRequestorName(i));
-    }
+    countMinCacheOverallMisses.flags(total | nozero| nonan);
+    countMinCacheOverallMisses = countMinCacheDemandMisses + countMinCacheNonDemandMisses;
 
-    countMinOverallAccesses.flags(total | nozero | nonan);
-    countMinOverallAccesses = countMinOverallHits + countMinOverallMisses;
-    for (int i = 0; i < max_requestors; i++) {
-        countMinOverallAccesses.subname(i, system->getRequestorName(i));
-    }
-
-    countMinDemandMissRate.flags(total | nozero | nonan);
-    countMinDemandMissRate = countMinDemandMisses / countMinDemandAccesses;
-    for (int i = 0; i < max_requestors; i++) {
-        countMinDemandMissRate.subname(i, system->getRequestorName(i));
-    }
-
-    countMinOverallMissRate.flags(total | nozero | nonan);
-    countMinOverallMissRate = countMinOverallMisses / countMinOverallAccesses;
-    for (int i = 0; i < max_requestors; i++) {
-        countMinOverallMissRate.subname(i, system->getRequestorName(i));
-    }
-
-    countMinDemandAvgMissLatency.flags(total | nozero | nonan);
-    countMinDemandAvgMissLatency = countMinDemandMissLatency / countMinDemandMisses;
-    for (int i = 0; i < max_requestors; i++) {
-        countMinDemandAvgMissLatency.subname(i, system->getRequestorName(i));
-    }
-
-    countMinOverallAvgMissLatency.flags(total | nozero | nonan);
-    countMinOverallAvgMissLatency = countMinOverallMissLatency / countMinOverallMisses;
-    for (int i = 0; i < max_requestors; i++) {
-        countMinOverallAvgMissLatency.subname(i, system->getRequestorName(i));
-    }
-*/
-    countMinBlockedCycles.init(NUM_BLOCKED_CAUSES);
-    countMinBlockedCycles
-        .subname(Blocked_NoMSHRs, "no_mshrs")
-        .subname(Blocked_NoTargets, "no_targets")
-        ;
-
-
-    countMinBlockedCauses.init(NUM_BLOCKED_CAUSES);
-    countMinBlockedCauses
-        .subname(Blocked_NoMSHRs, "no_mshrs")
-        .subname(Blocked_NoTargets, "no_targets")
-        ;
-/*
-    countMinAvgBlocked
-        .subname(Blocked_NoMSHRs, "no_mshrs")
-        .subname(Blocked_NoTargets, "no_targets")
-        ;
-    countMinAvgBlocked = blockedCycles / blockedCauses;
-
-    countMinWriteBacks
-        .init(max_requestors)
-        .flags(total | nozero | nonan)
-        ;
-    for (int i = 0; i < max_requestors; i++) {
-        countMinWriteBacks.subname(i, system->getRequestorName(i));
-    }
+    countMinCacheOverallAccess.flags(total | nozero| nonan);
+    countMinCacheOverallAccess = countMinCacheOverallHits + countMinCacheOverallMisses;
 
     countMinDemandMshrHits.flags(total | nozero | nonan);
     countMinDemandMshrHits = SUM_DEMAND_COUNTMIN(mshrHits);
@@ -2981,70 +2842,18 @@ BaseCache::CacheStats::regStats()
         countMinOverallMshrMisses.subname(i, system->getRequestorName(i));
     }
 
-    countMinDemandMshrMissLatency.flags(total | nozero | nonan);
-    countMinDemandMshrMissLatency = SUM_DEMAND_COUNTMIN(mshrMissLatency);
-    for (int i = 0; i < max_requestors; i++) {
-        countMinDemandMshrMissLatency.subname(i, system->getRequestorName(i));
-    }
-
-    countMinOverallMshrMissLatency.flags(total | nozero | nonan);
-    countMinOverallMshrMissLatency =
-        countMinDemandMshrMissLatency + SUM_NON_DEMAND_COUNTMIN(mshrMissLatency);
-    for (int i = 0; i < max_requestors; i++) {
-        countMinOverallMshrMissLatency.subname(i, system->getRequestorName(i));
-    }
-
-    countMinOverallMshrUncacheable.flags(total | nozero | nonan);
-    countMinOverallMshrUncacheable =
-        SUM_DEMAND_COUNTMIN(mshrUncacheable) + SUM_NON_DEMAND_COUNTMIN(mshrUncacheable);
-    for (int i = 0; i < max_requestors; i++) {
-        countMinOverallMshrUncacheable.subname(i, system->getRequestorName(i));
-    }
+    countMinBlockedCycles.init(NUM_BLOCKED_CAUSES);
+    countMinBlockedCycles
+        .subname(Blocked_NoMSHRs, "no_mshrs")
+        .subname(Blocked_NoTargets, "no_targets")
+        ;
 
 
-    countMinOverallMshrUncacheableLatency.flags(total | nozero | nonan);
-    countMinOverallMshrUncacheableLatency =
-        SUM_DEMAND_COUNTMIN(mshrUncacheableLatency) +
-        SUM_NON_DEMAND_COUNTMIN(mshrUncacheableLatency);
-    for (int i = 0; i < max_requestors; i++) {
-        countMinOverallMshrUncacheableLatency.subname(i, system->getRequestorName(i));
-    }
-
-    countMinDemandMshrMissRate.flags(total | nozero | nonan);
-    countMinDemandMshrMissRate = countMinDemandMshrMisses / countMinDemandAccesses;
-    for (int i = 0; i < max_requestors; i++) {
-        countMinDemandMshrMissRate.subname(i, system->getRequestorName(i));
-    }
-
-    countMinOverallMshrMissRate.flags(total | nozero | nonan);
-    countMinOverallMshrMissRate = countMinOverallMshrMisses / countMinOverallAccesses;
-    for (int i = 0; i < max_requestors; i++) {
-        countMinOverallMshrMissRate.subname(i, system->getRequestorName(i));
-    }
-
-    countMinDemandAvgMshrMissLatency.flags(total | nozero | nonan);
-    countMinDemandAvgMshrMissLatency = countMinDemandMshrMissLatency / countMinDemandMshrMisses;
-    for (int i = 0; i < max_requestors; i++) {
-        countMinDemandAvgMshrMissLatency.subname(i, system->getRequestorName(i));
-    }
-
-    countMinOverallAvgMshrMissLatency.flags(total | nozero | nonan);
-    countMinOverallAvgMshrMissLatency = countMinOverallMshrMissLatency / countMinOverallMshrMisses;
-    for (int i = 0; i < max_requestors; i++) {
-        countMinOverallAvgMshrMissLatency.subname(i, system->getRequestorName(i));
-    }
-
-    countMinOverallAvgMshrUncacheableLatency.flags(total | nozero | nonan);
-    countMinOverallAvgMshrUncacheableLatency =
-        countMinOverallMshrUncacheableLatency / countMinOverallMshrUncacheable;
-    for (int i = 0; i < max_requestors; i++) {
-        countMinOverallAvgMshrUncacheableLatency.subname(i,
-            system->getRequestorName(i));
-    }
-
-    countMinDataExpansions.flags(nozero | nonan);
-    countMinDataContractions.flags(nozero | nonan);
-*/
+    countMinBlockedCauses.init(NUM_BLOCKED_CAUSES);
+    countMinBlockedCauses
+        .subname(Blocked_NoMSHRs, "no_mshrs")
+        .subname(Blocked_NoTargets, "no_targets")
+        ;
 
 }
 
@@ -3061,44 +2870,13 @@ BaseCache::regProbePoints()
 void
 BaseCache::updateCountMinStats()
 {
-    /*const auto max_requestors = system->maxRequestors();
 
-    int idx = 0;
-    std::cout << counterName << " " << name() << std::endl; 
-    for (auto &cmcs: stats.countMinCmd) {
-        std::cout << idx << ": " << MemCmd(idx).toString() << " inUse: " << cmcs->inUse << std::endl;
-	if (cmcs->inUse) {
-            for (int i = 0; i < max_requestors; i++) {
-                std::cout << i << ": " << system->getRequestorName(i) << " hitsInUse: " << cmcs->hitsInUse[i] << " missesInUse: " << cmcs->missesInUse[i] << std::endl;            
-                if(cmcs->hitsInUse[i]) {
-                    cmcs->hits[i] = system->count_min_structure_system[counterName]->estimate(std::string(system->getRequestorName(i) + "." + MemCmd(idx).toString() + ".hits").data());
-                    std::cout << name() << ".hits" << i << ": " << std::string(system->getRequestorName(i) + "." + MemCmd(idx).toString() + ".hits").data() << " => " << cmcs->hits[i].value() << std::endl;
-                }
-                if (cmcs->missesInUse[i]) {
-                    cmcs->misses[i] = system->count_min_structure_system[counterName]->estimate(std::string(system->getRequestorName(i) + "." + MemCmd(idx).toString() + ".misses").data());
-                    std::cout << name() << ".misses" << i << ": " << std::string(system->getRequestorName(i) + "." + MemCmd(idx).toString() + ".misses").data() << " => " << cmcs->misses[i].value() << std::endl;     
-                }
-            }
-        }
-        ++idx;
-        std::cout << std::endl;
-    }*/
-   
-    stats.countMinCacheDemandHits = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".demandHits").data());
+    stats.countMinWriteBacks = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".writebacks").data(), default_group);
+    stats.countMinReplacements = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".replacements").data(), default_group);
 
-    stats.countMinCacheDemandMisses = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".demandMisses").data());
-//    stats.countMinCacheDemandAccess = stats.countMinCacheDemandHits.value() + stats.countMinCacheDemandMisses.value();
+    if(tags)
+        tags->updateCountMinStats();
 
-    stats.countMinCacheNonDemandHits = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".nonDemandHits").data());
-    stats.countMinCacheNonDemandMisses = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".nonDemandMisses").data());
-//    stats.countMinCacheNonDemandAccess = stats.countMinCacheNonDemandHits.value() + stats.countMinCacheNonDemandMisses.value();
-
-//    system->count_min_structure_system[counterName]->print();    
-
-    stats.countMinWriteBacks = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".writebacks").data());
-    stats.countMinReplacements = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".replacements").data());
-    tags->updateCountMinStats();
-    //std::cout << prefetcher << std::endl;
     if (prefetcher)
         prefetcher->updateCountMinStats();
 

@@ -22,30 +22,32 @@ class CountMinCounter
         unsigned int reset_hashes_on_reset;
         unsigned int **counters;
         unsigned int **hashes;
-	unsigned int *row_counts;
+	    unsigned int *row_counts;
         unsigned int hash_string_prime[73];
         unsigned int current_group;
         int value(int c);
         int pointValue(int c);
         std::set<std::string> countersAdded;
     public:
-        CountMinCounter(int w, int d, int cons);
+        CountMinCounter(int w, int d, int cons, int c_g);
         ~CountMinCounter();
         unsigned int hashstr(char *s, unsigned int, unsigned int, unsigned int row);
         void print();
         void reset();
         void change_group_context();
-        int increment(int s);
-        int increment(char *s);
-        int increment(int s, int update);
-        int increment(char *s, int update);
+
+        int increment(int s, int group);
+        int increment(char *s, int group);
+        int increment(int s, int group, int update);
+        int increment(char *s, int group, int update);
+
         int decrement(int s);
         int decrement(char *s);
         int decrement(int s, int update);
         int decrement(char *s, int update);
 
-        int estimate(int s);
-        int estimate(char *s);
+        int estimate(int s, int group);
+        int estimate(char *s, int group);
 
         int getNumberOfCounters();
         std::set<std::string> getCounterNames();

@@ -254,7 +254,7 @@ Queued::getPacket()
     pfq.pop_front();
 
     prefetchStats.pfIssued++;
-    system->count_min_structure_system[counterName]->increment(std::string(name() + ".pfIssued").data());
+    system->count_min_structure_system[counterName]->increment(std::string(name() + ".pfIssued").data(), default_group);
     issuedPrefetches += 1;
     assert(pkt != nullptr);
     DPRINTF(HWPrefetch, "Generating prefetch for %#x.\n", pkt->getAddr());

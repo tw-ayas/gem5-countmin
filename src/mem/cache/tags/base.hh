@@ -171,6 +171,7 @@ class BaseTags : public ClockedObject
     } stats;
 
     std::string counterName;
+    int default_group;
 
   public:
     typedef BaseTagsParams Params;

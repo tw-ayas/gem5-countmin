@@ -203,6 +203,7 @@ class BPredUnit : public SimObject
 
     /** update countMinStats */
     void updateCountMinStats();
+    int default_group;
 
   private:
     struct PredictorHistory
@@ -340,6 +341,7 @@ class BPredUnit : public SimObject
         statistics::Scalar indirectMispredicted;
 
         /** countMin Stats */
+        statistics::Scalar countMinLookups;
         statistics::Scalar countMinCondPredicted;
         statistics::Scalar countMinCondIncorrect;
     } stats;

@@ -456,6 +456,7 @@ class Base : public ClockedObject
     void addTLB(BaseTLB *tlb);
 
     std::string counterName;
+    int default_group;
     
     void updateCountMinStats();
 

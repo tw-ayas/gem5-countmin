@@ -889,6 +889,7 @@ class BaseCache : public ClockedObject
     const unsigned blkSize;
 
     std::string counterName;
+    int default_group;
 //    const unsigned probHwCounters;
 //    const float probHwCountersEp;
 //    const float probHwCountersGamma;
@@ -1218,7 +1219,7 @@ class BaseCache : public ClockedObject
         * Experimental Counter using CountMinSketch Algorithm
         */
 
-/*
+
         statistics::Formula countMinDemandHits;
         statistics::Formula countMinOverallHits;
         statistics::Formula countMinDemandHitLatency;
@@ -1226,46 +1227,24 @@ class BaseCache : public ClockedObject
 
         statistics::Formula countMinDemandMisses;
         statistics::Formula countMinOverallMisses;
-        statistics::Formula countMinDemandMissLatency;
-        statistics::Formula countMinOverallMissLatency;
-        statistics::Formula countMinDemandAccesses;
-        statistics::Formula countMinOverallAccesses;
-
-        statistics::Formula countMinDemandMissRate;
-        statistics::Formula countMinOverallMissRate;
-        statistics::Formula countMinDemandAvgMissLatency;
-        statistics::Formula countMinOverallAvgMissLatency;
-*/
         statistics::Vector countMinBlockedCycles;   
         statistics::Vector countMinBlockedCauses;
-
-/*:        statistics::Formula countMinAvgBlocked;
 
         statistics::Formula countMinDemandMshrHits;
         statistics::Formula countMinOverallMshrHits;
         statistics::Formula countMinDemandMshrMisses;
         statistics::Formula countMinOverallMshrMisses;
-        statistics::Formula countMinOverallMshrUncacheable;
-        statistics::Formula countMinDemandMshrMissLatency;
-        statistics::Formula countMinOverallMshrMissLatency;
-        statistics::Formula countMinOverallMshrUncacheableLatency;
-        statistics::Formula countMinDemandMshrMissRate;
-        statistics::Formula countMinOverallMshrMissRate;
-        statistics::Formula countMinDemandAvgMshrMissLatency;
-        statistics::Formula countMinOverallAvgMshrMissLatency;
-        statistics::Formula countMinOverallAvgMshrUncacheableLatency;
-*/
+
         statistics::Scalar countMinReplacements;
-/*        statistics::Scalar countMinDataExpansions;
-        statistics::Scalar countMinDataContractions;
-*/       
         statistics::Scalar countMinWriteBacks;
+
         statistics::Scalar countMinCacheDemandHits;
         statistics::Scalar countMinCacheDemandMisses;
         statistics::Formula countMinCacheDemandAccess;
         statistics::Scalar countMinCacheNonDemandHits;
         statistics::Scalar countMinCacheNonDemandMisses;
         statistics::Formula countMinCacheNonDemandAccess;
+
         statistics::Formula countMinCacheOverallHits;
         statistics::Formula countMinCacheOverallMisses; 
         statistics::Formula countMinCacheOverallAccess;        
@@ -1366,7 +1345,7 @@ class BaseCache : public ClockedObject
         uint8_t flag = 1 << cause;
         if (blocked == 0) {
             stats.blockedCauses[cause]++;
-            stats.countMinBlockedCauses[cause] += system->count_min_structure_system[counterName]->increment(std::string(name() + ".blockedCauses" + std::to_string(cause)).data());
+            stats.countMinBlockedCauses[cause] += system->count_min_structure_system[counterName]->increment(std::string(name() + ".blockedCauses" + std::to_string(cause)).data(), default_group);
             blockedCycle = curCycle();
             cpuSidePort.setBlocked();
         }
@@ -1388,7 +1367,7 @@ class BaseCache : public ClockedObject
         DPRINTF(Cache,"Unblocking for cause %d, mask=%d\n", cause, blocked);
         if (blocked == 0) {
             stats.blockedCycles[cause] += curCycle() - blockedCycle;
-            stats.countMinBlockedCycles[cause] += system->count_min_structure_system[counterName]->increment(std::string(name() + ".blockedCycle" + std::to_string(cause)).data(), (curCycle() - blockedCycle));
+            stats.countMinBlockedCycles[cause] += system->count_min_structure_system[counterName]->increment(std::string(name() + ".blockedCycle" + std::to_string(cause)).data(), default_group, (curCycle() - blockedCycle));
             cpuSidePort.clearBlocked();
         }
     }
@@ -1451,28 +1430,23 @@ class BaseCache : public ClockedObject
 
   public:
 
+    int getSubGroupForCounter(){
+        if(default_group == 11){
+            return 12;
+        }
+        if(default_group == 16){
+            return 16;
+        }
+    }
+
     void incMissCount(PacketPtr pkt)
     {
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).misses[pkt->req->requestorId()]++;
-        
-        /*std::string key = "";
-        if (isHitMissSumPkt(pkt) == 1){
-            key = name() + ".demandMisses";
-        }
-        else if(isHitMissSumPkt(pkt) == 2){
-            key = name() + ".nonDemandMisses";
-        }
-        else{
-            key = name() + system->getRequestorName(pkt->req->requestorId()) + "." + MemCmd(pkt->cmdToIndex()).toString() + ".misses";
-        }*/
 
-        stats.cmdStats(pkt).misses[pkt->req->requestorId()].value();
-
-	//system->count_min_structure_system[counterName]->increment(key.data());            
         std::string key = name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".misses";
         //std::cout << key << std::endl;
-        stats.countMinCmdStats(pkt).misses[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data());
+        stats.countMinCmdStats(pkt).misses[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data(), getSubGroupForCounter());
         
         pkt->req->incAccessDepth();
         if (missCount) {
@@ -1487,24 +1461,9 @@ class BaseCache : public ClockedObject
         assert(pkt->req->requestorId() < system->maxRequestors());
         stats.cmdStats(pkt).hits[pkt->req->requestorId()]++;
 
-        /*std::string key = "";
-        if (isHitMissSumPkt(pkt) == 1){
-            key = name() + ".demandHits";
-        }
-        else if (isHitMissSumPkt(pkt) == 2){
-            key = name() + ".nonDemandHits";
-        }
-        else{
-           key = name() + system->getRequestorName(pkt->req->requestorId()) + "." + MemCmd(pkt->cmdToIndex()).toString() + ".hits";   
-        }*/
-
-//        std::cout << key << std::endl;
-        stats.cmdStats(pkt).hits[pkt->req->requestorId()].value();
-        
-        //system->count_min_structure_system[counterName]->increment(key.data());
         std::string key = name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".hits";
         //std::cout << key << std::endl;
-        stats.countMinCmdStats(pkt).hits[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data());
+        stats.countMinCmdStats(pkt).hits[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data(), getSubGroupForCounter());
 
     }
 

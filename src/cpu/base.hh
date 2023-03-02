@@ -231,6 +231,8 @@ class BaseCPU : public ClockedObject
 
     void updateCountMinStats();
 
+    int default_value;
+
   protected:
     std::vector<BaseInterrupts*> interrupts;
 

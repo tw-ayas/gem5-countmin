@@ -621,11 +621,6 @@ class CPU : public BaseCPU
         statistics::Formula countMinTotalCpi;
         statistics::Formula countMinIpc;
         statistics::Formula countMinTotalIpc;
-        statistics::Scalar countMinBranchInsts;
-        statistics::Scalar countMinBranchMisses;
-        statistics::Scalar countMinStalledCyclesFrontend;
-        statistics::Scalar countMinStalledCyclesBackend;
-        statistics::Scalar countMinFlushCycles;
     } cpuStats;
 
   public:
@@ -635,9 +630,9 @@ class CPU : public BaseCPU
 
     void updateCountMinStats();    
 
-    int update_count_min(char *s);
+    int update_count_min(char *s, int group);
 
-    int get_count_min(char *s);
+    int get_count_min(char *s, int group);
     
 };
 

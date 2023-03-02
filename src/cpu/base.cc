@@ -184,6 +184,7 @@ BaseCPU::BaseCPU(const Params &p, bool is_checker)
 //    for(auto const& i : cpuList){
 //        std::cout << i->name() << " " << i->cpuId() << std::endl;
 //    }
+    default_counter = 1;
 
     registerExitCallback([this]() { updateCountMinStats(); });
 }
@@ -825,7 +826,7 @@ BaseCPU::updateCountMinStats(){
     
 //    std::cout << "Updating all the Stats, CPU, Cacahe, Others, etc" << std::endl;   
 
-    baseStats.countMinNumCycles = system->count_min_structure_system[name()]->estimate(std::string(name() + ".numCycles").data());
+    baseStats.countMinNumCycles = system->count_min_structure_system[name()]->estimate(std::string(name() + ".numCycles").data(), default_value);
 
 //    std::cout << "Cycles count per 1000 => " << baseStats.numCycles.value() << std::endl;
 //    std::cout << find(std::string(name() + ".dcache").data())->name() << " Update CountMin Stats" << std::endl;

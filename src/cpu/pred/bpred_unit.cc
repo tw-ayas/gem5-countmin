@@ -78,7 +78,7 @@ BPredUnit::BPredUnit(const Params &params)
     int first_pos= counter_name.find(".") + 1;
     int second_pos = counter_name.find(".", first_pos);
     counterName = counter_name.substr(0, second_pos);
-
+    default_group = 1;
 }
 
 BPredUnit::BPredUnitStats::BPredUnitStats(statistics::Group *parent)
@@ -109,7 +109,9 @@ BPredUnit::BPredUnitStats::BPredUnitStats(statistics::Group *parent)
       ADD_STAT(countMinCondPredicted, statistics::units::Count::get(),
                "countMin Number of conditional branches predicted"),
       ADD_STAT(countMinCondIncorrect, statistics::units::Count::get(),
-               "countMin Number of conditional branches incorrect")
+               "countMin Number of conditional branches incorrect"),
+      ADD_STAT(countMinLookups, statistics::units::Count::get(),
+               "countMin Number of BP lookups")
 {
     BTBHitRatio.precision(6);
 }
@@ -152,6 +154,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
     std::unique_ptr<PCStateBase> target(pc.clone());
 
     ++stats.lookups;
+    system->count_min_structure_system[counterName]->increment(std::string(name() + ".lookups").data(), default_group);
     ppBranches->notify(1);
 
     void *bp_history = NULL;
@@ -165,7 +168,7 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
         uncondBranch(tid, pc.instAddr(), bp_history);
     } else {
         ++stats.condPredicted;
-        system->count_min_structure_system[counterName]->increment(std::string(name() + ".condPredicted").data());
+        system->count_min_structure_system[counterName]->increment(std::string(name() + ".condPredicted").data(), default_group);
         pred_taken = lookup(tid, pc.instAddr(), bp_history);
 
         DPRINTF(Branch, "[tid:%i] [sn:%llu] "
@@ -409,7 +412,7 @@ BPredUnit::squash(const InstSeqNum &squashed_sn,
     History &pred_hist = predHist[tid];
 
     ++stats.condIncorrect;
-    system->count_min_structure_system[counterName]->increment(std::string(name() + ".condIncorrect").data());
+    system->count_min_structure_system[counterName]->increment(std::string(name() + ".condIncorrect").data(), default_group);
     ppMisses->notify(1);
 
     DPRINTF(Branch, "[tid:%i] Squashing from sequence number %i, "
@@ -549,8 +552,9 @@ BPredUnit::dump()
 void
 BPredUnit::updateCountMinStats()
 {
-    stats.countMinCondPredicted = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".condPredicted").data());
-    stats.countMinCondIncorrect = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".condIncorrect").data());
+    stats.countMinLookups = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".lookups").data(), default_group);
+    stats.countMinCondPredicted = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".condPredicted").data(), default_group);
+    stats.countMinCondIncorrect = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".condIncorrect").data(), default_group);
 }
 
 } // namespace branch_prediction

@@ -205,6 +205,8 @@ class Decode
     /** Update CountMin Stats */
     void updateCountMinStats();
 
+    int default_group;
+
   private:
     // Interfaces to objects outside of decode.
     /** CPU interface. */

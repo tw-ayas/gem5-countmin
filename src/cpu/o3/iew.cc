@@ -116,6 +116,8 @@ IEW::IEW(CPU *_cpu, const BaseO3CPUParams &params)
 
     counterName = cpu->name();
 
+    default_value = 6;
+
 }
 
 std::string
@@ -899,10 +901,10 @@ IEW::dispatch(ThreadID tid)
 
     if (dispatchStatus[tid] == Blocked) {
         ++iewStats.blockCycles;
-        cpu->update_count_min(std::string(name() + ".blockCycles").data());
+        cpu->update_count_min(std::string(name() + ".blockCycles").data(), cpu->default_group);
     } else if (dispatchStatus[tid] == Squashing) {
         ++iewStats.squashCycles;
-        cpu->update_count_min(std::string(name() + ".squashCycles").data());
+        cpu->update_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
     }
 
     // Dispatch should try to dispatch as many instructions as its bandwidth
@@ -1009,7 +1011,7 @@ IEW::dispatchInsts(ThreadID tid)
             toRename->iewUnblock[tid] = false;
 
             ++iewStats.iqFullEvents;
-            cpu->update_count_min(std::string(cpu->name() + ".iqFullEvents").data());
+            cpu->update_count_min(std::string(name() + ".iqFullEvents").data(), default_group);
             break;
         }
 
@@ -1029,7 +1031,7 @@ IEW::dispatchInsts(ThreadID tid)
             toRename->iewUnblock[tid] = false;
 
             ++iewStats.lsqFullEvents;
-            cpu->update_count_min(std::string(cpu->name() + ".lsqFullEvents").data());
+            cpu->update_count_min(std::string(name() + ".lsqFullEvents").data(), default_group);
             break;
         }
 
@@ -1118,7 +1120,7 @@ IEW::dispatchInsts(ThreadID tid)
             instQueue.recordProducer(inst);
 
             iewStats.executedInstStats.numNop[tid]++;
-            iewStats.executedInstStats.countMinNumNop[tid] = cpu->update_count_min(std::string(name() + ".numNop::" + std::to_string(tid)).data());
+            iewStats.executedInstStats.countMinNumNop[tid] = cpu->update_count_min(std::string(name() + ".numNop::" + std::to_string(tid)).data(), default_group);
 
             add_to_iq = false;
         } else {
@@ -1246,7 +1248,7 @@ IEW::executeInsts()
             inst->setCanCommit();
 
             ++iewStats.executedInstStats.numSquashedInsts;
-            iewStats.executedInstStats.countMinNumSquashedInsts = cpu->update_count_min(std::string(name() + ".numLoadInsts").data());             
+            iewStats.executedInstStats.countMinNumSquashedInsts = cpu->update_count_min(std::string(name() + ".numLoadInsts").data(), default_group);
 
             continue;
         }
@@ -1383,7 +1385,7 @@ IEW::executeInsts()
                     iewStats.predictedNotTakenIncorrect++;
                 }
                 //Update branchMispredict for count_min
-                cpu->update_count_min(std::string(cpu->name() + ".branchMispredicts").data());
+                cpu->update_count_min(std::string(cpu->name() + ".branchMispredicts").data(), default_group);
  
             } else if (ldstQueue.violation(tid)) {
                 assert(inst->isMemRef());
@@ -1631,7 +1633,7 @@ IEW::updateExeInstStats(const DynInstPtr& inst)
     ThreadID tid = inst->threadNumber;
 
     iewStats.executedInstStats.numInsts++;
-    cpu->update_count_min(std::string(name() + ".numInsts").data());
+    cpu->update_count_min(std::string(name() + ".numInsts").data(), default_group);
     
 #if TRACING_ON
     if (debug::O3PipeView) {
@@ -1644,7 +1646,7 @@ IEW::updateExeInstStats(const DynInstPtr& inst)
     //
     if (inst->isControl()) {
         iewStats.executedInstStats.numBranches[tid]++;
-        iewStats.executedInstStats.countMinNumBranches[tid] = cpu->update_count_min(std::string(name() + ".numBranches::" + std::to_string(tid)).data());
+        iewStats.executedInstStats.countMinNumBranches[tid] = cpu->update_count_min(std::string(name() + ".numBranches::" + std::to_string(tid)).data(), default_group);
     }
 
     //
@@ -1652,11 +1654,11 @@ IEW::updateExeInstStats(const DynInstPtr& inst)
     //
     if (inst->isMemRef()) {
         iewStats.executedInstStats.numRefs[tid]++;
-        iewStats.executedInstStats.countMinNumRefs[tid] = cpu->update_count_min(std::string(name() + ".numRefs::" + std::to_string(tid)).data());
+        iewStats.executedInstStats.countMinNumRefs[tid] = cpu->update_count_min(std::string(name() + ".numRefs::" + std::to_string(tid)).data(), default_group);
 
         if (inst->isLoad()) {
             iewStats.executedInstStats.numLoadInsts[tid]++;
-            iewStats.executedInstStats.countMinNumLoadInsts[tid] = cpu->update_count_min(std::string(name() + ".numLoadInsts::" + std::to_string(tid)).data());
+            iewStats.executedInstStats.countMinNumLoadInsts[tid] = cpu->update_count_min(std::string(name() + ".numLoadInsts::" + std::to_string(tid)).data(), default_group);
         }
     }
 }
@@ -1691,20 +1693,19 @@ IEW::checkMisprediction(const DynInstPtr& inst)
             }
 
             //Update branchMispredicts for count_min
-            cpu->update_count_min(std::string(cpu->name() + ".branchMispredicts").data());
+            cpu->update_count_min(std::string(name() + ".branchMispredicts").data(), default_group);
         }
     }
 }
 
 void
 IEW::updateCountMinStats(){
-    iewStats.countMinIqFullEvents = cpu->get_count_min(std::string(name() + ".iqFullEvents").data());
-    iewStats.countMinLsqFullEvents = cpu->get_count_min(std::string(name() + ".lsqFullEvents").data());
-    iewStats.countMinStallBackendCycles = cpu->get_count_min(std::string(name() + ".blockCycles").data()) + cpu->get_count_min(std::string(name() + ".squashCycles").data());
-    iewStats.countMinBranchMispredicts = cpu->get_count_min(std::string(name() + ".branchMispredicts").data());
-    iewStats.countMinSquashCycles = cpu->get_count_min(std::string(name() + ".squashCycles").data());
-//    iewStats.executedInstStats.countMinNumBranches = cpu->get_count_min(std::string(name() + ".numBranches").data());
-    iewStats.executedInstStats.countMinNumInsts = cpu->get_count_min(std::string(name() + ".numInsts").data());
+    iewStats.countMinIqFullEvents = cpu->get_count_min(std::string(name() + ".iqFullEvents").data(), default_group);
+    iewStats.countMinLsqFullEvents = cpu->get_count_min(std::string(name() + ".lsqFullEvents").data(), default_group);
+    iewStats.countMinStallBackendCycles = cpu->get_count_min(std::string(name() + ".blockCycles").data(), cpu->default_group) + cpu->get_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
+    iewStats.countMinBranchMispredicts = cpu->get_count_min(std::string(name() + ".branchMispredicts").data(), default_group);
+    iewStats.countMinSquashCycles = cpu->get_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
+    iewStats.executedInstStats.countMinNumInsts = cpu->get_count_min(std::string(name() + ".numInsts").data(), default_group);
 }
 
 } // namespace o3

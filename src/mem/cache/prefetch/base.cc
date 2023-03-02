@@ -110,9 +110,11 @@ Base::Base(const BasePrefetcherParams &p)
     int first_pos= counter_name.find(".") + 1;
     int second_pos = counter_name.find(".", first_pos);
     counterName = counter_name.substr(0, second_pos);
+    default_group = 12;
 
     if (system->count_min_structure_system.count(counterName) == 0){
         counterName = "system";
+        default_group = 16;
     }
 
 }
@@ -331,7 +333,7 @@ void
 Base::updateCountMinStats()
 {
 //    std::cout << "Update Prefetcher CountMinStats" << std::endl;
-    prefetchStats.countMinPfIssued = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".pfIssued").data());
+    prefetchStats.countMinPfIssued = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".pfIssued").data(), default_group);
 }
 
 } // namespace prefetch

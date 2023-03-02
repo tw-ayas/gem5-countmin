@@ -74,9 +74,11 @@ BaseTags::BaseTags(const Params &p)
     int second_pos = counter_name.find(".", first_pos);
 //    int third_pos = counter_name.find(".", second_pos);
     counterName = counter_name.substr(0, second_pos);
+    default_group = 11;
 
     if (system->count_min_structure_system.count(counterName) == 0){
         counterName = "system";
+        default_group = 16;
     }
 
 }
@@ -136,8 +138,8 @@ BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     stats.tagAccesses += 1;
     stats.dataAccesses += 1;
 
-    //system->count_min_structure_system[counterName]->increment(std::string(name() + ".tagAccessess").data());
-    //system->count_min_structure_system[counterName]->increment(std::string(name() + ".dataAccesses").data());
+    stats.countMinTagAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".tagAccessess").data(), default_group);
+    stats.countMinDataAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".dataAccesses").data(), default_group);
 }
 
 void
@@ -181,7 +183,7 @@ BaseTags::computeStatsVisitor(CacheBlk &blk)
         const uint32_t task_id = blk.getTaskId();
         assert(task_id < context_switch_task_id::NumTaskId);
         stats.occupanciesTaskId[task_id]++;
-        stats.countMinOccupanciesTaskId[task_id] = system->count_min_structure_system[counterName]->increment(std::string(name() + ".occupanciesTaskId::" + std::to_string(task_id)).data());
+        stats.countMinOccupanciesTaskId[task_id] = system->count_min_structure_system[counterName]->increment(std::string(name() + ".occupanciesTaskId::" + std::to_string(task_id)).data(), default_group);
         Tick age = blk.getAge();
 
         int age_index;
@@ -197,7 +199,7 @@ BaseTags::computeStatsVisitor(CacheBlk &blk)
             age_index = 4; // >10ms
 
         stats.ageTaskId[task_id][age_index]++;
-        stats.ageTaskId[task_id][age_index] = system->count_min_structure_system[counterName]->increment(std::string(name() + ".ageTaskId_" + std::to_string(task_id) + "::" + std::to_string(age_index)).data());
+        stats.ageTaskId[task_id][age_index] = system->count_min_structure_system[counterName]->increment(std::string(name() + ".ageTaskId_" + std::to_string(task_id) + "::" + std::to_string(age_index)).data(), default_group);
     }
 }
 
@@ -380,8 +382,8 @@ BaseTags::BaseTagStats::preDumpStats()
 void
 BaseTags::updateCountMinStats()
 {
-    stats.countMinTagAccesses = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".tagAccesses").data());
-    stats.countMinDataAccesses = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".dataAccesses").data());
+    //stats.countMinTagAccesses = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".tagAccesses").data());
+    //stats.countMinDataAccesses = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".dataAccesses").data());
 }
 
 } // namespace gem5

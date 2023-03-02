@@ -86,6 +86,8 @@ Decode::Decode(CPU *_cpu, const BaseO3CPUParams &params)
         squashInst[tid] = nullptr;
         squashAfterDelaySlot[tid] = 0;
     }
+
+    default_group = 6;
 }
 
 void
@@ -595,7 +597,7 @@ Decode::decode(bool &status_change, ThreadID tid)
         ++stats.blockedCycles;
     } else if (decodeStatus[tid] == Squashing) {
         ++stats.squashCycles;
-        cpu->update_count_min(std::string(name() + ".squashCycles").data());
+        cpu->update_count_min(std::string(name() + ".squashCycles").data(), cpu->default_value);
     }
 
     // Decode should try to decode as many instructions as its bandwidth
@@ -726,7 +728,7 @@ Decode::decodeInsts(ThreadID tid)
             std::unique_ptr<PCStateBase> target = inst->branchTarget();
             if (*target != inst->readPredTarg()) {
                 ++stats.branchMispred;
-                cpu->update_count_min(std::string(cpu->name() + ".branchMispred").data());
+                cpu->update_count_min(std::string(name() + ".branchMispred").data(), default_value);
 
                 // Might want to set some sort of boolean and just do
                 // a check at the end
@@ -759,9 +761,9 @@ Decode::decodeInsts(ThreadID tid)
 
 void
 Decode::updateCountMinStats(){
-    stats.countMinSquashCycles = cpu->get_count_min(std::string(name() + ".squashCycles").data());
+    stats.countMinSquashCycles = cpu->get_count_min(std::string(name() + ".squashCycles").data(), cpu->default_value);
 //    stats.countMinBranchResolved = cpu->get_count_min(std::string(name() + ".branchResolved").data());
-    stats.countMinBranchMispred = cpu->get_count_min(std::string(name() + ".branchMispred").data());
+    stats.countMinBranchMispred = cpu->get_count_min(std::string(name() + ".branchMispred").data(), default_value);
 
 }
 

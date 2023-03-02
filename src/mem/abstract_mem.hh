@@ -202,6 +202,7 @@ class AbstractMemory : public ClockedObject
         /** countMin Stats */
         statistics::Vector countMinNumReads;
         statistics::Vector countMinNumWrites;
+        statistics::Vector countMinNumOther;
     } stats;
 
 
@@ -354,7 +355,8 @@ class AbstractMemory : public ClockedObject
      */
     void functionalAccess(PacketPtr pkt);
 
-    std::string getCpuCounterName(std::string requestor);    
+    std::string getCpuCounterName(std::string requestor);
+    int default_group;
 
 };
 

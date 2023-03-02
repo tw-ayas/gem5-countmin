@@ -4,7 +4,7 @@
 #include <ctime>
 #include <iostream>
 
-CountMinCounter::CountMinCounter(int size, int d, int cons) :
+CountMinCounter::CountMinCounter(int size, int d, int cons, int c_g) :
 hash_string_prime {503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599,
                    601, 607, 613, 617, 619, 631, 641, 643, 647, 653, 659, 661, 673, 677, 683, 691,
                    701, 709, 719, 727, 733, 739, 743, 751, 757, 761, 769, 773, 787, 797,
@@ -14,7 +14,7 @@ hash_string_prime {503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 5
     width = size / (4 * d);
     depth = d;
     conservative_update = cons;
-    reset_hashes_on_reset = 1;
+    reset_hashes_on_reset = 0;
     std::cout << "CountMinCounter with size " << size << " " << " " << width << " " << depth << std::endl;
     auto C = new unsigned int *[depth];
     row_counts = new unsigned int[depth];
@@ -37,7 +37,7 @@ hash_string_prime {503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 5
         cout << "hashes for " << i << " " << hashes[i][0] << " " << " " << hashes[i][1] << endl;
     }
 
-    current_group = 0;
+    current_group = c_g;
 };
 
 void CountMinCounter::reset(){
@@ -45,10 +45,12 @@ void CountMinCounter::reset(){
         for(int j = 0; j < width; j++){
             counters[i][j] = 0;
         }
-        std::srand(time(nullptr));
-        hashes[i][0] = int(float(std::rand()) * float(std::rand()));
-        hashes[i][1] = int(float(std::rand()) * float(std::rand()) + (std::rand() % 157896547));
-        cout << "hashes for " << i << " " << hashes[i][0] << " " << " " << hashes[i][1] << endl;
+        if(reset_hashes_on_reset) {
+            std::srand(time(nullptr));
+            hashes[i][0] = int(float(std::rand()) * float(std::rand()));
+            hashes[i][1] = int(float(std::rand()) * float(std::rand()) + (std::rand() % 157896547));
+            cout << "hashes for " << i << " " << hashes[i][0] << " " << " " << hashes[i][1] << endl;
+        }
     }
 }
 
@@ -71,21 +73,77 @@ std::set<std::string> CountMinCounter::getCounterNames()
     return countersAdded;
 }
 
-int CountMinCounter::increment(int s){
-   return CountMinCounter::increment(s, 1);
+int CountMinCounter::increment(int s, int group){
+   return CountMinCounter::increment(s, group, 1);
 }
 
-int CountMinCounter::increment(char *s){
-   return  CountMinCounter::increment(s, 1);
+int CountMinCounter::increment(char *s, int group){
+   return  CountMinCounter::increment(s, group, 1);
 }
 
-int CountMinCounter::increment(int s, int update) {
+int CountMinCounter::increment(int s, int group, int update) {
     char *str = std::to_string(s).data();
-    return CountMinCounter::increment(str, update);
+    return CountMinCounter::increment(str, group, update);
 }
 
-int CountMinCounter::increment(char *s, int update){
+int CountMinCounter::increment(char *s, int group, int update)
+{
+    switch(current_group){
+        case 0:
+            //count all counters
+            break;
+        case 1:
+            //count only General and some pipeline and cache
+            if ((group < 1 || group > 5) || group != 11 group != 17)
+            {
+                return 0;
+            }
+            break;
+        case 2:
+            //count all pipeline parameters
+            if (group < 6 || group > 10)
+            {
+                return 0;
+            }
+            break;
+        case 3:
+            //count all l1cache parameters
+            if (group < 11 || group > 15)
+            {
+                return 0;
+            }
+            break;
+        case 4:
+            //count all l2 cache and memory parameters
+            if (group < 16 || group > 20)
+            {
+                return 0;
+            }
+            break;
+        case 5:
+            //cpu and pipeline parameters
+            if (group < 0 || group > 10)
+            {
+                return 0;
+            }
+            break;
+        case 6:
+            //l1 l2 and memory parameters
+            if (group < 11 || group > 20)
+            {
+                return 0;
+            }
+            break;
+        case 7:
+            //cpu and l1 parameters
+            if ((group < 0 || group > 6) || (group < 11 || group > 15))
+            {
+                return 0;
+            }
+            break;
+        default:
 
+    }
     unsigned int hashval;
     int estimate = -1;
     int hashpos[depth];
@@ -145,12 +203,70 @@ int CountMinCounter::decrement(char *s, int update){
     return estimate;
 }
 
-int CountMinCounter::estimate(int s) {
+int CountMinCounter::estimate(int s, int group) {
     char *str = std::to_string(s).data();
     return CountMinCounter::estimate(str);
 }
 
-int CountMinCounter::estimate(char *s){
+int CountMinCounter::estimate(char *s, int group){
+
+    switch(current_group){
+        case 0:
+            //count all counters
+            break;
+        case 1:
+            //count only General and some pipeline and cache
+            if ((group < 1 || group > 5) || group != 11 group != 17)
+            {
+                return 0;
+            }
+            break;
+        case 2:
+            //count all pipeline parameters
+            if (group < 6 || group > 10)
+            {
+                return 0;
+            }
+            break;
+        case 3:
+            //count all l1cache parameters
+            if (group < 11 || group > 15)
+            {
+                return 0;
+            }
+            break;
+        case 4:
+            //count all l2 cache and memory parameters
+            if (group < 16 || group > 20)
+            {
+                return 0;
+            }
+            break;
+        case 5:
+            //cpu and pipeline parameters
+            if (group < 0 || group > 10)
+            {
+                return 0;
+            }
+            break;
+        case 6:
+            //l1 l2 and memory parameters
+            if (group < 11 || group > 20)
+            {
+                return 0;
+            }
+            break;
+        case 7:
+            //cpu and l1 parameters
+            if ((group < 0 || group > 6) || (group < 11 || group > 15))
+            {
+                return 0;
+            }
+            break;
+        default:
+
+    }
+
     unsigned int hashval;
     int estimate = -1;
     for(int i = 0; i < depth; i++){

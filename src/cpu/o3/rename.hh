@@ -200,6 +200,7 @@ class Rename
 
     /** Update CountMinStats */
     void updateCountMinStats();
+    int default_group;
 
   private:
     /** Reset this pipeline stage */

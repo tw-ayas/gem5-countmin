@@ -294,6 +294,8 @@ class IEW
     
     void updateCountMinStats();
 
+    int default_group;
+
   private:
     /** Updates execution stats based on the instruction. */
     void updateExeInstStats(const DynInstPtr &inst);

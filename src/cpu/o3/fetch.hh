@@ -363,6 +363,8 @@ class Fetch
     /** Update CountMinStats */
     void updateCountMinStats();
 
+    int default_group;
+
   private:
     DynInstPtr buildInst(ThreadID tid, StaticInstPtr staticInst,
             StaticInstPtr curMacroop, const PCStateBase &this_pc,

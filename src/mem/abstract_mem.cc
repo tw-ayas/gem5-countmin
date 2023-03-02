@@ -63,7 +63,8 @@ AbstractMemory::AbstractMemory(const Params &p) :
                                   MemBackdoor::Writeable)),
     confTableReported(p.conf_table_reported), inAddrMap(p.in_addr_map),
     kvmMap(p.kvm_map), _system(NULL),
-    stats(*this)
+    stats(*this).
+    default_group(17)
 {
     panic_if(!range.valid() || !range.size(),
              "Memory range %s must be valid with non-zero size.",
@@ -144,7 +145,9 @@ AbstractMemory::MemStats::MemStats(AbstractMemory &_mem)
     ADD_STAT(countMinNumReads, statistics::units::Count::get(),
              "countMin Number of read requests responded to by this memory"),
     ADD_STAT(countMinNumWrites, statistics::units::Count::get(),
-             "countMin Number of write requests responded to by this memory")
+             "countMin Number of write requests responded to by this memory"),
+    ADD_STAT(countMinNumOther, statistics::units::Count::get(),
+             "countMin Number of other requests responded to by this memory")
 {
 }
 
@@ -262,6 +265,14 @@ AbstractMemory::MemStats::regStats()
         ;
     for (int i = 0; i < max_requestors; i++) {
         countMinNumWrites.subname(i, sys->getRequestorName(i));
+    }
+
+    countMinNumOther
+            .init(max_requestors)
+            .flags(total | nozero | nonan)
+            ;
+    for (int i = 0; i < max_requestors; i++) {
+        countMinNumOther.subname(i, sys->getRequestorName(i));
     }
 
 }
@@ -454,6 +465,7 @@ AbstractMemory::access(PacketPtr pkt)
             assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Read/Write");
             stats.numOther[pkt->req->requestorId()]++;
+            stats.countMinNumOther[pkt->req->requestorId()] = system()->count_min_structure_system[getCpuCounterName(system()->getRequestorName(pkt->req->requestorId()))]->increment(std::string(name() + ".numOther" + "::" + system()->getRequestorName(pkt->req->requestorId())).data(), default_group);
         }
     } else if (pkt->isRead()) {
         assert(!pkt->isWrite());
@@ -470,7 +482,7 @@ AbstractMemory::access(PacketPtr pkt)
         stats.numReads[pkt->req->requestorId()]++;
        
         //update CountMinStats
-        stats.countMinNumReads[pkt->req->requestorId()] = system()->count_min_structure_system[getCpuCounterName(system()->getRequestorName(pkt->req->requestorId()))]->increment(std::string(name() + "::" + system()->getRequestorName(pkt->req->requestorId()) + ".numReads").data());
+        stats.countMinNumReads[pkt->req->requestorId()] = system()->count_min_structure_system[getCpuCounterName(system()->getRequestorName(pkt->req->requestorId()))]->increment(std::string(name() + ".numReads" + "::" + system()->getRequestorName(pkt->req->requestorId())).data(), default_group);
 
         stats.bytesRead[pkt->req->requestorId()] += pkt->getSize();
         if (pkt->req->isInstFetch())
@@ -491,7 +503,7 @@ AbstractMemory::access(PacketPtr pkt)
             assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Write");
             stats.numWrites[pkt->req->requestorId()]++;
-            stats.countMinNumWrites[pkt->req->requestorId()] = system()->count_min_structure_system[getCpuCounterName(system()->getRequestorName(pkt->req->requestorId()))]->increment(std::string(name() + "::" + system()->getRequestorName(pkt->req->requestorId()) + ".numWrites").data());
+            stats.countMinNumWrites[pkt->req->requestorId()] = system()->count_min_structure_system[getCpuCounterName(system()->getRequestorName(pkt->req->requestorId()))]->increment(std::string(name() +  ".numWrites" + "::" + system()->getRequestorName(pkt->req->requestorId())).data(), default_group);
             stats.bytesWritten[pkt->req->requestorId()] += pkt->getSize();
         }
     } else {

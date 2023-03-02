@@ -379,16 +379,10 @@ CPU::CPUStats::CPUStats(CPU *cpu)
                "countMin IPC: Instructions Per Cycle"),
       ADD_STAT(countMinTotalIpc, statistics::units::Rate<statistics::units::Cycle, statistics::units::Count>::get(),
                "countMin TotalIPC: Total Instructions Per Cycle of All Threads"),
-      ADD_STAT(countMinBranchInsts, statistics::units::Count::get(),
-               "number of branches encountered"),
-      ADD_STAT(countMinBranchMisses, statistics::units::Count::get(),
-               "countMin number of branch misses"),
       ADD_STAT(countMinStalledCyclesFrontend, statistics::units::Count::get(),
                "countMin number of stalled cycles frontend fetch.icacheStalledCycles + fetch.miscStalledCycles"),
       ADD_STAT(countMinStalledCyclesBackend, statistics::units::Count::get(),
-               "countMin number of stalled cycles backend"),
-      ADD_STAT(countMinFlushCycles, statistics::units::Count::get(),
-               "countMin number of cycles flushed")
+               "countMin number of stalled cycles backend")
 {
     // Register any of the O3CPU's stats here.
     timesIdled
@@ -496,7 +490,7 @@ CPU::tick()
 
     ++baseStats.numCycles;
     
-    system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data());
+    system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), default_group);
     
     if( std::fmod(baseStats.numCycles.value(), 1000) == 0) {
         updateCountMinStats();  
@@ -1275,7 +1269,7 @@ CPU::instDone(ThreadID tid, const DynInstPtr &inst)
         thread[tid]->numInst++;
         thread[tid]->threadStats.numInsts++;
         cpuStats.committedInsts[tid]++;
-        system->count_min_structure_system[name()]->increment(std::string(name() + ".committedInsts::" + std::to_string(tid)).data());
+        system->count_min_structure_system[name()]->increment(std::string(name() + ".committedInsts::" + std::to_string(tid)).data(), default_group);
 
         // Check for instruction-count-based events.
         thread[tid]->comInstEventQueue.serviceEvents(thread[tid]->numInst);
@@ -1459,7 +1453,7 @@ CPU::wakeCPU()
         --cycles;
         cpuStats.idleCycles += cycles;
         baseStats.numCycles += cycles;
-        system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), cycles);
+        system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), default_group, cycles);
     }
 
     schedule(tickEvent, clockEdge());
@@ -1617,13 +1611,8 @@ CPU::updateCountMinStats(){
         return;   
 //    std::cout << "Updating O3 CPU Stats:" << std::endl;
     for (ThreadID tid = 0; tid < numThreads; tid++) { 
-        cpuStats.countMinCommittedInsts[tid] = system->count_min_structure_system[name()]->estimate(std::string(name() + ".committedInsts::" + std::to_string(tid)).data());  
+        cpuStats.countMinCommittedInsts[tid] = system->count_min_structure_system[name()]->estimate(std::string(name() + ".committedInsts::" + std::to_string(tid)).data(), default_group);
     }
-    cpuStats.countMinBranchInsts = system->count_min_structure_system[name()]->estimate(std::string(name() + ".branchInsts").data());
-    cpuStats.countMinBranchMisses = system->count_min_structure_system[name()]->estimate(std::string(name() + ".branchMisses").data());
-    cpuStats.countMinStalledCyclesFrontend = system->count_min_structure_system[name()]->estimate(std::string(name() + ".stallCyclesFrontend").data());
-    cpuStats.countMinStalledCyclesBackend = system->count_min_structure_system[name()]->estimate(std::string(name() + ".stallCyclesBackend").data());
-    cpuStats.countMinFlushCycles = system->count_min_structure_system[name()]->estimate(std::string(name() + ".flushCycles").data());
 
     fetch.updateCountMinStats();
     decode.updateCountMinStats();
@@ -1633,13 +1622,13 @@ CPU::updateCountMinStats(){
 }
 
 int
-CPU::update_count_min(char *s){
-    return system->count_min_structure_system[name()]->increment(s);
+CPU::update_count_min(char *s, int group){
+    return system->count_min_structure_system[name()]->increment(s, group);
 }
 
-int 
-CPU::get_count_min(char *s){
-    return system->count_min_structure_system[name()]->estimate(s);
+int 1
+CPU::get_count_min(char *s, int group){
+    return system->count_min_structure_system[name()]->estimate(s, group);
 }
 
 } // namespace o3

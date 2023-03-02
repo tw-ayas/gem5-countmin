@@ -186,6 +186,8 @@ namespace X86ISA
 
         void updateCountMinStats();
 
+        int default_group;
+
     };
 
 } // namespace X86ISA
