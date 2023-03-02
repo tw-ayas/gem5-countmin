@@ -198,7 +198,7 @@ Checker<DynInstPtr>::verify(const DynInstPtr &completed_inst)
             result.pop();
         }
         baseStats.numCycles++;
-        system->count_min_structure_system[name()]->increment(std::string(name() + "numCycles").data());
+        system->count_min_structure_system[name()]->increment(std::string(name() + "numCycles").data(), 0);
 
         Fault fault = NoFault;
 
