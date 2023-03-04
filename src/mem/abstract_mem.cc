@@ -63,7 +63,7 @@ AbstractMemory::AbstractMemory(const Params &p) :
                                   MemBackdoor::Writeable)),
     confTableReported(p.conf_table_reported), inAddrMap(p.in_addr_map),
     kvmMap(p.kvm_map), _system(NULL),
-    stats(*this).
+    stats(*this),
     default_group(17)
 {
     panic_if(!range.valid() || !range.size(),

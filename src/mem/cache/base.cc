@@ -2491,18 +2491,15 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
     ADD_STAT(dataContractions, statistics::units::Count::get(),
              "number of data contractions"),
     cmd(MemCmd::NUM_MEM_CMDS),
+
+    ADD_STAT(countMinDemandHits, statistics::units::Count::get(),
+               "countMin number of demand Hits"),
+    ADD_STAT(countMinOverallHits, statistics::units::Count::get(),
+               "countMin number of overall Hits"),
     ADD_STAT(countMinDemandMisses, statistics::units::Count::get(),
-               "countMin number of demand (read+write) misses"),
+               "countMin number of demand misses"),
     ADD_STAT(countMinOverallMisses, statistics::units::Count::get(),
-               "countMin number of overall misses"),
-    ADD_STAT(countMinDemandAccesses, statistics::units::Count::get(),
-               "countMin number of demand (read+write) accesses"),
-    ADD_STAT(countMinOverallAccesses, statistics::units::Count::get(),
-               "countMin number of overall (read+write) accesses"),
-    ADD_STAT(countMinBlockedCycles, statistics::units::Cycle::get(),
-               "countMin number of cycles access was blocked"),
-    ADD_STAT(countMinBlockedCauses, statistics::units::Count::get(),
-               "countMin number of times access was blocked"),
+               "countMin number of overall Misses"),
     ADD_STAT(countMinDemandMshrHits, statistics::units::Count::get(),
                "countMin number of demand (read+write) MSHR hits"),
     ADD_STAT(countMinOverallMshrHits, statistics::units::Count::get(),
@@ -2511,28 +2508,24 @@ BaseCache::CacheStats::CacheStats(BaseCache &c)
                "countMin number of demand (read+write) MSHR misses"),
     ADD_STAT(countMinOverallMshrMisses, statistics::units::Count::get(),
             "number of overall MSHR misses"),
-    ADD_STAT(countMinReplacements, statistics::units::Count::get(),
-               "countMin number of replacements"),
-    ADD_STAT(countMinWriteBacks, statistics::units::Count::get(),
-               "countMin number of writebacks"),
-    ADD_STAT(countMinDemandHits, statistics::units::Count::get(),
-               "countMin number of demand Hits"),
-    ADD_STAT(countMinDemandMisses, statistics::units::Count::get(),
-               "countMin number of demand Misses"),
     ADD_STAT(countMinDemandAccesses, statistics::units::Count::get(),
                "countMin number of demand Access"),
+    ADD_STAT(countMinOverallAccesses, statistics::units::Count::get(),
+               "countMin number of overall cache Access"),
     ADD_STAT(countMinNonDemandHits, statistics::units::Count::get(),
                "countMin number of non demand Hits"),
     ADD_STAT(countMinNonDemandMisses, statistics::units::Count::get(),
                "countMin number of non demand Misses"),
     ADD_STAT(countMinNonDemandAccesses, statistics::units::Count::get(),
                "countMin number of non demand Access"), 
-    ADD_STAT(countMinOverallHits, statistics::units::Count::get(),
-               "countMin number of overall Hits"),
-    ADD_STAT(countMinOverallMisses, statistics::units::Count::get(),
-               "countMin number of overall Misses"),
-    ADD_STAT(countMinOverallAccesses, statistics::units::Count::get(),
-               "countMin number of overall cache Access"),
+    ADD_STAT(countMinReplacements, statistics::units::Count::get(),
+               "countMin number of replacements"),
+    ADD_STAT(countMinWriteBacks, statistics::units::Count::get(),
+               "countMin number of writebacks"),
+    ADD_STAT(countMinBlockedCycles, statistics::units::Cycle::get(),
+               "countMin number of cycles access was blocked"),
+    ADD_STAT(countMinBlockedCauses, statistics::units::Count::get(),
+               "countMin number of times access was blocked"),
     countMinCmd(MemCmd::NUM_MEM_CMDS)
 {
     for (int idx = 0; idx < MemCmd::NUM_MEM_CMDS; ++idx){
@@ -2803,21 +2796,6 @@ BaseCache::CacheStats::regStats()
         countMinOverallMisses.subname(i, system->getRequestorName(i));
     }
 
-    countMinDemandAccesses.flags(total | nozero | nonan);
-    countMinDemandAccesses = countMinDemandHits + countMinDemandMisses;
-
-    countMinNonDemandAccess.flags(total | nozero| nonan);
-    countMinNonDemandAccess = countMinNonDemandHits + countMinNonDemandMisses;
-
-    countMinOverallHits.flags(total | nozero| nonan);
-    countMinOverallHits = countMinDemandHits + countMinNonDemandHits;
-
-    countMinOverallMisses.flags(total | nozero| nonan);
-    countMinOverallMisses = countMinDemandMisses + countMinNonDemandMisses;
-
-    countMinOverallAccesses.flags(total | nozero| nonan);
-    countMinOverallAccesses = countMinOverallHits + countMinOverallMisses;
-
     countMinDemandMshrHits.flags(total | nozero | nonan);
     countMinDemandMshrHits = SUM_DEMAND_COUNTMIN(mshrHits);
     for (int i = 0; i < max_requestors; i++) {
@@ -2842,10 +2820,26 @@ BaseCache::CacheStats::regStats()
         countMinOverallMshrMisses.subname(i, system->getRequestorName(i));
     }
 
+    countMinDemandAccesses.flags(total | nozero | nonan);
+    countMinDemandAccesses = countMinDemandHits + countMinDemandMisses;
+
+    countMinOverallAccesses.flags(total | nozero| nonan);
+    countMinOverallAccesses = countMinOverallHits + countMinOverallMisses;
+
+    countMinNonDemandHits.flags(total | nozero | nonan);
+    countMinNonDemandHits = SUM_NON_DEMAND_COUNTMIN(hits);
+ 
+    countMinNonDemandMisses.flags(total| nozero | nonan);
+    countMinNonDemandMisses = SUM_NON_DEMAND_COUNTMIN(misses);
+
+    countMinNonDemandAccesses.flags(total | nozero| nonan);
+    countMinNonDemandAccesses = countMinNonDemandHits + countMinNonDemandMisses;
+
     countMinBlockedCycles.init(NUM_BLOCKED_CAUSES);
     countMinBlockedCycles
         .subname(Blocked_NoMSHRs, "no_mshrs")
         .subname(Blocked_NoTargets, "no_targets")
+        .subname(Blocked_NoWBBuffers, "no_wb_buffers")
         ;
 
 
@@ -2853,6 +2847,7 @@ BaseCache::CacheStats::regStats()
     countMinBlockedCauses
         .subname(Blocked_NoMSHRs, "no_mshrs")
         .subname(Blocked_NoTargets, "no_targets")
+        .subname(Blocked_NoWBBuffers, "no_wb_buffers")
         ;
 
 }

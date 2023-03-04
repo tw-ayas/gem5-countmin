@@ -410,7 +410,7 @@ BaseSimpleCPU::postExecute()
         t_info.execContextStats.numIntAluAccesses++;
         t_info.execContextStats.numIntInsts++;
         t_info.countMinExecContextStats.numIntAluAccesses = system->count_min_structure_system[name()]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numIntAluAccesses").data(), 0);
-        t_info.countMinExecContextStats.numIntInsts = system->count_min_structure_system[name()]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numIntInsts").data());
+        t_info.countMinExecContextStats.numIntInsts = system->count_min_structure_system[name()]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numIntInsts").data(), 0);
     }
 
     //float alu accesses
@@ -418,7 +418,7 @@ BaseSimpleCPU::postExecute()
         t_info.execContextStats.numFpAluAccesses++;
         t_info.execContextStats.numFpInsts++;
         t_info.countMinExecContextStats.numFpAluAccesses = system->count_min_structure_system[name()]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numFpAluAccesses").data(), 0);
-        t_info.countMinExecContextStats.numFpInsts = system->count_min_structure_system[name()]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numFpInsts").data());
+        t_info.countMinExecContextStats.numFpInsts = system->count_min_structure_system[name()]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numFpInsts").data(), 0);
     }
 
     //vector alu accesses
@@ -426,7 +426,7 @@ BaseSimpleCPU::postExecute()
         t_info.execContextStats.numVecAluAccesses++;
         t_info.execContextStats.numVecInsts++;
         t_info.countMinExecContextStats.numVecAluAccesses = system->count_min_structure_system[name()]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numVecAluAccesses").data(), 0);
-        t_info.countMinExecContextStats.numVecInsts = system->count_min_structure_system[name()]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numVecInsts").data());
+        t_info.countMinExecContextStats.numVecInsts = system->count_min_structure_system[name()]->increment(std::string(name() + ".thread_" + std::to_string(curThread) + ".numVecInsts").data(), 0);
     }
 
     //number of function calls/returns to get window accesses

@@ -466,7 +466,7 @@ Rename::rename(bool &status_change, ThreadID tid)
         ++stats.blockCycles;
     } else if (renameStatus[tid] == Squashing) {
         ++stats.squashCycles;
-        stats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), cpu->default_value);
+        stats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
     } else if (renameStatus[tid] == SerializeStall) {
         ++stats.serializeStallCycles;
         // If we are currently in SerializeStall and resumeSerialize
@@ -1429,7 +1429,7 @@ Rename::dumpHistory()
 
 void
 Rename::updateCountMinStats(){
-    //stats.countMinSquashCycles = cpu->get_count_min(std::string(name() + ".squashCycles").data(), cpu->default_value);
+    //stats.countMinSquashCycles = cpu->get_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
 }
 
 } // namespace o3

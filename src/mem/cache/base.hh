@@ -1222,28 +1222,25 @@ class BaseCache : public ClockedObject
 
         statistics::Formula countMinDemandHits;
         statistics::Formula countMinOverallHits;
-        statistics::Formula countMinDemandHitLatency;
-        statistics::Formula countMinOverallHitLatency;
-
         statistics::Formula countMinDemandMisses;
         statistics::Formula countMinOverallMisses;
-        statistics::Vector countMinBlockedCycles;   
-        statistics::Vector countMinBlockedCauses;
 
         statistics::Formula countMinDemandMshrHits;
         statistics::Formula countMinOverallMshrHits;
         statistics::Formula countMinDemandMshrMisses;
-        statistics::Formula countMinOverallMshrMisses;
+        statistics::Formula countMinOverallMshrMisses; 
+     
+        statistics::Formula countMinDemandAccesses;
+        statistics::Formula countMinOverallAccesses;        
+        statistics::Formula countMinNonDemandHits;
+        statistics::Formula countMinNonDemandMisses;
+        statistics::Formula countMinNonDemandAccesses;
 
         statistics::Scalar countMinReplacements;
         statistics::Scalar countMinWriteBacks;
-     
-        statistics::Formula countMinDemandAccesses;
-        statistics::Scalar countMinNonDemandHits;
-        statistics::Scalar countMinNonDemandMisses;
-        statistics::Formula countMinNonDemandAccesses;
-
-        statistics::Formula countMinOverallAccesses;        
+        
+        statistics::Vector countMinBlockedCycles;   
+        statistics::Vector countMinBlockedCauses;
 
         std::vector<std::unique_ptr<CacheCmdStats>> countMinCmd;
 
@@ -1341,7 +1338,7 @@ class BaseCache : public ClockedObject
         uint8_t flag = 1 << cause;
         if (blocked == 0) {
             stats.blockedCauses[cause]++;
-            stats.countMinBlockedCauses[cause] += system->count_min_structure_system[counterName]->increment(std::string(name() + ".blockedCauses" + std::to_string(cause)).data(), default_group);
+            stats.countMinBlockedCauses[cause] += system->count_min_structure_system[counterName]->increment(std::string(name() + ".blockedCauses" + getBlockedCauseName(cause)).data(), default_group);
             blockedCycle = curCycle();
             cpuSidePort.setBlocked();
         }
@@ -1363,7 +1360,7 @@ class BaseCache : public ClockedObject
         DPRINTF(Cache,"Unblocking for cause %d, mask=%d\n", cause, blocked);
         if (blocked == 0) {
             stats.blockedCycles[cause] += curCycle() - blockedCycle;
-            stats.countMinBlockedCycles[cause] += system->count_min_structure_system[counterName]->increment(std::string(name() + ".blockedCycle" + std::to_string(cause)).data(), default_group, (curCycle() - blockedCycle));
+            stats.countMinBlockedCycles[cause] += system->count_min_structure_system[counterName]->increment(std::string(name() + ".blockedCycle" + getBlockedCauseName(cause)).data(), default_group, (curCycle() - blockedCycle));
             cpuSidePort.clearBlocked();
         }
     }
@@ -1466,6 +1463,20 @@ class BaseCache : public ClockedObject
     void updateCountMinStats();
 
     std::string getCpuCounterName(std::string requestor);
+
+    std::string getBlockedCauseName(BlockedCause cause)
+    {
+        switch(cause){
+            case 0:
+                return std::string("no_mshrs");
+            case 1:
+                return std::string("no_wb_buffers");
+            case 2:
+                return std::string("no_targets");
+            default:
+                return std::to_string(cause);
+        }
+    }
 
     /**
      * Checks if the cache is coalescing writes

@@ -1,15 +1,15 @@
-#include "countmin.hh"
+#include "./countmin.hh"
 
 #include <cmath>
 #include <ctime>
 #include <iostream>
 
 CountMinCounter::CountMinCounter(int size, int d, int cons, int c_g) :
-hash_string_prime {503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599,
-                   601, 607, 613, 617, 619, 631, 641, 643, 647, 653, 659, 661, 673, 677, 683, 691,
-                   701, 709, 719, 727, 733, 739, 743, 751, 757, 761, 769, 773, 787, 797,
-                   809, 811, 821, 823, 827, 829, 839, 853, 857, 859, 863, 877, 881, 883, 887,
-                   907, 911, 919, 929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997}
+        hash_string_prime {503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599,
+                           601, 607, 613, 617, 619, 631, 641, 643, 647, 653, 659, 661, 673, 677, 683, 691,
+                           701, 709, 719, 727, 733, 739, 743, 751, 757, 761, 769, 773, 787, 797,
+                           809, 811, 821, 823, 827, 829, 839, 853, 857, 859, 863, 877, 881, 883, 887,
+                           907, 911, 919, 929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997}
 {
     width = size / (4 * d);
     depth = d;
@@ -27,28 +27,30 @@ hash_string_prime {503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 5
     }
     counters = C;
 
-    std::srand(time(nullptr));
+    std::mt19937_64 gen (std::random_device{}());
 
     hashes = new unsigned int*[depth];
     for (int i = 0; i < depth; i++){
         hashes[i] = new unsigned int[2];
-        hashes[i][0] = int(float(std::rand()) * float(std::rand()) );
-        hashes[i][1] = int(float(std::rand()) * float(std::rand()) + (std::rand() % 157896547));
+        hashes[i][0] = int(gen() * (i + 1));
+        hashes[i][1] = int(gen() / (i + 1));
         cout << "hashes for " << i << " " << hashes[i][0] << " " << " " << hashes[i][1] << endl;
     }
 
     current_group = c_g;
+    cout << "current group: " <<  current_group << endl;
 };
 
 void CountMinCounter::reset(){
+
+    std::mt19937_64 gen (std::random_device{}());
     for (int i = 0; i < depth; i++){
         for(int j = 0; j < width; j++){
             counters[i][j] = 0;
         }
         if(reset_hashes_on_reset) {
-            std::srand(time(nullptr));
-            hashes[i][0] = int(float(std::rand()) * float(std::rand()));
-            hashes[i][1] = int(float(std::rand()) * float(std::rand()) + (std::rand() % 157896547));
+            hashes[i][0] = int(gen() * (i + 1));
+            hashes[i][1] = int(gen() / (i + 1));
             cout << "hashes for " << i << " " << hashes[i][0] << " " << " " << hashes[i][1] << endl;
         }
     }
@@ -74,11 +76,11 @@ std::set<std::string> CountMinCounter::getCounterNames()
 }
 
 int CountMinCounter::increment(int s, int group){
-   return CountMinCounter::increment(s, group, 1);
+    return CountMinCounter::increment(s, group, 1);
 }
 
 int CountMinCounter::increment(char *s, int group){
-   return  CountMinCounter::increment(s, group, 1);
+    return  CountMinCounter::increment(s, group, 1);
 }
 
 int CountMinCounter::increment(int s, int group, int update) {
@@ -88,13 +90,14 @@ int CountMinCounter::increment(int s, int group, int update) {
 
 int CountMinCounter::increment(char *s, int group, int update)
 {
+    //   cout << "group: " << group << " " << s << endl;
     switch(current_group){
         case 0:
             //count all counters
             break;
         case 1:
             //count only General and some pipeline and cache
-            if ((group < 1 || group > 5) || group != 11 || group != 17)
+            if ((group < 1 || group > 5) && group != 11 && group != 17)
             {
                 return 0;
             }
@@ -136,17 +139,19 @@ int CountMinCounter::increment(char *s, int group, int update)
             break;
         case 7:
             //cpu and l1 parameters
-            if ((group < 0 || group > 6) || (group < 11 || group > 15))
+            if (!((group >= 1 && group <= 5) || (group > 10 && group <= 15)))
             {
                 return 0;
             }
             break;
         case 8:
-            if ((group < 0 || group > 6) || (group < 11 || group > 20))
+            if (!((group >= 1 && group <= 5) || (group > 10)))
             {
                 return 0;
             }
     }
+
+    // cout << "group: " << group << endl;
 
     unsigned int hashval;
     int estimate = -1;
@@ -220,7 +225,7 @@ int CountMinCounter::estimate(char *s, int group){
             break;
         case 1:
             //count only General and some pipeline and cache
-            if ((group < 1 || group > 5) || group != 11 || group != 17)
+            if ((group < 1 || group > 5) && group != 11 &&  group != 17)
             {
                 return 0;
             }
@@ -262,13 +267,13 @@ int CountMinCounter::estimate(char *s, int group){
             break;
         case 7:
             //cpu and l1 parameters
-            if ((group < 0 || group > 6) || (group < 11 || group > 15))
+            if (!((group >= 1 && group <= 5) || (group > 10 && group <= 15)))
             {
                 return 0;
             }
             break;
         case 8:
-            if ((group < 0 || group > 6) || (group < 11 || group > 20))
+            if (!((group >= 1 && group <= 5) || (group > 10)))
             {
                 return 0;
             }
@@ -311,15 +316,16 @@ unsigned int CountMinCounter::hashstr(char *s, unsigned int rand_one, unsigned i
     c = *s++;
     int pos = 1;
     row++;
-    int letter_sum = 0;
+//    cout << s <<  ": " << rand_one << " " << rand_two << "=>";
     while (c) {
         int index = pos % 73;
-        int shift_prime = (c * pos)/ 25;
-        hash = ((hash) + (rand_two / (c + pos))) + (hash_string_prime[index] << shift_prime);
+        int shift_prime = (c * pos) % 25;
+        hash = ((hash) + (((rand_two / (c << 5)))) + ((hash_string_prime[index] << shift_prime) / rand_one));
         c = *s++;
         pos++;
     }
     hash = ((hash) % width);
+//    cout << hash << endl;
     return hash;
 }
 
@@ -337,4 +343,3 @@ void CountMinCounter::print() {
 CountMinCounter::~CountMinCounter(){
     free(counters);
 }
-

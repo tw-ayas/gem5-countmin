@@ -74,11 +74,11 @@ BaseTags::BaseTags(const Params &p)
     int second_pos = counter_name.find(".", first_pos);
 //    int third_pos = counter_name.find(".", second_pos);
     counterName = counter_name.substr(0, second_pos);
-    default_group = 11;
+    default_group = 12;
 
     if (system->count_min_structure_system.count(counterName) == 0){
         counterName = "system";
-        default_group = 16;
+        default_group = 17;
     }
 
 }

@@ -378,11 +378,7 @@ CPU::CPUStats::CPUStats(CPU *cpu)
       ADD_STAT(countMinIpc, statistics::units::Rate<statistics::units::Cycle, statistics::units::Count>::get(),
                "countMin IPC: Instructions Per Cycle"),
       ADD_STAT(countMinTotalIpc, statistics::units::Rate<statistics::units::Cycle, statistics::units::Count>::get(),
-               "countMin TotalIPC: Total Instructions Per Cycle of All Threads"),
-      ADD_STAT(countMinStalledCyclesFrontend, statistics::units::Count::get(),
-               "countMin number of stalled cycles frontend fetch.icacheStalledCycles + fetch.miscStalledCycles"),
-      ADD_STAT(countMinStalledCyclesBackend, statistics::units::Count::get(),
-               "countMin number of stalled cycles backend")
+               "countMin TotalIPC: Total Instructions Per Cycle of All Threads")
 {
     // Register any of the O3CPU's stats here.
     timesIdled
@@ -492,9 +488,9 @@ CPU::tick()
     
     system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), default_group);
     
-    if( std::fmod(baseStats.numCycles.value(), 1000) == 0) {
+//    if( std::fmod(baseStats.numCycles.value(), 1000) == 0) {
         updateCountMinStats();  
-    }
+//    }
  
     updateCycleCounters(BaseCPU::CPU_STATE_ON);
 
@@ -1269,7 +1265,7 @@ CPU::instDone(ThreadID tid, const DynInstPtr &inst)
         thread[tid]->numInst++;
         thread[tid]->threadStats.numInsts++;
         cpuStats.committedInsts[tid]++;
-        system->count_min_structure_system[name()]->increment(std::string(name() + ".committedInsts::" + std::to_string(tid)).data(), default_group);
+        cpuStats.countMinCommittedInsts[tid] = system->count_min_structure_system[name()]->increment(std::string(name() + ".committedInsts::" + std::to_string(tid)).data(), default_group);
 
         // Check for instruction-count-based events.
         thread[tid]->comInstEventQueue.serviceEvents(thread[tid]->numInst);
@@ -1610,9 +1606,6 @@ CPU::updateCountMinStats(){
     if (!system->probHwCounters)
         return;   
 //    std::cout << "Updating O3 CPU Stats:" << std::endl;
-    for (ThreadID tid = 0; tid < numThreads; tid++) { 
-        cpuStats.countMinCommittedInsts[tid] = system->count_min_structure_system[name()]->estimate(std::string(name() + ".committedInsts::" + std::to_string(tid)).data(), default_group);
-    }
 
     fetch.updateCountMinStats();
     decode.updateCountMinStats();
@@ -1626,7 +1619,7 @@ CPU::update_count_min(char *s, int group){
     return system->count_min_structure_system[name()]->increment(s, group);
 }
 
-int 1
+int 
 CPU::get_count_min(char *s, int group){
     return system->count_min_structure_system[name()]->estimate(s, group);
 }

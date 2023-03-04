@@ -116,7 +116,7 @@ IEW::IEW(CPU *_cpu, const BaseO3CPUParams &params)
 
     counterName = cpu->name();
 
-    default_value = 6;
+    default_group = 6;
 
 }
 

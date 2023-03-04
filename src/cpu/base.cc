@@ -826,7 +826,7 @@ BaseCPU::updateCountMinStats(){
     
 //    std::cout << "Updating all the Stats, CPU, Cacahe, Others, etc" << std::endl;   
 
-    baseStats.countMinNumCycles = system->count_min_structure_system[name()]->estimate(std::string(name() + ".numCycles").data(), default_value);
+    baseStats.countMinNumCycles = system->count_min_structure_system[name()]->estimate(std::string(name() + ".numCycles").data(), default_group);
 
 //    std::cout << "Cycles count per 1000 => " << baseStats.numCycles.value() << std::endl;
 //    std::cout << find(std::string(name() + ".dcache").data())->name() << " Update CountMin Stats" << std::endl;

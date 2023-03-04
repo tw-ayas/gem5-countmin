@@ -1657,7 +1657,7 @@ Fetch::IcachePort::recvReqRetry()
 void
 Fetch::updateCountMinStats(){
     fetchStats.countMinIcacheStallCycles = cpu->get_count_min(std::string(name() + ".icacheStallCycles").data(), cpu->default_group);
-    fetchStats.countMinMiscStallCycles = cpu->get_count_min(std::string(name() + ".miscStallCycles").data()), cpu->default_group;
+    fetchStats.countMinMiscStallCycles = cpu->get_count_min(std::string(name() + ".miscStallCycles").data(), cpu->default_group);
     fetchStats.countMinBranches = cpu->get_count_min(std::string(name() + ".branches").data(), default_group);
     fetchStats.countMinPredictedBranches = cpu->get_count_min(std::string(name() + ".predictedBranches").data(), default_group);
     fetchStats.countMinSquashCycles = cpu->get_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
