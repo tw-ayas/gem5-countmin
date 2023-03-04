@@ -616,7 +616,9 @@ class CPU : public BaseCPU
         statistics::Scalar miscRegfileWrites;
 
         /** CountMinStats */
+        statistics::Scalar countMinIdleCycles;
         statistics::Vector countMinCommittedInsts;
+        statistics::Vector countMinCommittedOps;
         statistics::Formula countMinCpi;
         statistics::Formula countMinTotalCpi;
         statistics::Formula countMinIpc;

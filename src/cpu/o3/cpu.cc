@@ -374,7 +374,7 @@ CPU::CPUStats::CPUStats(CPU *cpu)
                "to idling"),
       ADD_STAT(countMinCommittedInsts, statistics::units::Count::get(),
                "countMin number of committed instructions per Thread"),
-      ADD_STAT(countMincommittedOps, statistics::units::Count::get(),
+      ADD_STAT(countMinCommittedOps, statistics::units::Count::get(),
                "countMin Number of Ops (including micro ops) Simulated"),
       ADD_STAT(countMinCpi, statistics::units::Rate<statistics::units::Cycle, statistics::units::Count>::get(),
                "countMin CPI: Cycles Per Instruction"),
