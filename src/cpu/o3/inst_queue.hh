@@ -543,7 +543,12 @@ class InstructionQueue
         statistics::Formula fuBusyRate;
 
         /** CountMinStas */
+        statistics::Scalar countMinInstsAdded;
+        statistics::Scalar countMinNonSpecInstsAdded;
+        statistics::Scalar countMinInstsIssued;
         statistics::Scalar countMinBranchInstsIssued;
+        statistics::Scalar countMinSquashedInstsIssued;
+        statistics::Scalar countMinSquashedInstsExamined;
     } iqStats;
 
    public:
@@ -564,6 +569,8 @@ class InstructionQueue
         statistics::Scalar fpAluAccesses;
         statistics::Scalar vecAluAccesses;
     } iqIOStats;
+
+    int default_group;
 };
 
 } // namespace o3

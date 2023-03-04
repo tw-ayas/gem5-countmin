@@ -159,6 +159,8 @@ InstructionQueue::InstructionQueue(CPU *cpu_ptr, IEW *iew_ptr,
     for (ThreadID tid = numThreads; tid < MaxThreads; tid++) {
         maxEntries[tid] = 0;
     }
+
+    default_group = 6;
 }
 
 InstructionQueue::~InstructionQueue()
@@ -217,8 +219,19 @@ InstructionQueue::IQStats::IQStats(CPU *cpu, const unsigned &total_width)
     ADD_STAT(fuBusyRate, statistics::units::Rate<
                 statistics::units::Count, statistics::units::Count>::get(),
              "FU busy rate (busy events/executed inst)"),
+    ADD_STAT(countMinInstsAdded, statistics::units::Count::get(),
+             "countMin Number of instructions added to the IQ (excludes non-spec)"),
+    ADD_STAT(countMinNonSpecInstsAdded, statistics::units::Count::get(),
+             "countMin Number of non-speculative instructions added to the IQ"),
+    ADD_STAT(countMinInstsIssued, statistics::units::Count::get(),
+             "countMin Number of instructions issued"),
     ADD_STAT(countMinBranchInstsIssued, statistics::units::Count::get(),
-             "Number of branch instructions issued")
+             "countMin Number of branch instructions issued"),
+    ADD_STAT(countMinSquashedInstsIssued, statistics::units::Count::get(),
+             "countMin Number of squashed instructions issued"),
+    ADD_STAT(countMinSquashedInstsExamined, statistics::units::Count::get(),
+             "countMin Number of squashed instructions iterated over during squash; "
+             "mainly for profiling")
 {
     instsAdded
         .prereq(instsAdded);
@@ -599,6 +612,7 @@ InstructionQueue::insert(const DynInstPtr &new_inst)
     }
 
     ++iqStats.instsAdded;
+    iqStats.countMinInstsAdded = cpu->update_count_min(std::string(name() + ".instsAdded").data(), default_group);
 
     count[new_inst->threadNumber]++;
 
@@ -645,6 +659,7 @@ InstructionQueue::insertNonSpec(const DynInstPtr &new_inst)
     }
 
     ++iqStats.nonSpecInstsAdded;
+    iqStats.countMinNonSpecInstsAdded = cpu->update_count_min(std::string(name() + ".nonSpecInstsAdded").data(), default_group);
 
     count[new_inst->threadNumber]++;
 
@@ -809,6 +824,8 @@ InstructionQueue::scheduleReadyInsts()
             listOrder.erase(order_it++);
 
             ++iqStats.squashedInstsIssued;
+            iqStats.squashedInstsIssued = cpu->update_count_min(std::string(name() + ".squashedInstsIssued").data(), default_group);
+
 
             continue;
         }
@@ -907,6 +924,7 @@ InstructionQueue::scheduleReadyInsts()
 
     iqStats.numIssuedDist.sample(total_issued);
     iqStats.instsIssued+= total_issued;
+    iqStats.countMinInstsIssued = cpu->update_count_min(std::string(name() + ".instsIssued").data(), default_group, total_issued);
 
     // If we issued any instructions, tell the CPU we had activity.
     // @todo If the way deferred memory instructions are handeled due to
@@ -1321,6 +1339,7 @@ InstructionQueue::doSquash(ThreadID tid)
         }
         instList[tid].erase(squash_it--);
         ++iqStats.squashedInstsExamined;
+        iqStats.countMinSquashedInstsExamined = cpu->update_count_min(std::string(name() + ".squashedInstsExamined").data(), default_group);
     }
 }
 

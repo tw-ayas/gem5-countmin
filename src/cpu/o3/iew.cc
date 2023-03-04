@@ -114,7 +114,7 @@ IEW::IEW(CPU *_cpu, const BaseO3CPUParams &params)
 
     skidBufferMax = (renameToIEWDelay + 1) * params.renameWidth;
 
-    counterName = cpu->name();
+    counterName = name();
 
     default_group = 6;
 
@@ -206,7 +206,7 @@ IEW::IEWStats::IEWStats(CPU *cpu)
     ADD_STAT(countMinIdleCycles, statistics::units::Count::get(),
              "countMin Number of cycles IEW is idle"),
     ADD_STAT(countMinSquashCycles, statistics::units::Count::get(),
-             "countMin Number of cycles IEW is squashing")
+             "countMin Number of cycles IEW is squashing"),
     ADD_STAT(countMinBlockCycles, statistics::units::Count::get(),
              "countMin Number of cycles IEW is blocking")
 {
