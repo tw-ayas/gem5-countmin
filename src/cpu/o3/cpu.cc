@@ -369,8 +369,13 @@ CPU::CPUStats::CPUStats(CPU *cpu)
                "number of misc regfile reads"),
       ADD_STAT(miscRegfileWrites, statistics::units::Count::get(),
                "number of misc regfile writes"),
+      ADD_STAT(countMinIdleCycles, statistics::units::Cycle::get(),
+               "countMin Total number of cycles that the CPU has spent unscheduled due "
+               "to idling"),
       ADD_STAT(countMinCommittedInsts, statistics::units::Count::get(),
                "countMin number of committed instructions per Thread"),
+      ADD_STAT(countMincommittedOps, statistics::units::Count::get(),
+               "countMin Number of Ops (including micro ops) Simulated"),
       ADD_STAT(countMinCpi, statistics::units::Rate<statistics::units::Cycle, statistics::units::Count>::get(),
                "countMin CPI: Cycles Per Instruction"),
       ADD_STAT(countMinTotalCpi, statistics::units::Rate<statistics::units::Cycle, statistics::units::Count>::get(),
@@ -1273,6 +1278,8 @@ CPU::instDone(ThreadID tid, const DynInstPtr &inst)
     thread[tid]->numOp++;
     thread[tid]->threadStats.numOps++;
     cpuStats.committedOps[tid]++;
+    cpuStats.countMinCommittedOps[tid] = system->count_min_structure_system[name()]->increment(std::string(name() + ".committedOps::" + std::to_string(tid)).data(), default_group);
+
 
     probeInstCommit(inst->staticInst, inst->pcState().instAddr());
 }
@@ -1448,6 +1455,7 @@ CPU::wakeCPU()
     if (cycles > 1) {
         --cycles;
         cpuStats.idleCycles += cycles;
+        cpuStats.countMinIdleCycles = system->count_min_structure_system[name()]->increment(std::string(name() + ".idleCycles").data(), default_group, cycles);
         baseStats.numCycles += cycles;
         baseStats.countMinNumCycles = system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), default_group, cycles);
     }

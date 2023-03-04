@@ -1079,7 +1079,7 @@ Commit::commitInsts()
             rob->retireHead(commit_thread);
 
             ++stats.commitSquashedInsts;
-            //cpu->update_count_min(std::string(name() + ".commitSquashedInsts").data());
+            stats.countMinCommitSquashedInsts = cpu->update_count_min(std::string(name() + ".commitSquashedInsts").data(), cpu->default_group);
             
             // Notify potential listeners that this instruction is squashed
             ppSquash->notify(head_inst);
