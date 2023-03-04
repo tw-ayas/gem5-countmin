@@ -317,9 +317,10 @@ unsigned int CountMinCounter::hashstr(char *s, unsigned int rand_one, unsigned i
 //    cout << s <<  ": " << rand_one << " " << rand_two << "=>";
     while (c) {
         int index = pos % 73;
-        int shift_prime = (c * pos) % 25;
-        int shift_char = row % 5;
-        hash = ((hash) + (((rand_two / (c << shift_char)))) + ((hash_string_prime[index] << shift_prime) / rand_one));
+        //int shift_prime = (c * pos) % 25;
+        //int shift_char = row % 5;
+        //hash = ((hash) + (((rand_two / (c << shift_char)))) + ((hash_string_prime[index] << shift_prime) / rand_one));
+        hash = ((hash + hash_string_prime[index]) ^ (rand_two + c));
         c = *s++;
         pos++;
     }
