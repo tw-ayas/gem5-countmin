@@ -85,7 +85,7 @@ TLB::TLB(const Params &p)
     default_group = 17;
 
     if (system->count_min_structure_system.count(counterName) == 0){
-        counterName = "system";
+        system->addCounter(counterName);
     }
     std::cout << "Cache: " << name() << " with CounterName: " << counterName << std::endl;
 }
