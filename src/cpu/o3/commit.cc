@@ -952,7 +952,7 @@ Commit::commit()
                      toIEW->commitInfo[tid].branchTaken = true;
                 }
                 ++stats.branchMispredicts;
-                cpu->update_count_min(std::string(name() + ".branchMispredicts").data(), cpu->default_group);
+                stats.countMinBranchMispredicts = cpu->update_count_min(std::string(name() + ".branchMispredicts").data(), cpu->default_group);
             }
 
             set(toIEW->commitInfo[tid].pc, fromIEW->pc[tid]);
@@ -1630,7 +1630,7 @@ Commit::oldestReady()
 void
 Commit::updateCountMinStats(){
 //    stats.countMinCommitSquashedInsts = cpu->get_count_min(std::string(name() + ".commitSquashedInsts").data());
-    stats.countMinBranchMispredicts = cpu->get_count_min(std::string(name() + ".branchMispredicts").data(), cpu->default_group);
+//    stats.countMinBranchMispredicts = cpu->get_count_min(std::string(name() + ".branchMispredicts").data(), cpu->default_group);
 //    stats.countMinInstsCommitted = cpu->get_count_min(std::string(name() + ".instsCommitted").data());
 //    stats.countMinOpsCommitted = cpu->get_count_min(std::string(name() + ".opsCommitted").data());
 //    stats.countMinBranches = cpu->get_count_min(std::string(name() + ".branches").data());

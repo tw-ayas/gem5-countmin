@@ -153,7 +153,6 @@ int CountMinCounter::increment(char *s, int group, int update)
 
     // cout << "group: " << group << endl;
 
-    unsigned int hashval;
     int estimate = -1;
     int hashpos[depth];
     int min = -1;
@@ -315,12 +314,12 @@ unsigned int CountMinCounter::hashstr(char *s, unsigned int rand_one, unsigned i
     int c;
     c = *s++;
     int pos = 1;
-    row++;
 //    cout << s <<  ": " << rand_one << " " << rand_two << "=>";
     while (c) {
         int index = pos % 73;
         int shift_prime = (c * pos) % 25;
-        hash = ((hash) + (((rand_two / (c << 5)))) + ((hash_string_prime[index] << shift_prime) / rand_one));
+        int shift_char = row % 5;
+        hash = ((hash) + (((rand_two / (c << shift_char)))) + ((hash_string_prime[index] << shift_prime) / rand_one));
         c = *s++;
         pos++;
     }

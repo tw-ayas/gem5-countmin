@@ -996,7 +996,7 @@ BaseCache::handleEvictions(std::vector<CacheBlk*> &evict_blks,
     // counter if a valid block is being replaced
     if (replacement) {
         stats.replacements++;
-        system->count_min_structure_system[counterName]->increment(std::string(name() + ".replacements").data(), default_group);
+        stats.countMinReplacements = system->count_min_structure_system[counterName]->increment(std::string(name() + ".replacements").data(), default_group);
         // Evict valid blocks associated to this victim block
         for (auto& blk : evict_blks) {
             if (blk->isValid()) {
@@ -1732,7 +1732,7 @@ BaseCache::writebackBlk(CacheBlk *blk)
         (blk->isSet(CacheBlk::DirtyBit) || writebackClean));
 
     stats.writebacks[Request::wbRequestorId]++;
-    system->count_min_structure_system[counterName]->increment(std::string(name() + ".writebacks").data(), default_group);
+    stats.countMinWriteBacks = system->count_min_structure_system[counterName]->increment(std::string(name() + ".writebacks").data(), default_group);
 
     RequestPtr req = std::make_shared<Request>(
         regenerateBlkAddr(blk), blkSize, 0, Request::wbRequestorId);
@@ -2866,14 +2866,14 @@ void
 BaseCache::updateCountMinStats()
 {
 
-    stats.countMinWriteBacks = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".writebacks").data(), default_group);
-    stats.countMinReplacements = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".replacements").data(), default_group);
+//    stats.countMinWriteBacks = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".writebacks").data(), default_group);
+//    stats.countMinReplacements = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".replacements").data(), default_group);
 
-    if(tags)
-        tags->updateCountMinStats();
+//    if(tags)
+//        tags->updateCountMinStats();
 
-    if (prefetcher)
-        prefetcher->updateCountMinStats();
+//    if (prefetcher)
+//        prefetcher->updateCountMinStats();
 
 }
 

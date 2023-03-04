@@ -512,9 +512,11 @@ class IEW
         /** countMin Stats */
         statistics::Scalar countMinIqFullEvents;
         statistics::Scalar countMinLsqFullEvents;
-        statistics::Scalar countMinStallBackendCycles;
+        statistics::Formula countMinStallBackendCycles;
         statistics::Scalar countMinBranchMispredicts;
+        statistics::Scalar countMinIdleCycles;
         statistics::Scalar countMinSquashCycles;
+        statistics::Scalar countMinBlockCycles;
 
     } iewStats;
 };

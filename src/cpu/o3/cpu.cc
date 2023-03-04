@@ -485,11 +485,11 @@ CPU::tick()
     assert(drainState() != DrainState::Drained);
 
     ++baseStats.numCycles;
-    
-    system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), default_group);
+
+    baseStats.countMinNumCycles = system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), default_group);
     
 //    if( std::fmod(baseStats.numCycles.value(), 1000) == 0) {
-        updateCountMinStats();  
+//        updateCountMinStats();
 //    }
  
     updateCycleCounters(BaseCPU::CPU_STATE_ON);
@@ -1449,7 +1449,7 @@ CPU::wakeCPU()
         --cycles;
         cpuStats.idleCycles += cycles;
         baseStats.numCycles += cycles;
-        system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), default_group, cycles);
+        baseStats.countMinNumCycles = system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), default_group, cycles);
     }
 
     schedule(tickEvent, clockEdge());
@@ -1601,7 +1601,7 @@ CPU::htmSendAbortSignal(ThreadID tid, uint64_t htm_uid,
 
 void
 CPU::updateCountMinStats(){
-    BaseCPU::updateCountMinStats();
+/*    BaseCPU::updateCountMinStats();
  
     if (!system->probHwCounters)
         return;   
@@ -1611,7 +1611,7 @@ CPU::updateCountMinStats(){
     decode.updateCountMinStats();
     rename.updateCountMinStats();
     iew.updateCountMinStats();
-    commit.updateCountMinStats();
+    commit.updateCountMinStats();*/
 }
 
 int

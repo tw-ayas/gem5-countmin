@@ -450,7 +450,7 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
                 schedule(nextReqEvent, curTick());
             }
             stats.writeReqs++;
-            system()->count_min_structure_system["system"]->increment(std::string(name() + ".writeReqs").data(), 16);
+            stats.countMinWriteReqs = system()->count_min_structure_system["system"]->increment(std::string(name() + ".writeReqs").data(), 16);
             stats.bytesWrittenSys += size;
         }
     } else {
@@ -472,7 +472,7 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
                 }
             }
             stats.readReqs++;
-            system()->count_min_structure_system["system"]->increment(std::string(name() + ".readReqs").data(), 16);
+            stats.countMinReadReqs = system()->count_min_structure_system["system"]->increment(std::string(name() + ".readReqs").data(), 16);
             stats.bytesReadSys += size;
         }
     }
@@ -1500,8 +1500,8 @@ MemCtrl::MemoryPort::recvTimingReq(PacketPtr pkt)
 void
 MemCtrl::updateCountMinStats(){
 //    std::cout << "Update MemCtrl Stats" << std::endl;
-    stats.countMinReadReqs = system()->count_min_structure_system["system"]->estimate(std::string(name() + ".readReqs").data(), 16);
-    stats.countMinWriteReqs = system()->count_min_structure_system["system"]->estimate(std::string(name() + ".writeReqs").data(), 16);
+//    stats.countMinReadReqs = system()->count_min_structure_system["system"]->estimate(std::string(name() + ".readReqs").data(), 16);
+//    stats.countMinWriteReqs = system()->count_min_structure_system["system"]->estimate(std::string(name() + ".writeReqs").data(), 16);
 }
 
 } // namespace memory

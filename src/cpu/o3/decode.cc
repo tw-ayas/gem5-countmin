@@ -597,7 +597,7 @@ Decode::decode(bool &status_change, ThreadID tid)
         ++stats.blockedCycles;
     } else if (decodeStatus[tid] == Squashing) {
         ++stats.squashCycles;
-        cpu->update_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
+        stats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
     }
 
     // Decode should try to decode as many instructions as its bandwidth
@@ -728,7 +728,7 @@ Decode::decodeInsts(ThreadID tid)
             std::unique_ptr<PCStateBase> target = inst->branchTarget();
             if (*target != inst->readPredTarg()) {
                 ++stats.branchMispred;
-                cpu->update_count_min(std::string(name() + ".branchMispred").data(), default_group);
+                stats.countMinBranchMispred = cpu->update_count_min(std::string(name() + ".branchMispred").data(), default_group);
 
                 // Might want to set some sort of boolean and just do
                 // a check at the end
@@ -761,9 +761,9 @@ Decode::decodeInsts(ThreadID tid)
 
 void
 Decode::updateCountMinStats(){
-    stats.countMinSquashCycles = cpu->get_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
+//    stats.countMinSquashCycles = cpu->get_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
 //    stats.countMinBranchResolved = cpu->get_count_min(std::string(name() + ".branchResolved").data());
-    stats.countMinBranchMispred = cpu->get_count_min(std::string(name() + ".branchMispred").data(), default_group);
+//    stats.countMinBranchMispred = cpu->get_count_min(std::string(name() + ".branchMispred").data(), default_group);
 
 }
 

@@ -333,7 +333,7 @@ void
 Base::updateCountMinStats()
 {
 //    std::cout << "Update Prefetcher CountMinStats" << std::endl;
-    prefetchStats.countMinPfIssued = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".pfIssued").data(), default_group);
+//    prefetchStats.countMinPfIssued = system->count_min_structure_system[counterName]->estimate(std::string(name() + ".pfIssued").data(), default_group);
 }
 
 } // namespace prefetch

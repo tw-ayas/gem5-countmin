@@ -565,11 +565,11 @@ Fetch::lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &next_pc)
     inst->setPredTaken(predict_taken);
 
     ++fetchStats.branches;
-    cpu->update_count_min(std::string(cpu->name() + ".branches").data(), default_group);
+    fetchStats.countMinBranches = cpu->update_count_min(std::string(name() + ".branches").data(), default_group);
 
     if (predict_taken) {
         ++fetchStats.predictedBranches;
-        cpu->update_count_min(std::string(name() + ".predictedBranches").data(), default_group);
+        fetchStats.countMinPredictedBranches = cpu->update_count_min(std::string(name() + ".predictedBranches").data(), default_group);
     }
 
     return predict_taken;
@@ -780,7 +780,7 @@ Fetch::doSquash(const PCStateBase &new_pc, const DynInstPtr squashInst,
     delayedCommit[tid] = true;
 
     ++fetchStats.squashCycles;
-    cpu->update_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
+    fetchStats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
 }
 
 void
@@ -1174,14 +1174,14 @@ Fetch::fetch(bool &status_change)
 
             if (fetchStatus[tid] == IcacheWaitResponse){
                 ++fetchStats.icacheStallCycles;
-                cpu->update_count_min(std::string(cpu->name() + ".icacheStallCycles").data(), cpu->default_group);
+                fetchStats.countMinIcacheStallCycles = cpu->update_count_min(std::string(name() + ".icacheStallCycles").data(), cpu->default_group);
             }
             else if (fetchStatus[tid] == ItlbWait){
                 ++fetchStats.tlbCycles;
             } 
             else{
                 ++fetchStats.miscStallCycles;
-                cpu->update_count_min(std::string(cpu->name() + ".miscStallCycles").data(), cpu->default_group);
+                fetchStats.countMinMiscStallCycles = cpu->update_count_min(std::string(name() + ".miscStallCycles").data(), cpu->default_group);
             }    
             return;
         } else if (checkInterrupt(this_pc.instAddr()) &&
@@ -1190,7 +1190,7 @@ Fetch::fetch(bool &status_change)
             // an delayed commit micro-op currently (delayed commit
             // instructions are not interruptable by interrupts, only faults)
             ++fetchStats.miscStallCycles;
-            cpu->update_count_min(std::string(cpu->name() + ".miscStallCycles").data(), cpu->default_group);
+            fetchStats.countMinMiscStallCycles = cpu->update_count_min(std::string(name() + ".miscStallCycles").data(), cpu->default_group);
             DPRINTF(Fetch, "[tid:%i] Fetch is stalled!\n", tid);
             return;
         }
@@ -1603,11 +1603,11 @@ Fetch::profileStall(ThreadID tid)
         DPRINTF(Fetch, "[tid:%i] Fetch is blocked!\n", tid);
     } else if (fetchStatus[tid] == Squashing) {
         ++fetchStats.squashCycles;
-        cpu->update_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
+        fetchStats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
         DPRINTF(Fetch, "[tid:%i] Fetch is squashing!\n", tid);
     } else if (fetchStatus[tid] == IcacheWaitResponse) {
         ++fetchStats.icacheStallCycles;
-        cpu->update_count_min(std::string(cpu->name() + ".icacheStallCycles").data(), cpu->default_group);
+        fetchStats.countMinIcacheStallCycles = cpu->update_count_min(std::string(name() + ".icacheStallCycles").data(), cpu->default_group);
         DPRINTF(Fetch, "[tid:%i] Fetch is waiting cache response!\n",
                 tid);
     } else if (fetchStatus[tid] == ItlbWait) {
@@ -1656,12 +1656,12 @@ Fetch::IcachePort::recvReqRetry()
 
 void
 Fetch::updateCountMinStats(){
-    fetchStats.countMinIcacheStallCycles = cpu->get_count_min(std::string(name() + ".icacheStallCycles").data(), cpu->default_group);
+/*    fetchStats.countMinIcacheStallCycles = cpu->get_count_min(std::string(name() + ".icacheStallCycles").data(), cpu->default_group);
     fetchStats.countMinMiscStallCycles = cpu->get_count_min(std::string(name() + ".miscStallCycles").data(), cpu->default_group);
     fetchStats.countMinBranches = cpu->get_count_min(std::string(name() + ".branches").data(), default_group);
     fetchStats.countMinPredictedBranches = cpu->get_count_min(std::string(name() + ".predictedBranches").data(), default_group);
     fetchStats.countMinSquashCycles = cpu->get_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
-
+*/
     if (branchPred)
         branchPred->updateCountMinStats();
 }

@@ -82,7 +82,7 @@ Multi::getPacket()
             PacketPtr pkt = prefetchers[pf_turn]->getPacket();
             panic_if(!pkt, "Prefetcher is ready but didn't return a packet.");
             prefetchStats.pfIssued++;
-            system->count_min_structure_system[counterName]->increment(std::string(name() + ".pfIssued").data(), default_group);
+            prefetchStats.countMinPfIssued = system->count_min_structure_system[counterName]->increment(std::string(name() + ".pfIssued").data(), default_group);
             issuedPrefetches++;
             return pkt;
         }
