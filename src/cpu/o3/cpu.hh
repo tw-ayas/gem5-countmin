@@ -632,6 +632,8 @@ class CPU : public BaseCPU
 
     int update_count_min(char *s, int group);
 
+        int update_count_min(char *s, int group, int increment);
+
     int get_count_min(char *s, int group);
     
 };

@@ -1619,6 +1619,11 @@ CPU::update_count_min(char *s, int group){
     return system->count_min_structure_system[name()]->increment(s, group);
 }
 
+int
+CPU::update_count_min(char *s, int group, int increment){
+    return system->count_min_structure_system[name()]->increment(s, group, increment);
+}
+
 int 
 CPU::get_count_min(char *s, int group){
     return system->count_min_structure_system[name()]->estimate(s, group);
