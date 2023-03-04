@@ -464,6 +464,10 @@ CPU::CPUStats::CPUStats(CPU *cpu)
         .init(cpu->numThreads)
         .flags(statistics::total);
 
+    countMinCommittedOps
+            .init(cpu->numThreads)
+            .flags(statistics::total);
+
     countMinCpi
         .precision(6);
     countMinCpi = cpu->baseStats.countMinNumCycles / countMinCommittedInsts;
