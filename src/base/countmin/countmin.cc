@@ -4,18 +4,13 @@
 #include <ctime>
 #include <iostream>
 
-CountMinCounter::CountMinCounter(int size, int d, int cons, int c_g) :
-        hash_string_prime {503, 509, 521, 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599,
-                           601, 607, 613, 617, 619, 631, 641, 643, 647, 653, 659, 661, 673, 677, 683, 691,
-                           701, 709, 719, 727, 733, 739, 743, 751, 757, 761, 769, 773, 787, 797,
-                           809, 811, 821, 823, 827, 829, 839, 853, 857, 859, 863, 877, 881, 883, 887,
-                           907, 911, 919, 929, 937, 941, 947, 953, 967, 971, 977, 983, 991, 997}
+CountMinCounter::CountMinCounter(int size, int d, int cons, int c_g)
 {
     width = size / (4 * d);
     depth = d;
     conservative_update = cons;
     reset_hashes_on_reset = 0;
-    std::cout << "CountMinCounter with size " << size << " " << " " << width << " " << depth << std::endl;
+    std::cout << "CountMinCounter with size: " << size << "| width: " << " " << width << "| depth: " << depth << std::endl;
     auto C = new unsigned int *[depth];
     row_counts = new unsigned int[depth];
     for (int i = 0; i < depth; i++){
@@ -28,12 +23,13 @@ CountMinCounter::CountMinCounter(int size, int d, int cons, int c_g) :
     counters = C;
 
     std::mt19937_64 gen (std::random_device{}());
-
-    hashes = new unsigned int*[depth];
+    hashes = new char*[depth];
     for (int i = 0; i < depth; i++){
-        hashes[i] = new unsigned int[2];
-        hashes[i][0] = int(gen() * (i + 1));
-        hashes[i][1] = int(gen() / (i + 1));
+        hashes[i] = new char[depth];
+        for(int j = 0; j < 16; j++){
+            hashes[i][j] = char((gen() >> j) % width);
+            cout << int(hashes[i][j]) << " ";
+        }
         cout << "hashes for " << i << " " << hashes[i][0] << " " << " " << hashes[i][1] << endl;
     }
 
@@ -309,23 +305,30 @@ int CountMinCounter::pointValue(int c) {
     }
 }
 
-unsigned int CountMinCounter::hashstr(char *s, unsigned int rand_one, unsigned int rand_two, unsigned int row) {
-    unsigned int hash = rand_one;
-    int c;
-    c = *s++;
-    int pos = 1;
-//    cout << s <<  ": " << rand_one << " " << rand_two << "=>";
-    while (c) {
-        int index = pos % 73;
-        //int shift_prime = (c * pos) % 25;
-        //int shift_char = row % 5;
-        //hash = ((hash) + (((rand_two / (c << shift_char)))) + ((hash_string_prime[index] << shift_prime) / rand_one));
-        hash = ((hash + hash_string_prime[index]) ^ (rand_two + c));
+unsigned int CountMinCounter::hashstr(char *s, unsigned int row){
+    uint16_t hashstr = 0;
+    int c = *s;
+    while(c){
+        hashstr = hashstr + (c >> row);
         c = *s++;
-        pos++;
     }
-    hash = ((hash) % width);
-//    cout << hash << endl;
+    return hash_function(hashstr, row);
+}
+
+unsigned int CountMinCounter::hash_function(uint16_t key, unsigned int row) {
+    int hash = 0;
+    for(int i = 15; i >= 0; i--){
+        uint16_t test = key & 1;
+        if(test){
+            if(hash){
+                hash = hash ^ hashes[row][i];
+            }
+            else{
+                hash = hashes[row][i];
+            }
+        }
+        key = key >> 1;
+    }
     return hash;
 }
 

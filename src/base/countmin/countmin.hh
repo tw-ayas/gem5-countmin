@@ -21,9 +21,8 @@ class CountMinCounter
         unsigned int conservative_update;
         unsigned int reset_hashes_on_reset;
         unsigned int **counters;
-        unsigned int **hashes;
+        char **hashes;
 	    unsigned int *row_counts;
-        unsigned int hash_string_prime[73];
         unsigned int current_group;
         int value(int c);
         int pointValue(int c);
@@ -31,7 +30,8 @@ class CountMinCounter
     public:
         CountMinCounter(int w, int d, int cons, int c_g);
         ~CountMinCounter();
-        unsigned int hashstr(char *s, unsigned int, unsigned int, unsigned int row);
+        unsigned int hashstr(char *s, unsigned int row);
+        unsigned int hash_function(uint16_t , unsigned int row);
         void print();
         void reset();
         void change_group_context();
