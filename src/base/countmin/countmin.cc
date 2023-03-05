@@ -196,7 +196,7 @@ int CountMinCounter::decrement(char *s, int update){
     unsigned int hashval;
     int estimate = -1;
     for (int i = 0; i < depth; i++) {
-        hashval = hashstr(s, hashes[i][0], hashes[i][1], i);
+        hashval = hashstr(s, i);
         int hash = counters[i][hashval];
         hash -= update;
         counters[i][hashval] = hash;
