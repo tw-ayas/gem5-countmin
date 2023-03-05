@@ -82,7 +82,7 @@ TLB::TLB(const Params &p)
     int first_pos= counter_name.find(".") + 1;
     int second_pos = counter_name.find(".", first_pos);
     counterName = counter_name.substr(0, second_pos);
-    default_group = 17;
+    default_group = 4;
 
     if (system->count_min_structure_system.count(counterName) == 0){
         system->addCounter(counterName);

@@ -78,7 +78,7 @@ BPredUnit::BPredUnit(const Params &params)
     int first_pos= counter_name.find(".") + 1;
     int second_pos = counter_name.find(".", first_pos);
     counterName = counter_name.substr(0, second_pos);
-    default_group = 1;
+    default_group = 4;
 }
 
 BPredUnit::BPredUnitStats::BPredUnitStats(statistics::Group *parent)

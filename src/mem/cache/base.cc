@@ -996,7 +996,7 @@ BaseCache::handleEvictions(std::vector<CacheBlk*> &evict_blks,
     // counter if a valid block is being replaced
     if (replacement) {
         stats.replacements++;
-        stats.countMinReplacements = system->count_min_structure_system[counterName]->increment(std::string(name() + ".replacements").data(), default_group);
+        stats.countMinReplacements = system->count_min_structure_system[counterName]->increment(std::string(name() + ".replacements").data(), 4);
         // Evict valid blocks associated to this victim block
         for (auto& blk : evict_blks) {
             if (blk->isValid()) {
@@ -1732,7 +1732,7 @@ BaseCache::writebackBlk(CacheBlk *blk)
         (blk->isSet(CacheBlk::DirtyBit) || writebackClean));
 
     stats.writebacks[Request::wbRequestorId]++;
-    stats.countMinWriteBacks = system->count_min_structure_system[counterName]->increment(std::string(name() + ".writebacks").data(), default_group);
+    stats.countMinWriteBacks = system->count_min_structure_system[counterName]->increment(std::string(name() + ".writebacks").data(), 4);
 
     RequestPtr req = std::make_shared<Request>(
         regenerateBlkAddr(blk), blkSize, 0, Request::wbRequestorId);

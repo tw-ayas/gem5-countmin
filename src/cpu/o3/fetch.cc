@@ -145,7 +145,7 @@ Fetch::Fetch(CPU *_cpu, const BaseO3CPUParams &params)
     // Get the size of an instruction.
     instSize = decoder[0]->moreBytesSize();
     
-    default_group = 6;
+    default_group = 2;
 }
 
 std::string Fetch::name() const { return cpu->name() + ".fetch"; }
@@ -780,7 +780,7 @@ Fetch::doSquash(const PCStateBase &new_pc, const DynInstPtr squashInst,
     delayedCommit[tid] = true;
 
     ++fetchStats.squashCycles;
-    fetchStats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
+    fetchStats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), default_group);
 }
 
 void
@@ -1174,14 +1174,14 @@ Fetch::fetch(bool &status_change)
 
             if (fetchStatus[tid] == IcacheWaitResponse){
                 ++fetchStats.icacheStallCycles;
-                fetchStats.countMinIcacheStallCycles = cpu->update_count_min(std::string(name() + ".icacheStallCycles").data(), cpu->default_group);
+                fetchStats.countMinIcacheStallCycles = cpu->update_count_min(std::string(name() + ".icacheStallCycles").data(), default_group);
             }
             else if (fetchStatus[tid] == ItlbWait){
                 ++fetchStats.tlbCycles;
             } 
             else{
                 ++fetchStats.miscStallCycles;
-                fetchStats.countMinMiscStallCycles = cpu->update_count_min(std::string(name() + ".miscStallCycles").data(), cpu->default_group);
+                fetchStats.countMinMiscStallCycles = cpu->update_count_min(std::string(name() + ".miscStallCycles").data(), default_group);
             }    
             return;
         } else if (checkInterrupt(this_pc.instAddr()) &&
@@ -1190,7 +1190,7 @@ Fetch::fetch(bool &status_change)
             // an delayed commit micro-op currently (delayed commit
             // instructions are not interruptable by interrupts, only faults)
             ++fetchStats.miscStallCycles;
-            fetchStats.countMinMiscStallCycles = cpu->update_count_min(std::string(name() + ".miscStallCycles").data(), cpu->default_group);
+            fetchStats.countMinMiscStallCycles = cpu->update_count_min(std::string(name() + ".miscStallCycles").data(), default_group);
             DPRINTF(Fetch, "[tid:%i] Fetch is stalled!\n", tid);
             return;
         }
@@ -1603,11 +1603,11 @@ Fetch::profileStall(ThreadID tid)
         DPRINTF(Fetch, "[tid:%i] Fetch is blocked!\n", tid);
     } else if (fetchStatus[tid] == Squashing) {
         ++fetchStats.squashCycles;
-        fetchStats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
+        fetchStats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), default_group);
         DPRINTF(Fetch, "[tid:%i] Fetch is squashing!\n", tid);
     } else if (fetchStatus[tid] == IcacheWaitResponse) {
         ++fetchStats.icacheStallCycles;
-        fetchStats.countMinIcacheStallCycles = cpu->update_count_min(std::string(name() + ".icacheStallCycles").data(), cpu->default_group);
+        fetchStats.countMinIcacheStallCycles = cpu->update_count_min(std::string(name() + ".icacheStallCycles").data(), default_group);
         DPRINTF(Fetch, "[tid:%i] Fetch is waiting cache response!\n",
                 tid);
     } else if (fetchStatus[tid] == ItlbWait) {

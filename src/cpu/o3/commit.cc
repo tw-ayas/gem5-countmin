@@ -1095,7 +1095,7 @@ Commit::commitInsts()
             if (commit_success) {
                 ++num_committed;
                 stats.committedInstType[tid][head_inst->opClass()]++;
-                stats.countMinCommittedInstType[tid][head_inst->opClass()] = cpu->update_count_min(std::string(name() + ".committedInstType::" + std::to_string(tid) + "::" + std::to_string(head_inst->opClass())).data(), default_group);
+                stats.countMinCommittedInstType[tid][head_inst->opClass()] = cpu->update_count_min(std::string(name() + ".committedInstType::" + std::to_string(tid) + "::" + std::to_string(head_inst->opClass())).data(), 3); //included in group 2 because it has more counters for each instruction type
                 ppCommit->notify(head_inst);
 
                 // hardware transactional memory
@@ -1260,7 +1260,7 @@ Commit::commitHead(const DynInstPtr &head_inst, unsigned inst_num)
             toIEW->commitInfo[tid].strictlyOrderedLoad = head_inst;
         } else {
             ++stats.commitNonSpecStalls;
-            stats.countMinCommitNonSpecStalls = cpu->update_count_min(std::string(name() + ".commitNonSpecStalls").data(), default_group);
+            stats.countMinCommitNonSpecStalls = cpu->update_count_min(std::string(name() + ".commitNonSpecStalls").data(), cpu->default_group);
         }
 
         return false;
@@ -1462,7 +1462,7 @@ Commit::updateComInstStats(const DynInstPtr &inst)
 
     if (!inst->isMicroop() || inst->isLastMicroop()){
         stats.instsCommitted[tid]++;
-        stats.countMinInstsCommitted[tid] = cpu->update_count_min(std::string(name() + ".instsCommitted::" + std::to_string(tid)).data(), default_group);
+        stats.countMinInstsCommitted[tid] = cpu->update_count_min(std::string(name() + ".instsCommitted::" + std::to_string(tid)).data(), cpu->default_group);
     }
     stats.opsCommitted[tid]++;
     stats.countMinOpsCommitted[tid] = cpu->update_count_min(std::string(name() + ".opsCommitted::" + std::to_string(tid)).data(), cpu->default_group);
@@ -1486,11 +1486,11 @@ Commit::updateComInstStats(const DynInstPtr &inst)
     //
     if (inst->isMemRef()) {
         stats.memRefs[tid]++;
-        stats.countMinMemRefs[tid] = cpu->update_count_min(std::string(name() + ".memRefs::" + std::to_string(tid)).data(), default_group);
+        stats.countMinMemRefs[tid] = cpu->update_count_min(std::string(name() + ".memRefs::" + std::to_string(tid)).data(), cpu->default_group);
 
         if (inst->isLoad()) {
             stats.loads[tid]++;
-            stats.countMinLoads[tid] = cpu->update_count_min(std::string(name() + ".loads::" + std::to_string(tid)).data(), default_group);
+            stats.countMinLoads[tid] = cpu->update_count_min(std::string(name() + ".loads::" + std::to_string(tid)).data(), cpu->default_group);
         }
 
         if (inst->isAtomic()) {
@@ -1505,24 +1505,24 @@ Commit::updateComInstStats(const DynInstPtr &inst)
     // Integer Instruction
     if (inst->isInteger()) {
         stats.integer[tid]++;
-        stats.countMinInteger[tid] = cpu->update_count_min(std::string(name() + ".integer::" + std::to_string(tid)).data(), default_group);
+        stats.countMinInteger[tid] = cpu->update_count_min(std::string(name() + ".integer::" + std::to_string(tid)).data(), cpu->default_group);
     }
 
     // Floating Point Instruction
     if (inst->isFloating()) {
         stats.floating[tid]++;
-        stats.countMinFloating[tid] = cpu->update_count_min(std::string(name() + ".floating::" + std::to_string(tid)).data(), default_group);
+        stats.countMinFloating[tid] = cpu->update_count_min(std::string(name() + ".floating::" + std::to_string(tid)).data(), cpu->default_group);
     }   
     // Vector Instruction
     if (inst->isVector()) {
         stats.vectorInstructions[tid]++;
-        stats.countMinVectorInstructions[tid] = cpu->update_count_min(std::string(name() + ".vectorInstructions::" + std::to_string(tid)).data(), default_group);
+        stats.countMinVectorInstructions[tid] = cpu->update_count_min(std::string(name() + ".vectorInstructions::" + std::to_string(tid)).data(), cpu->default_group);
     }
 
     // Function Calls
     if (inst->isCall()) {
         stats.functionCalls[tid]++;
-        stats.countMinFunctionCalls[tid] = cpu->update_count_min(std::string(name() + ".functionCalls::" + std::to_string(tid)).data(), default_group);
+        stats.countMinFunctionCalls[tid] = cpu->update_count_min(std::string(name() + ".functionCalls::" + std::to_string(tid)).data(), cpu->default_group);
     }
 }
 

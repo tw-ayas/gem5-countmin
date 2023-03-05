@@ -160,7 +160,7 @@ InstructionQueue::InstructionQueue(CPU *cpu_ptr, IEW *iew_ptr,
         maxEntries[tid] = 0;
     }
 
-    default_group = 6;
+    default_group = 3;
 }
 
 InstructionQueue::~InstructionQueue()

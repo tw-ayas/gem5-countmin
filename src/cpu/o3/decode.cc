@@ -728,7 +728,7 @@ Decode::decodeInsts(ThreadID tid)
             std::unique_ptr<PCStateBase> target = inst->branchTarget();
             if (*target != inst->readPredTarg()) {
                 ++stats.branchMispred;
-                stats.countMinBranchMispred = cpu->update_count_min(std::string(name() + ".branchMispred").data(), default_group);
+                stats.countMinBranchMispred = cpu->update_count_min(std::string(name() + ".branchMispred").data(), cpu->default_group);
 
                 // Might want to set some sort of boolean and just do
                 // a check at the end

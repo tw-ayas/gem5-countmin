@@ -116,7 +116,7 @@ IEW::IEW(CPU *_cpu, const BaseO3CPUParams &params)
 
     counterName = name();
 
-    default_group = 6;
+    default_group = 2;
 
 }
 
@@ -909,10 +909,10 @@ IEW::dispatch(ThreadID tid)
 
     if (dispatchStatus[tid] == Blocked) {
         ++iewStats.blockCycles;
-        iewStats.countMinBlockCycles = cpu->update_count_min(std::string(name() + ".blockCycles").data(), cpu->default_group);
+        iewStats.countMinBlockCycles = cpu->update_count_min(std::string(name() + ".blockCycles").data(), default_group);
     } else if (dispatchStatus[tid] == Squashing) {
         ++iewStats.squashCycles;
-        iewStats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
+        iewStats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), default_group);
     }
 
     // Dispatch should try to dispatch as many instructions as its bandwidth

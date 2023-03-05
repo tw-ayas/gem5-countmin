@@ -1424,12 +1424,7 @@ class BaseCache : public ClockedObject
   public:
 
     int getSubGroupForCounter(){
-        if(default_group == 11){
-            return 12;
-        }
-        if(default_group == 16){
-            return 16;
-        }
+        return 5;
     }
 
     void incMissCount(PacketPtr pkt)

@@ -64,7 +64,7 @@ AbstractMemory::AbstractMemory(const Params &p) :
     confTableReported(p.conf_table_reported), inAddrMap(p.in_addr_map),
     kvmMap(p.kvm_map), _system(NULL),
     stats(*this),
-    default_group(17)
+    default_group(4)
 {
     panic_if(!range.valid() || !range.size(),
              "Memory range %s must be valid with non-zero size.",
