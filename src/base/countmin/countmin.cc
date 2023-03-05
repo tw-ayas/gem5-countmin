@@ -157,7 +157,7 @@ int CountMinCounter::increment(char *s, int group, int update)
     countersAdded.insert(s_check);
 
     for (int i = 0; i < depth; i++) {
-        hashpos[i] = hashstr(s, hashes[i][0], hashes[i][1], i);
+        hashpos[i] = hashstr(s, i);
         if(counters[i][hashpos[i]] < min || min < 0){
             min = counters[i][hashpos[i]];
         }
@@ -277,7 +277,7 @@ int CountMinCounter::estimate(char *s, int group){
     unsigned int hashval;
     int estimate = -1;
     for(int i = 0; i < depth; i++){
-        hashval = hashstr(s, hashes[i][0], hashes[i][1], i);
+        hashval = hashstr(s, i);
         int hash = counters[i][hashval];
         if(hash < estimate || estimate < 0){
             estimate = hash;
