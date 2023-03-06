@@ -229,7 +229,7 @@ AtomicSimpleCPU::activateContext(ThreadID thread_num)
                                  threadInfo[thread_num]->thread->lastSuspend);
     baseStats.numCycles += delta;
 
-    baseStats.countMinNumCycles = system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), 0, delta);
+    baseStats.countMinNumCycles = system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), 0, 0, baseStats.numCycles.value(), delta);
 
     if (std::fmod(baseStats.numCycles.value(), 1000) == 0 || delta >= 1000){
         updateCountMinStats(); 
@@ -643,7 +643,7 @@ AtomicSimpleCPU::tick()
     for (int i = 0; i < width || locked; ++i) {
         baseStats.numCycles++;
 
-        baseStats.countMinNumCycles = system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), 0);
+        baseStats.countMinNumCycles = system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), 0, 0, baseStats.numCycles.value());
 
         if (std::fmod(baseStats.numCycles.value(), 1000) == 0){
             updateCountMinStats();

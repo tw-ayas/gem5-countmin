@@ -21,6 +21,9 @@ private:
     //stragtegy will be normal, conservative update and morris counters group
     unsigned int strategy;
 
+    //We use numCycles for MorrisCounter saved everytime when cpu sends numCycles
+    uint64_t numCycles;
+
     //2 dimensional matrix with normal counters
     uint64_t **counters;
 

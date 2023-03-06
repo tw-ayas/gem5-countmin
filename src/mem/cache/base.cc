@@ -368,7 +368,7 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
                 stats.cmdStats(pkt).mshrHits[pkt->req->requestorId()]++;
 
                 std::string key = name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".mshrHits";
-                stats.countMinCmdStats(pkt).mshrHits[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data(), getSubGroupForCounter());
+                stats.countMinCmdStats(pkt).mshrHits[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data(), getSubGroupForCounter(), 0);
 
                 // We use forward_time here because it is the same
                 // considering new targets. We have multiple
@@ -395,7 +395,7 @@ BaseCache::handleTimingReqMiss(PacketPtr pkt, MSHR *mshr, CacheBlk *blk,
         stats.cmdStats(pkt).mshrMisses[pkt->req->requestorId()]++;
         
         std::string key = name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".mshrMisses";
-        stats.countMinCmdStats(pkt).mshrMisses[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data(), getSubGroupForCounter());
+        stats.countMinCmdStats(pkt).mshrMisses[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data(), getSubGroupForCounter(), 0);
         if (prefetcher && pkt->isDemand())
             prefetcher->incrDemandMhsrMisses();
 
@@ -958,7 +958,7 @@ BaseCache::getNextQueueEntry()
                 assert(pkt->req->requestorId() < system->maxRequestors());
                 stats.cmdStats(pkt).mshrMisses[pkt->req->requestorId()]++;
                 std::string key = name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".mshrMisses";
-                stats.countMinCmdStats(pkt).mshrMisses[pkt->req->requestorId()] = system->count_min_structure_system[counterName]->increment(key.data(), getSubGroupForCounter());
+                stats.countMinCmdStats(pkt).mshrMisses[pkt->req->requestorId()] = system->count_min_structure_system[counterName]->increment(key.data(), getSubGroupForCounter(), 0);
 
                 // allocate an MSHR and return it, note
                 // that we send the packet straight away, so do not
@@ -996,7 +996,7 @@ BaseCache::handleEvictions(std::vector<CacheBlk*> &evict_blks,
     // counter if a valid block is being replaced
     if (replacement) {
         stats.replacements++;
-        stats.countMinReplacements = system->count_min_structure_system[counterName]->increment(std::string(name() + ".replacements").data(), 4);
+        stats.countMinReplacements = system->count_min_structure_system[counterName]->increment(std::string(name() + ".replacements").data(), 4, 0);
         // Evict valid blocks associated to this victim block
         for (auto& blk : evict_blks) {
             if (blk->isValid()) {
@@ -1732,7 +1732,7 @@ BaseCache::writebackBlk(CacheBlk *blk)
         (blk->isSet(CacheBlk::DirtyBit) || writebackClean));
 
     stats.writebacks[Request::wbRequestorId]++;
-    stats.countMinWriteBacks = system->count_min_structure_system[counterName]->increment(std::string(name() + ".writebacks").data(), 4);
+    stats.countMinWriteBacks = system->count_min_structure_system[counterName]->increment(std::string(name() + ".writebacks").data(), 4, 0);
 
     RequestPtr req = std::make_shared<Request>(
         regenerateBlkAddr(blk), blkSize, 0, Request::wbRequestorId);

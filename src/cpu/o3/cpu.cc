@@ -495,7 +495,7 @@ CPU::tick()
 
     ++baseStats.numCycles;
 
-    baseStats.countMinNumCycles = system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), default_group);
+    baseStats.countMinNumCycles = system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), default_group, baseStats.numCycles.value());
     
 //    if( std::fmod(baseStats.numCycles.value(), 1000) == 0) {
 //        updateCountMinStats();
@@ -1274,7 +1274,7 @@ CPU::instDone(ThreadID tid, const DynInstPtr &inst)
         thread[tid]->numInst++;
         thread[tid]->threadStats.numInsts++;
         cpuStats.committedInsts[tid]++;
-        cpuStats.countMinCommittedInsts[tid] = system->count_min_structure_system[name()]->increment(std::string(name() + ".committedInsts::" + std::to_string(tid)).data(), default_group);
+        cpuStats.countMinCommittedInsts[tid] = system->count_min_structure_system[name()]->increment(std::string(name() + ".committedInsts::" + std::to_string(tid)).data(), default_group, baseStats.numCycles.value());
 
         // Check for instruction-count-based events.
         thread[tid]->comInstEventQueue.serviceEvents(thread[tid]->numInst);
@@ -1282,7 +1282,7 @@ CPU::instDone(ThreadID tid, const DynInstPtr &inst)
     thread[tid]->numOp++;
     thread[tid]->threadStats.numOps++;
     cpuStats.committedOps[tid]++;
-    cpuStats.countMinCommittedOps[tid] = system->count_min_structure_system[name()]->increment(std::string(name() + ".committedOps::" + std::to_string(tid)).data(), default_group);
+    cpuStats.countMinCommittedOps[tid] = system->count_min_structure_system[name()]->increment(std::string(name() + ".committedOps::" + std::to_string(tid)).data(), default_group, baseStats.numCycles.value());
 
 
     probeInstCommit(inst->staticInst, inst->pcState().instAddr());
@@ -1459,9 +1459,9 @@ CPU::wakeCPU()
     if (cycles > 1) {
         --cycles;
         cpuStats.idleCycles += cycles;
-        cpuStats.countMinIdleCycles = system->count_min_structure_system[name()]->increment(std::string(name() + ".idleCycles").data(), default_group, cycles);
+        cpuStats.countMinIdleCycles = system->count_min_structure_system[name()]->increment(std::string(name() + ".idleCycles").data(), default_group, baseStats.numCycles.value(), cycles);
         baseStats.numCycles += cycles;
-        baseStats.countMinNumCycles = system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), default_group, cycles);
+        baseStats.countMinNumCycles = system->count_min_structure_system[name()]->increment(std::string(name() + ".numCycles").data(), default_group, baseStats.numCycles.value(), cycles);
     }
 
     schedule(tickEvent, clockEdge());
@@ -1628,12 +1628,12 @@ CPU::updateCountMinStats(){
 
 int
 CPU::update_count_min(char *s, int group){
-    return system->count_min_structure_system[name()]->increment(s, group);
+    return system->count_min_structure_system[name()]->increment(s, group, baseStats.numCycles.value());
 }
 
 int
 CPU::update_count_min(char *s, int group, int increment){
-    return system->count_min_structure_system[name()]->increment(s, group, increment);
+    return system->count_min_structure_system[name()]->increment(s, group, baseStats.numCycles.value(), increment);
 }
 
 int 

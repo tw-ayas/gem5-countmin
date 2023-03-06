@@ -3,6 +3,7 @@
 #include <cmath>
 #include <ctime>
 #include <iostream>
+#include <bitset>
 
 CountMinCounter::CountMinCounter(unsigned int size, unsigned int d, unsigned int strat, unsigned int c_g)
 {
@@ -58,6 +59,8 @@ CountMinCounter::CountMinCounter(unsigned int size, unsigned int d, unsigned int
     current_group = c_g;
     // cout << "current group: " <<  current_group << endl;
 
+    numCycles = 0;
+
     std::srand(time(nullptr));
 };
 
@@ -86,6 +89,12 @@ uint64_t CountMinCounter::increment(int s, int group, int pc, int update) {
 
 uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
 {
+    if(!pc){
+        pc = numCycles;
+    }
+    else{
+        numCycles = pc;
+    }
     switch(current_group){
         case 0:
             //count all counters
@@ -113,7 +122,7 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
             break;
         case 4:
             //count all l2 cache and memory parameters
-            if if (group > 4)
+            if (group > 4)
             {
                 return 0;
             }
@@ -249,7 +258,7 @@ uint64_t CountMinCounter::estimate(char *s, int group){
             break;
         case 4:
             //count all l2 cache and memory parameters
-            if if (group > 4)
+            if (group > 4)
                 {
                     return 0;
                 }

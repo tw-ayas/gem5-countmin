@@ -1338,7 +1338,7 @@ class BaseCache : public ClockedObject
         uint8_t flag = 1 << cause;
         if (blocked == 0) {
             stats.blockedCauses[cause]++;
-            stats.countMinBlockedCauses[cause] += system->count_min_structure_system[counterName]->increment(std::string(name() + ".blockedCauses" + getBlockedCauseName(cause)).data(), default_group);
+            stats.countMinBlockedCauses[cause] += system->count_min_structure_system[counterName]->increment(std::string(name() + ".blockedCauses" + getBlockedCauseName(cause)).data(), default_group, 0);
             blockedCycle = curCycle();
             cpuSidePort.setBlocked();
         }
@@ -1360,7 +1360,7 @@ class BaseCache : public ClockedObject
         DPRINTF(Cache,"Unblocking for cause %d, mask=%d\n", cause, blocked);
         if (blocked == 0) {
             stats.blockedCycles[cause] += curCycle() - blockedCycle;
-            stats.countMinBlockedCycles[cause] += system->count_min_structure_system[counterName]->increment(std::string(name() + ".blockedCycle" + getBlockedCauseName(cause)).data(), default_group, (curCycle() - blockedCycle));
+            stats.countMinBlockedCycles[cause] += system->count_min_structure_system[counterName]->increment(std::string(name() + ".blockedCycle" + getBlockedCauseName(cause)).data(), default_group, 0, (curCycle() - blockedCycle));
             cpuSidePort.clearBlocked();
         }
     }
@@ -1434,7 +1434,7 @@ class BaseCache : public ClockedObject
 
         std::string key = name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".misses";
         //std::cout << key << std::endl;
-        stats.countMinCmdStats(pkt).misses[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data(), getSubGroupForCounter());
+        stats.countMinCmdStats(pkt).misses[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data(), getSubGroupForCounter(), 0);
         
         pkt->req->incAccessDepth();
         if (missCount) {
@@ -1451,7 +1451,7 @@ class BaseCache : public ClockedObject
 
         std::string key = name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".hits";
         //std::cout << key << std::endl;
-        stats.countMinCmdStats(pkt).hits[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data(), getSubGroupForCounter());
+        stats.countMinCmdStats(pkt).hits[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data(), getSubGroupForCounter(), 0);
 
     }
 

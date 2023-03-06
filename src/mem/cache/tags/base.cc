@@ -138,8 +138,8 @@ BaseTags::insertBlock(const PacketPtr pkt, CacheBlk *blk)
     stats.tagAccesses += 1;
     stats.dataAccesses += 1;
 
-    stats.countMinTagAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".tagAccessess").data(), default_group);
-    stats.countMinDataAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".dataAccesses").data(), default_group);
+    stats.countMinTagAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".tagAccessess").data(), default_group, 0);
+    stats.countMinDataAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".dataAccesses").data(), default_group, 0);
 }
 
 void
@@ -183,7 +183,7 @@ BaseTags::computeStatsVisitor(CacheBlk &blk)
         const uint32_t task_id = blk.getTaskId();
         assert(task_id < context_switch_task_id::NumTaskId);
         stats.occupanciesTaskId[task_id]++;
-        stats.countMinOccupanciesTaskId[task_id] = system->count_min_structure_system[counterName]->increment(std::string(name() + ".occupanciesTaskId::" + std::to_string(task_id)).data(), default_group);
+        stats.countMinOccupanciesTaskId[task_id] = system->count_min_structure_system[counterName]->increment(std::string(name() + ".occupanciesTaskId::" + std::to_string(task_id)).data(), default_group, 0);
         Tick age = blk.getAge();
 
         int age_index;
@@ -199,7 +199,7 @@ BaseTags::computeStatsVisitor(CacheBlk &blk)
             age_index = 4; // >10ms
 
         stats.ageTaskId[task_id][age_index]++;
-        stats.ageTaskId[task_id][age_index] = system->count_min_structure_system[counterName]->increment(std::string(name() + ".ageTaskId_" + std::to_string(task_id) + "::" + std::to_string(age_index)).data(), default_group);
+        stats.ageTaskId[task_id][age_index] = system->count_min_structure_system[counterName]->increment(std::string(name() + ".ageTaskId_" + std::to_string(task_id) + "::" + std::to_string(age_index)).data(), default_group, 0);
     }
 }
 
