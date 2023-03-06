@@ -12,7 +12,7 @@ CountMinCounter::CountMinCounter(unsigned int size, unsigned int d, unsigned int
 
     if(strategy != 2) {
         // CMS-Normal and CMS-CU
-        width = (size / d) / 4;
+        width = (size / d) / 8;
         depth = d;
 
         counters = new uint64_t *[depth];
@@ -27,30 +27,29 @@ CountMinCounter::CountMinCounter(unsigned int size, unsigned int d, unsigned int
         //CMS-Morris Counter
         width = (size / d) / 4;
         depth = d;
-        morris_counters = new char **[depth];
-        morris_constants = new uint32_t **[depth];
+        morris_counters = new uint8_t **[depth];
+        morris_constants = new uint32_t *[depth];
         for(int i = 0; i < depth; i++){
-            morris_counters[i] = new char *[width];
-            morris_constants[i] = new uint32_t *[width];
+            morris_counters[i] = new uint8_t *[width];
+            morris_constants[i] = new uint32_t [4];
             for(int j = 0; j < width; j++){
-                morris_counters[i][j] = new char [4];
-                morris_constants[i][j] = new uint32_t [4];
-                for(int k = 0; k < 5; k++){
+                morris_counters[i][j] = new uint8_t [4];
+                for(int k = 0; k < 4; k++){
                     morris_counters[i][j][k] = 0;
-                    morris_constants[i][j][k] = gen();
+                    morris_constants[i][k] = gen();
                 }
             }
         }
         counters = nullptr;
     }
 
-    std::cout << "CountMinCounter with size: " << size << "| width: " << " " << width << "| depth: " << depth << std::endl;
+    std::cout << "CountMinCounter with size: " << size << "| width: " << " " << width << "| depth: " << depth << "| with strategy: " << strategy << std::endl;
 
-    hashes = new char*[depth];
+    hashes = new uint8_t *[depth];
     for (int i = 0; i < depth; i++){
-        hashes[i] = new char[depth];
+        hashes[i] = new uint8_t [depth];
         for(int j = 0; j < 16; j++){
-            hashes[i][j] = char((gen() >> j) % width);
+            hashes[i][j] = uint8_t((gen() >> j) % width);
             std::cout << std::bitset<6>(hashes[i][j]) << " ";
         }
         std::cout << std::endl;
@@ -139,6 +138,7 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
 
     std::string s_check(s);
     countersAdded.insert(s_check);
+    std::cout << s_check;// << std::endl;
     for (int i = 0; i < depth; i++) {
         hashpos[i] = hashstr(s, i);
         if (strategy == 1) {
@@ -147,10 +147,13 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
                 min = counters[i][hashpos[i]];
             }
         }
+        if(strategy != 2)
+            std::cout << " " << counters[i][hashpos[i]] << "| ";
     }
+    std::cout << std::endl;
 
     for (int i = 0; i < depth; i++){
-        if(!strategy){
+        if(strategy == 0){
             actual_count = counters[i][hashpos[i]];
             actual_count += update;
             counters[i][hashpos[i]] = actual_count;
@@ -162,6 +165,9 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
                 actual_count += update;
                 counters[i][hashpos[i]] = actual_count;
             }
+            else{
+                actual_count = counters[i][hashpos[i]];
+            }
         }
         else if(strategy == 2){
             int column = hashpos[i];
@@ -169,30 +175,35 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
         }
 
         if(actual_count < estimate || estimate < 0){
-            estimate =  actual_count;
+            estimate = actual_count;
         }
     }
+    print();
     return estimate;
 }
 
 uint64_t CountMinCounter::increment_morris(int row, int column, int pc, int update)
 {
     uint64_t estimate = 0;
-    int offset = 0;
+//    int offset = 0;
     for(int i = 0; i < 4; i++){
-        char count = morris_counters[row][column][i];
-        uint32_t a = random_gen();
-        if ((pc % int(pow(a, count))) == (morris_constants[row][column][i] % int(pow(a, count)))){
+        uint8_t count = morris_counters[row][column][i];
+        std::cout << int(count) << ": ";
+        double a = random_gen();
+        //uint64_t tester = count << a;
+        std::cout << int(std::fmod(pc, int(pow(a, count))) == std::fmod(morris_constants[row][i], int(pow(a, count)))) << "| ";
+        if (std::fmod(pc, int(pow(a, count))) == std::fmod(morris_constants[row][i], int(pow(a, count)))){
             count += update;
             morris_counters[row][column][i] = count;
         }
-        estimate += int(pow(a, count));
+        estimate += uint64_t(pow(a, count));
     }
+    std::cout << "= " << (estimate / 4) << std::endl;
     return estimate / 4;
 }
 
 double CountMinCounter::random_gen(){
-    double x = ((float) std::rand()) / (float) RAND_MAX;;
+    double x = ((float) std::rand()) / (float) RAND_MAX;
     return 2;
 }
 
@@ -296,9 +307,9 @@ uint64_t CountMinCounter::estimate(char *s, int group){
 uint64_t CountMinCounter::estimate_morris(int row, int column) {
     uint64_t estimate = 0;
     for(int i = 0; i < 4; i++) {
-        char a = random_gen();
-        char count = morris_counters[row][column][i];
-        estimate += int(pow(a, count));
+        double a = random_gen();
+        uint8_t count = morris_counters[row][column][i];
+        estimate += pow(a, count);
     }
     return estimate / 4;
 }

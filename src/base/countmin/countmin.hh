@@ -29,11 +29,11 @@ private:
 
     //2 dimensional matrix with a group of 4 morris counters such that the width can be increased by twice
     //we have 4 morris constants for each row of CMS
-    char ***morris_counters;
-    uint32_t ***morris_constants; // a
+    uint8_t ***morris_counters;
+    uint32_t **morris_constants; // a
 
     //hashes is a 2 dimensional Matrix depth X 16 8 byte integers (char)
-    char **hashes;
+    uint8_t **hashes;
 
     uint64_t *row_counts;
     uint8_t current_group;

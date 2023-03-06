@@ -274,7 +274,7 @@ if args.prob_hw_counters_size:
 if args.prob_hw_counters_depth:
     system.prob_hw_counters_depth = args.prob_hw_counters_depth
 if args.prob_hw_counters_conservative_update:
-    system.prob_hw_counters_conservative_update = args.prob_hw_counters_depth
+    system.prob_hw_counters_conservative_update = args.prob_hw_counters_conservative_update
 if args.prob_hw_counters_group:
     system.prob_hw_counters_group = args.prob_hw_counters_group
 
