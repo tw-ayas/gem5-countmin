@@ -138,7 +138,7 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
 
     std::string s_check(s);
     countersAdded.insert(s_check);
-    std::cout << s_check;// << std::endl;
+//   std::cout << s_check;// << std::endl;
     for (int i = 0; i < depth; i++) {
         hashpos[i] = hashstr(s, i);
         if (strategy == 1) {
@@ -147,10 +147,10 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
                 min = counters[i][hashpos[i]];
             }
         }
-        if(strategy != 2)
-            std::cout << " " << counters[i][hashpos[i]] << "| ";
+//        if(strategy != 2)
+//            std::cout << " " << counters[i][hashpos[i]] << "| ";
     }
-    std::cout << std::endl;
+//    std::cout << std::endl;
 
     for (int i = 0; i < depth; i++){
         if(strategy == 0){
@@ -178,7 +178,7 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
             estimate = actual_count;
         }
     }
-    print();
+//    print();
     return estimate;
 }
 
@@ -188,17 +188,17 @@ uint64_t CountMinCounter::increment_morris(int row, int column, int pc, int upda
 //    int offset = 0;
     for(int i = 0; i < 4; i++){
         uint8_t count = morris_counters[row][column][i];
-        std::cout << int(count) << ": ";
+//        std::cout << int(count) << ": ";
         double a = random_gen();
         //uint64_t tester = count << a;
-        std::cout << int(std::fmod(pc, int(pow(a, count))) == std::fmod(morris_constants[row][i], int(pow(a, count)))) << "| ";
+//        std::cout << int(std::fmod(pc, int(pow(a, count))) == std::fmod(morris_constants[row][i], int(pow(a, count)))) << "| ";
         if (std::fmod(pc, int(pow(a, count))) == std::fmod(morris_constants[row][i], int(pow(a, count)))){
             count += update;
             morris_counters[row][column][i] = count;
         }
         estimate += uint64_t(pow(a, count));
     }
-    std::cout << "= " << (estimate / 4) << std::endl;
+//    std::cout << "= " << (estimate / 4) << std::endl;
     return estimate / 4;
 }
 
