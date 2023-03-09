@@ -34,6 +34,7 @@ private:
     uint32_t **morris_constants; // a
     double *morris_delta_constants;
     float morris_estimate_constant;
+    std::mt19937_64 *genMorris
     std::map<std::string, int> morris_counting_index;
 
     //hashes is a 2 dimensional Matrix depth X 16 8 byte integers (char)
@@ -45,7 +46,7 @@ private:
     int pointValue(int c);
     std::set<std::string> countersAdded;
 
-    static double random_gen();
+    double random_gen(int i);
 
 public:
     CountMinCounter(unsigned int w, unsigned int d, unsigned int strategy, unsigned int c_g);

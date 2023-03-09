@@ -195,6 +195,12 @@ IEW::IEWStats::IEWStats(CPU *cpu)
     ADD_STAT(wbFanout, statistics::units::Rate<
                 statistics::units::Count, statistics::units::Count>::get(),
              "Average fanout of values written-back"),
+      ADD_STAT(countMinBlockCycles, statistics::units::Count::get(),
+               "countMin Number of cycles IEW is blocking"),
+      ADD_STAT(countMinIdleCycles, statistics::units::Count::get(),
+               "countMin Number of cycles IEW is idle"),
+      ADD_STAT(countMinSquashCycles, statistics::units::Count::get(),
+               "countMin Number of cycles IEW is squashing"),
     ADD_STAT(countMinIqFullEvents, statistics::units::Count::get(),
              "countMin Number of times the IQ has become full, causing a stall"),
     ADD_STAT(countMinLsqFullEvents, statistics::units::Count::get(),
@@ -203,12 +209,19 @@ IEW::IEWStats::IEWStats(CPU *cpu)
              "countMin Number of Cycles IEW was blocked, blockCycles"), 
     ADD_STAT(countMinBranchMispredicts, statistics::units::Count::get(),
              "countMin Number of branch mispredicts detected at execute"),
-    ADD_STAT(countMinIdleCycles, statistics::units::Count::get(),
-             "countMin Number of cycles IEW is idle"),
-    ADD_STAT(countMinSquashCycles, statistics::units::Count::get(),
-             "countMin Number of cycles IEW is squashing"),
-    ADD_STAT(countMinBlockCycles, statistics::units::Count::get(),
-             "countMin Number of cycles IEW is blocking")
+
+    ADD_STAT(countMinInstsToCommit, statistics::units::Count::get(),
+               "countMin Cumulative count of insts sent to commit"),
+    ADD_STAT(countMinWritebackCount, statistics::units::Count::get(),
+               "countMin Cumulative count of insts written-back"),
+    ADD_STAT(countMinProducerInst, statistics::units::Count::get(),
+               "countMin Number of instructions producing a value"),
+    ADD_STAT(countMinConsumerInst, statistics::units::Count::get(),
+               "countMin Number of instructions consuming a value"),
+      ADD_STAT(countMinPredictedTakenIncorrect, statistics::units::Count::get(),
+               "countMin Number of branches that were predicted taken incorrectly"),
+      ADD_STAT(countMinPredictedNotTakenIncorrect, statistics::units::Count::get(),
+               "countMin Number of branches that were predicted not taken incorrectly")
 {
     instsToCommit
         .init(cpu->numThreads)
@@ -237,6 +250,22 @@ IEW::IEWStats::IEWStats(CPU *cpu)
     countMinStallBackendCycles
         .flags(statistics::total | statistics::nozero);
     countMinStallBackendCycles = countMinSquashCycles + countMinBlockCycles;
+
+    countMinInstsToCommit
+            .init(cpu->numThreads)
+            .flags(statistics::total);
+
+    countMinWritebackCount
+            .init(cpu->numThreads)
+            .flags(statistics::total);
+
+    countMinProducerInst
+            .init(cpu->numThreads)
+            .flags(statistics::total);
+
+    countMinConsumerInst
+            .init(cpu->numThreads)
+            .flags(statistics::total);
 }
 
 IEW::IEWStats::ExecutedInstStats::ExecutedInstStats(CPU *cpu)
@@ -1389,8 +1418,10 @@ IEW::executeInsts()
 
                 if (inst->readPredTaken()) {
                     iewStats.predictedTakenIncorrect++;
+                    iewStats.countMinPredictedTakenIncorrect = cpu->update_count_min(std::string(name() + ".predictedTakenIncorrect").data(), default_group);
                 } else {
                     iewStats.predictedNotTakenIncorrect++;
+                    iewStats.countMinPredictedNotTakenIncorrect = cpu->update_count_min(std::string(name() + ".predictedNotTakenIncorrect").data(), default_group);
                 }
                 //Update branchMispredict for count_min
                 iewStats.countMinBranchMispredicts = cpu->update_count_min(std::string(name() + ".branchMispredicts").data(), default_group);
@@ -1473,6 +1504,7 @@ IEW::writebackInsts()
                 inst->seqNum, inst->pcState());
 
         iewStats.instsToCommit[tid]++;
+        iewStats.countMinInstsToCommit[tid] = cpu->update_count_min(std::string(name() + ".instsToCommit::" + std::to_string(tid)).data(), default_group);
         // Notify potential listeners that execution is complete for this
         // instruction.
         ppToCommit->notify(inst);
@@ -1499,9 +1531,13 @@ IEW::writebackInsts()
 
             if (dependents) {
                 iewStats.producerInst[tid]++;
+                iewStats.countMinInstsToCommit[tid] = cpu->update_count_min(std::string(name() + ".producerInst::" + std::to_string(tid)).data(), default_group);
                 iewStats.consumerInst[tid]+= dependents;
+                iewStats.countMinInstsToCommit[tid] = cpu->update_count_min(std::string(name() + ".consermerInst::" + std::to_string(tid)).data(), default_group, dependents);
             }
             iewStats.writebackCount[tid]++;
+            iewStats.countMinWritebackCount[tid] = cpu->update_count_min(std::string(name() + ".writebackCount::" + std::to_string(tid)).data(), default_group);
+
         }
     }
 }
@@ -1696,8 +1732,10 @@ IEW::checkMisprediction(const DynInstPtr& inst)
 
             if (inst->readPredTaken()) {
                 iewStats.predictedTakenIncorrect++;
+                iewStats.countMinPredictedTakenIncorrect = cpu->update_count_min(std::string(name() + ".predictedTakenIncorrect").data(), default_group);
             } else {
                 iewStats.predictedNotTakenIncorrect++;
+                iewStats.countMinPredictedNotTakenIncorrect = cpu->update_count_min(std::string(name() + ".predictedNotTakenIncorrect").data(), default_group);
             }
 
             //Update branchMispredicts for count_min

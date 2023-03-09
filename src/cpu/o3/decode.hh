@@ -327,9 +327,15 @@ class Decode
         statistics::Scalar squashedInsts;
 
         /** CountMin Stats */
+        statistics::Scalar countMinIdleCycles;
+        statistics::Scalar countMinBlockedCycles;
+        statistics::Scalar countMinRunCycles;
+        statistics::Scalar countMinUnblockCycles;
         statistics::Scalar countMinSquashCycles;
         statistics::Scalar countMinBranchResolved;
         statistics::Scalar countMinBranchMispred;
+        statistics::Scalar countMinDecodedInsts;
+        statistics::Scalar countMinSquashedInsts;
     } stats;
 };
 

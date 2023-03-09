@@ -510,13 +510,21 @@ class IEW
         statistics::Formula wbFanout;
 
         /** countMin Stats */
+        statistics::Scalar countMinIdleCycles;
+        statistics::Scalar countMinSquashCycles;
+        statistics::Scalar countMinBlockCycles;
         statistics::Scalar countMinIqFullEvents;
         statistics::Scalar countMinLsqFullEvents;
         statistics::Formula countMinStallBackendCycles;
         statistics::Scalar countMinBranchMispredicts;
-        statistics::Scalar countMinIdleCycles;
-        statistics::Scalar countMinSquashCycles;
-        statistics::Scalar countMinBlockCycles;
+
+        statistics::Scalar countMinPredictedTakenIncorrect;
+        statistics::Scalar countMinPredictedNotTakenIncorrect;
+
+        statistics::Vector countMinInstsToCommit;
+        statistics::Vector countMinWritebackCount;
+        statistics::Vector countMinProducerInst;
+        statistics::Vector countMinConsumerInst;
 
     } iewStats;
 };

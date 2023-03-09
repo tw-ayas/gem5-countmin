@@ -87,7 +87,7 @@ Decode::Decode(CPU *_cpu, const BaseO3CPUParams &params)
         squashAfterDelaySlot[tid] = 0;
     }
 
-    default_group = 6;
+    default_group = 3;
 }
 
 void
@@ -145,12 +145,24 @@ Decode::DecodeStats::DecodeStats(CPU *cpu)
                "Number of instructions handled by decode"),
       ADD_STAT(squashedInsts, statistics::units::Count::get(),
                "Number of squashed instructions handled by decode"),
+      ADD_STAT(countMinIdleCycles, statistics::units::Cycle::get(),
+               "countMin Number of cycles decode is idle"),
+      ADD_STAT(countMinBlockedCycles, statistics::units::Cycle::get(),
+               "countMin Number of cycles decode is blocked"),
+      ADD_STAT(countMinRunCycles, statistics::units::Cycle::get(),
+               "countMin Number of cycles decode is running"),
+      ADD_STAT(countMinUnblockCycles, statistics::units::Cycle::get(),
+               "countMin Number of cycles decode is unblocking"),
       ADD_STAT(countMinSquashCycles, statistics::units::Count::get(),
                "countMin Number of cycles decode is squashing"),
       ADD_STAT(countMinBranchResolved, statistics::units::Count::get(),
                "countMin Number of times decode resolved a branch"),
       ADD_STAT(countMinBranchMispred, statistics::units::Count::get(),
-               "countMin Number of times decode detected a branch misprediction")
+               "countMin Number of times decode detected a branch misprediction"),
+      ADD_STAT(countMinDecodedInsts, statistics::units::Count::get(),
+               "countMin Number of instructions handled by decode"),
+      ADD_STAT(countMinSquashedInsts, statistics::units::Count::get(),
+               "countMin Number of squashed instructions handled by decode")
 {
     idleCycles.prereq(idleCycles);
     blockedCycles.prereq(blockedCycles);
@@ -162,6 +174,16 @@ Decode::DecodeStats::DecodeStats(CPU *cpu)
     controlMispred.prereq(controlMispred);
     decodedInsts.prereq(decodedInsts);
     squashedInsts.prereq(squashedInsts);
+
+    countMinIdleCycles.prereq(countMinIdleCycles);
+    countMinBlockedCycles.prereq(countMinBlockedCycles);
+    countMinRunCycles.prereq(countMinRunCycles);
+    countMinUnblockCycles.prereq(countMinUnblockCycles);
+    countMinSquashCycles.prereq(countMinSquashCycles);
+    countMinBranchResolved.prereq(countMinBranchResolved);
+    countMinBranchMispred.prereq(branchMispred);
+    countMinDecodedInsts.prereq(countMinDecodedInsts);
+    countMinSquashedInsts.prereq(countMinSquashedInsts);
 }
 
 void
@@ -595,9 +617,11 @@ Decode::decode(bool &status_change, ThreadID tid)
 
     if (decodeStatus[tid] == Blocked) {
         ++stats.blockedCycles;
+        stats.countMinBlockedCycles = cpu->update_count_min(std::string(name() + ".blockedCycles").data(), default_group);
+
     } else if (decodeStatus[tid] == Squashing) {
         ++stats.squashCycles;
-        stats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
+        stats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), default_group);
     }
 
     // Decode should try to decode as many instructions as its bandwidth
@@ -641,13 +665,16 @@ Decode::decodeInsts(ThreadID tid)
                 " early.\n",tid);
         // Should I change the status to idle?
         ++stats.idleCycles;
+        stats.countMinIdleCycles = cpu->update_count_min(std::string(name() + ".idleCycles").data(), default_group);
         return;
     } else if (decodeStatus[tid] == Unblocking) {
         DPRINTF(Decode, "[tid:%i] Unblocking, removing insts from skid "
                 "buffer.\n",tid);
         ++stats.unblockCycles;
+        stats.countMinUnblockCycles = cpu->update_count_min(std::string(name() + ".unblockCycles").data(), default_group);
     } else if (decodeStatus[tid] == Running) {
         ++stats.runCycles;
+        stats.countMinRunCycles = cpu->update_count_min(std::string(name() + ".runCycles").data(), default_group);
     }
 
     std::queue<DynInstPtr>
@@ -672,6 +699,7 @@ Decode::decodeInsts(ThreadID tid)
                     tid, inst->seqNum, inst->pcState());
 
             ++stats.squashedInsts;
+            stats.countMinSquashedInsts = cpu->update_count_min(std::string(name() + ".squashedInsts").data(), default_group);
 
             --insts_available;
 
@@ -694,6 +722,7 @@ Decode::decodeInsts(ThreadID tid)
         ++(toRename->size);
         ++toRenameIndex;
         ++stats.decodedInsts;
+        stats.countMinDecodeInsts = cpu->update_count_min(std::string(name() + ".decodeInsts").data(), default_group);
         --insts_available;
 
 #if TRACING_ON
@@ -728,7 +757,7 @@ Decode::decodeInsts(ThreadID tid)
             std::unique_ptr<PCStateBase> target = inst->branchTarget();
             if (*target != inst->readPredTarg()) {
                 ++stats.branchMispred;
-                stats.countMinBranchMispred = cpu->update_count_min(std::string(name() + ".branchMispred").data(), cpu->default_group);
+                stats.countMinBranchMispred = cpu->update_count_min(std::string(name() + ".branchMispred").data(), default_group);
 
                 // Might want to set some sort of boolean and just do
                 // a check at the end
@@ -761,7 +790,7 @@ Decode::decodeInsts(ThreadID tid)
 
 void
 Decode::updateCountMinStats(){
-//    stats.countMinSquashCycles = cpu->get_count_min(std::string(name() + ".squashCycles").data(), cpu->default_group);
+//    stats.countMinSquashCycles = cpu->get_count_min(std::string(name() + ".squashCycles").data(), default_group);
 //    stats.countMinBranchResolved = cpu->get_count_min(std::string(name() + ".branchResolved").data());
 //    stats.countMinBranchMispred = cpu->get_count_min(std::string(name() + ".branchMispred").data(), default_group);
 

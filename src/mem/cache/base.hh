@@ -1338,7 +1338,7 @@ class BaseCache : public ClockedObject
         uint8_t flag = 1 << cause;
         if (blocked == 0) {
             stats.blockedCauses[cause]++;
-            stats.countMinBlockedCauses[cause] += system->count_min_structure_system[counterName]->increment(std::string(name() + ".blockedCauses" + getBlockedCauseName(cause)).data(), default_group, 0);
+            stats.countMinBlockedCauses[cause] += system->count_min_structure_system[counterName]->increment(std::string(name() + ".blockedCauses" + getBlockedCauseName(cause)).data(), 4, 0);
             blockedCycle = curCycle();
             cpuSidePort.setBlocked();
         }
@@ -1360,7 +1360,7 @@ class BaseCache : public ClockedObject
         DPRINTF(Cache,"Unblocking for cause %d, mask=%d\n", cause, blocked);
         if (blocked == 0) {
             stats.blockedCycles[cause] += curCycle() - blockedCycle;
-            stats.countMinBlockedCycles[cause] += system->count_min_structure_system[counterName]->increment(std::string(name() + ".blockedCycle" + getBlockedCauseName(cause)).data(), default_group, 0, (curCycle() - blockedCycle));
+            stats.countMinBlockedCycles[cause] += system->count_min_structure_system[counterName]->increment(std::string(name() + ".blockedCycle" + getBlockedCauseName(cause)).data(), 4, 0, (curCycle() - blockedCycle));
             cpuSidePort.clearBlocked();
         }
     }

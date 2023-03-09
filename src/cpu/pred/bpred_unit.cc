@@ -78,7 +78,7 @@ BPredUnit::BPredUnit(const Params &params)
     int first_pos= counter_name.find(".") + 1;
     int second_pos = counter_name.find(".", first_pos);
     counterName = counter_name.substr(0, second_pos);
-    default_group = 4;
+    default_group = 2;
 }
 
 BPredUnit::BPredUnitStats::BPredUnitStats(statistics::Group *parent)
@@ -111,7 +111,10 @@ BPredUnit::BPredUnitStats::BPredUnitStats(statistics::Group *parent)
       ADD_STAT(countMinCondIncorrect, statistics::units::Count::get(),
                "countMin Number of conditional branches incorrect"),
       ADD_STAT(countMinLookups, statistics::units::Count::get(),
-               "countMin Number of BP lookups")
+               "countMin Number of BP lookups"),
+      ADD_STAT(countMinBTBLookups, statistics::units::Count::get(),
+               "countMin Number of BTB lookups"),
+      ADD_STAT(countMinTBHits, statistics::units::Count::get(), "countMin Number of BTB hits")
 {
     BTBHitRatio.precision(6);
 }
@@ -227,9 +230,11 @@ BPredUnit::predict(const StaticInstPtr &inst, const InstSeqNum &seqNum,
 
             if (inst->isDirectCtrl() || !iPred) {
                 ++stats.BTBLookups;
+                stats.countMinBTBLookups = system->count_min_structure_system[counterName]->increment(std::string(name() + ".BTBLookups").data(), default_group, 0);
                 // Check BTB on direct branches
                 if (BTB.valid(pc.instAddr(), tid)) {
                     ++stats.BTBHits;
+                    stats.countMinBTBHits = system->count_min_structure_system[counterName]->increment(std::string(name() + ".BTBHits").data(), default_group, 0);
                     // If it's not a return, use the BTB to get target addr.
                     set(target, BTB.lookup(pc.instAddr(), tid));
                     DPRINTF(Branch,

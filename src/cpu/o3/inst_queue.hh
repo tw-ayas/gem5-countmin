@@ -568,6 +568,16 @@ class InstructionQueue
         statistics::Scalar intAluAccesses;
         statistics::Scalar fpAluAccesses;
         statistics::Scalar vecAluAccesses;
+
+        statistics::Scalar countMinIntInstQueueReads;
+        statistics::Scalar countMinIntInstQueueWrites;
+        statistics::Scalar countMinIntInstQueueWakeupAccesses;
+        statistics::Scalar countMinFpInstQueueReads;
+        statistics::Scalar countMinFpInstQueueWrites;
+        statistics::Scalar countMinFpInstQueueWakeupAccesses;
+
+        statistics::Scalar countMinIntAluAccesses;
+        statistics::Scalar countMinFpAluAccesses;
     } iqIOStats;
 
     int default_group;

@@ -39,11 +39,18 @@ CountMinCounter::CountMinCounter(unsigned int size, unsigned int d, unsigned int
         for(int i = 0; i < depth; i++){
             morris_counters[i] = new uint8_t *[width];
             morris_constants[i] = new uint32_t [4];
+            genMorris = new  std::mt19937_64 [4];
             for(int j = 0; j < width; j++){
                 morris_counters[i][j] = new uint8_t [4];
                 for(int k = 0; k < 4; k++){
                     morris_counters[i][j][k] = 0;
                     morris_constants[i][k] = gen();
+                    auto v = vector<unsigned int>;
+                    for( int h = 0; h < k; h++){
+                        v.push(std::random{}());
+                    }
+                    seed_seq sd(begin(v), end(v));
+                    genMorris[k] = new std::mt19937_64 (sd);
                 }
             }
         }
@@ -51,7 +58,7 @@ CountMinCounter::CountMinCounter(unsigned int size, unsigned int d, unsigned int
         morris_estimate_constant = 2;   
         morris_delta_constants = new double [256];
         for (int i = 0; i < 256; i++){
-            morris_delta_constants[i] = 1/(2*(pow(morris_estimate_constant, i) - 1));
+            morris_delta_constants[i] = 1/(2*pow(morris_estimate_constant, i));
         }
 
         //if (strategy == 3){
@@ -218,7 +225,7 @@ uint64_t CountMinCounter::increment_morris(int row, int column, int pc, int upda
 
     for(int i = 0; i < 4; i++){
         uint8_t count = morris_counters[row][column][i];
-        double a = random_gen();
+        double a = random_gen(i);
 
 //        if (std::fmod(pc, int(pow(a, count))) == std::fmod(morris_constants[row][i], int(pow(a, count))))
         if (morris_delta_constants[count] > a)
@@ -226,15 +233,15 @@ uint64_t CountMinCounter::increment_morris(int row, int column, int pc, int upda
             count += update;
             morris_counters[row][column][i] = count;
         }
-        estimate += uint64_t(pow(morris_estimate_constant, count)) - 1;
+        estimate += uint64_t(pow(morris_estimate_constant, count));
     }
 
     return estimate / 4;
 }
 
-double CountMinCounter::random_gen(){
-    double x = ((float) std::rand()) / (float) RAND_MAX;
-    return x;
+double CountMinCounter::random_gen(int i){
+    std::uniform_real_distribution<double> dis(0.0, 1.0);
+    return dis(genMorris[i]());
 }
 
 uint64_t CountMinCounter::decrement(int s, int group, int pc){
@@ -343,7 +350,7 @@ uint64_t CountMinCounter::estimate_morris(int row, int column) {
     for(int i = 0; i < 4; i++) {
         double a = random_gen();
         uint8_t count = morris_counters[row][column][i];
-        estimate += int(pow(morris_estimate_constant, count)) - 1;
+        estimate += int(pow(morris_estimate_constant, count));
     }
     return estimate / 4;
 }

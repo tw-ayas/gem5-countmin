@@ -15,6 +15,7 @@
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
+ * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met: redistributions of source code must retain the above copyright
  * notice, this list of conditions and the following disclaimer;
@@ -482,7 +483,7 @@ AbstractMemory::access(PacketPtr pkt)
         stats.numReads[pkt->req->requestorId()]++;
        
         //update CountMinStats
-        stats.countMinNumReads[pkt->req->requestorId()] = system()->count_min_structure_system[getCpuCounterName(system()->getRequestorName(pkt->req->requestorId()))]->increment(std::string(name() + ".numReads" + "::" + system()->getRequestorName(pkt->req->requestorId())).data(), default_group, 0);
+        stats.countMinNumReads[pkt->req->requestorId()] = system()->count_min_structure_system[getCpuCounterName(system()->getRequestorName(pkt->req->requestorId()))]->increment(std::string(name() + ".numReads" + "::" + system()->getRequestorName(pkt->req->requestorId())).data(), 4, 0);
 
         stats.bytesRead[pkt->req->requestorId()] += pkt->getSize();
         if (pkt->req->isInstFetch())
@@ -503,7 +504,7 @@ AbstractMemory::access(PacketPtr pkt)
             assert(!pkt->req->isInstFetch());
             TRACE_PACKET("Write");
             stats.numWrites[pkt->req->requestorId()]++;
-            stats.countMinNumWrites[pkt->req->requestorId()] = system()->count_min_structure_system[getCpuCounterName(system()->getRequestorName(pkt->req->requestorId()))]->increment(std::string(name() +  ".numWrites" + "::" + system()->getRequestorName(pkt->req->requestorId())).data(), default_group, 0);
+            stats.countMinNumWrites[pkt->req->requestorId()] = system()->count_min_structure_system[getCpuCounterName(system()->getRequestorName(pkt->req->requestorId()))]->increment(std::string(name() +  ".numWrites" + "::" + system()->getRequestorName(pkt->req->requestorId())).data(), 4, 0);
             stats.bytesWritten[pkt->req->requestorId()] += pkt->getSize();
         }
     } else {

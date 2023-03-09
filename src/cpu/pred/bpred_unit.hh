@@ -344,6 +344,8 @@ class BPredUnit : public SimObject
         statistics::Scalar countMinLookups;
         statistics::Scalar countMinCondPredicted;
         statistics::Scalar countMinCondIncorrect;
+        statistics::Scalar countMinBTBLookups;
+        statistics::Scalar countMinBTBHits;
     } stats;
 
   protected:
