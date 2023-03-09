@@ -10,6 +10,7 @@
 
 #include <random>
 #include <set>
+#include <map>
 
 using namespace std;
 
@@ -31,6 +32,9 @@ private:
     //we have 4 morris constants for each row of CMS
     uint8_t ***morris_counters;
     uint32_t **morris_constants; // a
+    double *morris_delta_constants;
+    float morris_estimate_constant;
+    std::map<std::string, int> morris_counting_index;
 
     //hashes is a 2 dimensional Matrix depth X 16 8 byte integers (char)
     uint8_t **hashes;

@@ -2822,18 +2822,33 @@ BaseCache::CacheStats::regStats()
 
     countMinDemandAccesses.flags(total | nozero | nonan);
     countMinDemandAccesses = countMinDemandHits + countMinDemandMisses;
+    for (int i = 0; i < max_requestors; i++){
+        countMinDemandAccesses.subname(i, system->getRequestorName(i));
+    }
 
     countMinOverallAccesses.flags(total | nozero| nonan);
     countMinOverallAccesses = countMinOverallHits + countMinOverallMisses;
+    for (int i = 0; i < max_requestors; i++){
+        countMinOverallAccesses.subname(i, system->getRequestorName(i));
+    }
 
     countMinNonDemandHits.flags(total | nozero | nonan);
     countMinNonDemandHits = SUM_NON_DEMAND_COUNTMIN(hits);
- 
+    for (int i = 0; i < max_requestors; i++){
+        countMinNonDemandHits.subname(i, system->getRequestorName(i));
+    } 
+
     countMinNonDemandMisses.flags(total| nozero | nonan);
     countMinNonDemandMisses = SUM_NON_DEMAND_COUNTMIN(misses);
+    for (int i = 0; i < max_requestors; i++){
+        countMinDemandMisses.subname(i, system->getRequestorName(i));
+    }
 
     countMinNonDemandAccesses.flags(total | nozero| nonan);
     countMinNonDemandAccesses = countMinNonDemandHits + countMinNonDemandMisses;
+    for (int i = 0; i < max_requestors; i++){
+        countMinNonDemandAccesses.subname(i, system->getRequestorName(i));
+    }
 
     countMinBlockedCycles.init(NUM_BLOCKED_CAUSES);
     countMinBlockedCycles
