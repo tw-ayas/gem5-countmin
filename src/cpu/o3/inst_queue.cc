@@ -365,9 +365,9 @@ InstructionQueue::IQIOStats::IQIOStats(statistics::Group *parent)
              "Number of floating point alu accesses"),
     ADD_STAT(vecAluAccesses, statistics::units::Count::get(),
              "Number of vector alu accesses"),
-    ADD_STAT(countMinntInstQueueReads, statistics::units::Count::get(),
+    ADD_STAT(countMinIntInstQueueReads, statistics::units::Count::get(),
                "countMin Number of integer instruction queue reads"),
-      ADD_STAT(countIntInstQueueWrites, statistics::units::Count::get(),
+      ADD_STAT(countMinIntInstQueueWrites, statistics::units::Count::get(),
                "countMin Number of integer instruction queue writes"),
       ADD_STAT(countMinIntInstQueueWakeupAccesses, statistics::units::Count::get(),
                "countMin Number of integer instruction queue wakeup accesses"),
@@ -377,7 +377,7 @@ InstructionQueue::IQIOStats::IQIOStats(statistics::Group *parent)
                "countMin Number of floating instruction queue writes"),
       ADD_STAT(countMinFpInstQueueWakeupAccesses, statistics::units::Count::get(),
                "countMin Number of floating instruction queue wakeup accesses"),
-      ADD_STAT(countMInIntAluAccesses, statistics::units::Count::get(),
+      ADD_STAT(countMinIntAluAccesses, statistics::units::Count::get(),
                "countMin Number of integer alu accesses"),
       ADD_STAT(countMinFpAluAccesses, statistics::units::Count::get(),
                "countMin Number of floating point alu accesses")
@@ -1234,7 +1234,6 @@ InstructionQueue::violation(const DynInstPtr &store,
 {
     iqIOStats.intInstQueueWrites++;
     iqIOStats.countMinIntInstQueueWrites = cpu->update_count_min(std::string(name() + ".intInstQueueWrites").data(), default_group);
-    iqIOStats.intInstQueueWrites =
     memDepUnit[store->threadNumber].violation(store, faulting_load);
 }
 

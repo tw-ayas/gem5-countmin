@@ -114,7 +114,7 @@ BPredUnit::BPredUnitStats::BPredUnitStats(statistics::Group *parent)
                "countMin Number of BP lookups"),
       ADD_STAT(countMinBTBLookups, statistics::units::Count::get(),
                "countMin Number of BTB lookups"),
-      ADD_STAT(countMinTBHits, statistics::units::Count::get(), "countMin Number of BTB hits")
+      ADD_STAT(countMinBTBHits, statistics::units::Count::get(), "countMin Number of BTB hits")
 {
     BTBHitRatio.precision(6);
 }

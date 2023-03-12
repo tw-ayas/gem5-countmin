@@ -722,7 +722,7 @@ Decode::decodeInsts(ThreadID tid)
         ++(toRename->size);
         ++toRenameIndex;
         ++stats.decodedInsts;
-        stats.countMinDecodeInsts = cpu->update_count_min(std::string(name() + ".decodeInsts").data(), default_group);
+        stats.countMinDecodedInsts = cpu->update_count_min(std::string(name() + ".decodedInsts").data(), default_group);
         --insts_available;
 
 #if TRACING_ON
