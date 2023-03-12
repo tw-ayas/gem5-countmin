@@ -396,7 +396,7 @@ void CountMinCounter::print() {
     cout << "Printing Data Structure" << endl;
     for (int i = 0; i < depth; i++){
         for (int j = 0; j < width; j++){
-            if(strategy != 2) {
+            if(strategy < 2) {
                 cout << counters[i][j] << " ";
             }
             else{
