@@ -26,7 +26,7 @@ private:
     uint64_t numCycles;
 
     //2 dimensional matrix with normal counters
-    uint32_t **counters;
+    uint64_t **counters;
 
     //2 dimensional matrix with a group of 4 morris counters such that the width can be increased by twice
     //we have 4 morris constants for each row of CMS
@@ -57,21 +57,21 @@ public:
     void reset();
     void change_group_context();
 
-    uint32_t increment(int s, int group, int pc);
-    uint32_t increment(char *s, int group, int pc);
-    uint32_t increment(int s, int group, int pc, int update);
-    uint32_t increment(char *s, int group, int pc, int update);
+    uint64_t increment(int s, int group, int pc);
+    uint64_t increment(char *s, int group, int pc);
+    uint64_t increment(int s, int group, int pc, int update);
+    uint64_t increment(char *s, int group, int pc, int update);
 
-    uint32_t increment_morris(int row, int column, int pc, int update);
+    uint64_t increment_morris(int row, int column, int pc, int update);
 
     uint64_t decrement(int s, int group, int pc);
     uint64_t decrement(char *s, int group, int pc);
     uint64_t decrement(int s, int group, int pc, int update);
     uint64_t decrement(char *s, int group, int pc, int update);
 
-    uint32_t estimate(int s, int group);
-    uint32_t estimate(char *s, int group);
-    uint32_t estimate_morris(int row, int column);
+    uint64_t estimate(int s, int group);
+    uint64_t estimate(char *s, int group);
+    uint64_t estimate_morris(int row, int column);
 
     int getNumberOfCounters();
     std::set<std::string> getCounterNames();

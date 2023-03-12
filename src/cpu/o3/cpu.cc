@@ -1624,6 +1624,7 @@ CPU::updateCountMinStats(){
     rename.updateCountMinStats();
     iew.updateCountMinStats();
     commit.updateCountMinStats();*/
+    system->count_min_structure_system[name()]->print();
 }
 
 int

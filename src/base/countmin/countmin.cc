@@ -16,9 +16,9 @@ CountMinCounter::CountMinCounter(unsigned int size, unsigned int d, unsigned int
         width = (size / d) / 8;
         depth = d;
 
-        counters = new uint32_t *[depth];
+        counters = new uint64_t *[depth];
         for (int i = 0; i < depth; i++) {
-            counters[i] = new uint32_t [width];
+            counters[i] = new uint64_t [width];
             for (int j = 0; j < width; j++) {
                 counters[i][j] = 0;
             }
@@ -102,20 +102,20 @@ std::set<std::string> CountMinCounter::getCounterNames()
     return countersAdded;
 }
 
-uint32_t CountMinCounter::increment(int s, int group, int pc){
+uint64_t CountMinCounter::increment(int s, int group, int pc){
     return CountMinCounter::increment(s, group, pc, 1);
 }
 
-uint32_t CountMinCounter::increment(char *s, int group, int pc){
+uint64_t CountMinCounter::increment(char *s, int group, int pc){
     return  CountMinCounter::increment(s, group, pc, 1);
 }
 
-uint32_t CountMinCounter::increment(int s, int group, int pc, int update) {
+uint64_t CountMinCounter::increment(int s, int group, int pc, int update) {
     char *str = std::to_string(s).data();
     return CountMinCounter::increment(str, group, pc, update);
 }
 
-uint32_t CountMinCounter::increment(char *s, int group, int pc, int update)
+uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
 {
     if(!pc){
         pc = numCycles;
@@ -223,7 +223,7 @@ uint32_t CountMinCounter::increment(char *s, int group, int pc, int update)
     return estimate;
 }
 
-uint32_t CountMinCounter::increment_morris(int row, int column, int pc, int update)
+uint64_t CountMinCounter::increment_morris(int row, int column, int pc, int update)
 {
     uint64_t estimate = 0;
 
@@ -276,12 +276,12 @@ uint64_t CountMinCounter::decrement(char *s, int group, int pc, int update){
     return estimate;
 }
 
-uint32_t CountMinCounter::estimate(int s, int group) {
+uint64_t CountMinCounter::estimate(int s, int group) {
     char *str = std::to_string(s).data();
     return CountMinCounter::estimate(str, group);
 }
 
-uint32_t CountMinCounter::estimate(char *s, int group){
+uint64_t CountMinCounter::estimate(char *s, int group){
     
     if(strategy == 3 && morris_counting_index.size()  == width){
         return 0;
@@ -349,7 +349,7 @@ uint32_t CountMinCounter::estimate(char *s, int group){
     return estimate;
 }
 
-uint32_t CountMinCounter::estimate_morris(int row, int column) {
+uint64_t CountMinCounter::estimate_morris(int row, int column) {
     uint32_t estimate = 0;
     for(int i = 0; i < 4; i++) {
         double a = random_gen();
