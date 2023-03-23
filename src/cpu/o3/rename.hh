@@ -544,8 +544,9 @@ class Rename
         statistics::Scalar countMinSerializeStallCycles;
         statistics::Scalar countMinRunCycles;
         statistics::Scalar countMinUnblockCycles;
-
+        statistics::Scalar countMinRenamedInsts;
         statistics::Scalar countMinRenamedOperands;
+        statistics::Scalar countMinCommittedMaps;
         statistics::Scalar countMinLookups;
         statistics::Scalar countMinIntLookups;
         statistics::Scalar countMinFpLookups;

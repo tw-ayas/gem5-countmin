@@ -1014,7 +1014,7 @@ Rename::doSquash(const InstSeqNum &squashed_seq_num, ThreadID tid)
         historyBuffer[tid].erase(hb_it++);
 
         ++stats.undoneMaps;
-        stats.countMinUnDoneMaps = cpu->update_count_min(std::string(name() + ".undoneMaps").data(), default_group);
+        stats.countMinUndoneMaps = cpu->update_count_min(std::string(name() + ".undoneMaps").data(), default_group);
     }
 }
 
