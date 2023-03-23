@@ -539,6 +539,19 @@ class Rename
 
         /** CountMin stats */
         statistics::Scalar countMinSquashCycles;
+        statistics::Scalar countMinIdleCycles;
+        statistics::Scalar countMinBlockCycles;
+        statistics::Scalar countMinSerializeStallCycles;
+        statistics::Scalar countMinRunCycles;
+        statistics::Scalar countMinUnblockCycles;
+
+        statistics::Scalar countMinRenamedOperands;
+        statistics::Scalar countMinLookups;
+        statistics::Scalar countMinIntLookups;
+        statistics::Scalar countMinFpLookups;
+        statistics::Scalar countMinSerializing;
+        statistics::Scalar countMinTempSerializing;
+        statistics::Scalar countMinSkidInsts;
     } stats;
 };
 

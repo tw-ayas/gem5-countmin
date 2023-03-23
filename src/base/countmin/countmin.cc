@@ -41,20 +41,11 @@ CountMinCounter::CountMinCounter(unsigned int size, unsigned int d, unsigned int
         for(int i = 0; i < depth; i++){
             morris_counters[i] = new uint8_t *[width];
             morris_constants[i] = new uint32_t [4];
-//            genMorris = new  std::mt19937_64 [4];
             for(int j = 0; j < width; j++){
                 morris_counters[i][j] = new uint8_t [4];
                 for(int k = 0; k < 4; k++){
                     morris_counters[i][j][k] = 0;
                     morris_constants[i][k] = gen();
-//                    auto v = vector<unsigned int>(k+1);
-                    //for( int h = 0; h < k; h++){
-                    //    v.push(std::random_device{}());
-                    //}
-//                    for(auto& a: v)
-//		        a = std::random_device{}();
-//                    seed_seq sd(begin(v), end(v));
-//                    genMorris[k] = new std::mt19937_64(sd);
                 }
             }
         }
@@ -134,35 +125,28 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
             //count all counters
             break;
         case 1:
-            //count only General and some pipeline and cache
             if (group > 1)
             {
                 return 0;
             }
             break;
         case 2:
-            //count all pipeline parameters
             if (group > 2)
             {
                 return 0;
             }
             break;
         case 3:
-            //count all l1cache parameters
             if (group > 3)
             {
                 return 0;
             }
             break;
         case 4:
-            //count all l2 cache and memory parameters
             if (group > 4)
             {
                 return 0;
             }
-            break;
-        case 5:
-            //cpu and pipeline parameters
             break;
     }
 

@@ -306,7 +306,15 @@ MemCtrl::MemCtrlStats::MemCtrlStats(MemCtrl &mc)
     ADD_STAT(numStayReadState, statistics::units::Count::get(),
              "Number of times bus staying in READ state"),
     ADD_STAT(numStayWriteState, statistics::units::Count::get(),
-             "Number of times bus staying in WRITE state")
+             "Number of times bus staying in WRITE state"),
+      ADD_STAT(countMinNumReadWriteTurnArounds, statistics::units::Count::get(),
+               "countMin Number of turnarounds from READ to WRITE"),
+      ADD_STAT(countMinNumWriteReadTurnArounds, statistics::units::Count::get(),
+               "countMin Number of turnarounds from WRITE to READ"),
+      ADD_STAT(countMinNumStayReadState, statistics::units::Count::get(),
+               "countMin Number of times bus staying in READ state"),
+      ADD_STAT(countMinNumStayWriteState, statistics::units::Count::get(),
+               "countMin Number of times bus staying in WRITE state")
 {
 }
 

@@ -231,7 +231,8 @@ InstructionQueue::IQStats::IQStats(CPU *cpu, const unsigned &total_width)
              "countMin Number of squashed instructions issued"),
     ADD_STAT(countMinSquashedInstsExamined, statistics::units::Count::get(),
              "countMin Number of squashed instructions iterated over during squash; "
-             "mainly for profiling")
+             "mainly for profiling"),
+      ADD_STAT(countMinFuBusy, statistics::units::Count::get(), "countMin FU busy when requested")
 {
     instsAdded
         .prereq(instsAdded);
@@ -337,6 +338,11 @@ InstructionQueue::IQStats::IQStats(CPU *cpu, const unsigned &total_width)
         .flags(statistics::total)
         ;
     fuBusyRate = fuBusy / instsIssued;
+
+    countMinFuBusy
+        .init(cpu->numThreads)
+        .flags(statistics::total)
+        ;
 }
 
 InstructionQueue::IQIOStats::IQIOStats(statistics::Group *parent)
@@ -968,6 +974,7 @@ InstructionQueue::scheduleReadyInsts()
         } else {
             iqStats.statFuBusy[op_class]++;
             iqStats.fuBusy[tid]++;
+            iqStats.countMinFuBusy[tid] = cpu->update_count_min(std::string(name() + ".fuBusy::" + std::to_string(tid)).data(), default_group, total_issued);
             ++order_it;
         }
     }

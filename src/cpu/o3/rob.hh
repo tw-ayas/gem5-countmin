@@ -320,6 +320,8 @@ class ROB
     /** Dummy instruction returned if there are no insts left. */
     DynInstPtr dummyInst;
 
+    int default_group;
+
   private:
     /** The sequence number of the squashed instruction. */
     InstSeqNum squashedSeqNum[MaxThreads];
@@ -339,6 +341,9 @@ class ROB
         statistics::Scalar reads;
         // The number of rob_writes
         statistics::Scalar writes;
+
+        statistics::Scalar countMinReads;
+        statistics::Scalar countMinWrites;
     } stats;
 };
 

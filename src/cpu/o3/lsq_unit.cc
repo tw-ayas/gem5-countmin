@@ -196,7 +196,8 @@ LSQUnit::LSQUnit(uint32_t lqEntries, uint32_t sqEntries)
       htmStarts(0), htmStops(0),
       lastRetiredHtmUid(0),
       cacheBlockMask(0), stalled(false),
-      isStoreBlocked(false), storeInFlight(false), stats(nullptr)
+      isStoreBlocked(false), storeInFlight(false), stats(nullptr),
+      default_group(4)
 {
 }
 
@@ -271,7 +272,23 @@ LSQUnit::LSQUnitStats::LSQUnitStats(statistics::Group *parent)
                "Number of times an access to memory failed due to the cache "
                "being blocked"),
       ADD_STAT(loadToUse, "Distribution of cycle latency between the "
-                "first time a load is issued and its completion")
+                "first time a load is issued and its completion"),
+      ADD_STAT(countMinForwLoads, statistics::units::Count::get(),
+               "countMin Number of loads that had data forwarded from stores"),
+      ADD_STAT(countMinSquashedLoads, statistics::units::Count::get(),
+               "countMin Number of loads squashed"),
+      ADD_STAT(countMinIgnoredResponses, statistics::units::Count::get(),
+               "countMin Number of memory responses ignored because the instruction is "
+               "squashed"),
+      ADD_STAT(countMinMemOrderViolation, statistics::units::Count::get(),
+               "countMin Number of memory ordering violations"),
+      ADD_STAT(countMinSquashedStores, statistics::units::Count::get(),
+               "countMin Number of stores squashed"),
+      ADD_STAT(countMinRescheduledLoads, statistics::units::Count::get(),
+               "countMin Number of loads that were rescheduled"),
+      ADD_STAT(countMinBlockedByCache, statistics::units::Count::get(),
+               "countMin Number of times an access to memory failed due to the cache "
+               "being blocked")
 {
     loadToUse
         .init(0, 299, 10)
@@ -544,6 +561,7 @@ LSQUnit::checkViolations(typename LoadQueue::iterator& loadIt,
                         memDepViolator = ld_inst;
 
                         ++stats.memOrderViolation;
+                        stats.countMinMemOrderViolation = cpu->update_count_min(std::string(name() + ".memOrderViolation")).data(), default_group, 0);
 
                         return std::make_shared<GenericISA::M5PanicFault>(
                             "Detected fault with inst [sn:%lli] and "
@@ -571,6 +589,7 @@ LSQUnit::checkViolations(typename LoadQueue::iterator& loadIt,
                 memDepViolator = ld_inst;
 
                 ++stats.memOrderViolation;
+                stats.countMinMemOrderViolation = cpu->update_count_min(std::string(name() + ".memOrderViolation")).data(), default_group, 0);
 
                 return std::make_shared<GenericISA::M5PanicFault>(
                     "Detected fault with "
@@ -959,6 +978,7 @@ LSQUnit::squash(const InstSeqNum &squashed_num)
 
         loadQueue.pop_back();
         ++stats.squashedLoads;
+        stats.countMinSquashedLoads = cpu->update_count_min(std::string(name() + ".squashedLoads")).data(), default_group, 0);
     }
 
     // hardware transactional memory
@@ -1030,6 +1050,7 @@ LSQUnit::squash(const InstSeqNum &squashed_num)
 
         storeQueue.pop_back();
         ++stats.squashedStores;
+        stats.countMinSquashedStores = cpu->update_count_min(std::string(name() + ".squashedStores")).data(), default_group, 0);
     }
 }
 
@@ -1080,6 +1101,7 @@ LSQUnit::writeback(const DynInstPtr &inst, PacketPtr pkt)
     if (inst->isSquashed()) {
         assert (!inst->isStore() || inst->isStoreConditional());
         ++stats.ignoredResponses;
+        stats.countMinIgnoredResponses = cpu->update_count_min(std::string(name() + ".ignoredResponses")).data(), default_group, 0);
         return;
     }
 
@@ -1224,6 +1246,7 @@ LSQUnit::trySendPacket(bool isLoad, PacketPtr data_pkt)
         if (cache_got_blocked) {
             lsq->cacheBlocked(true);
             ++stats.blockedByCache;
+            stats.countMinBlockedByCache = cpu->update_count_min(std::string(name() + ".blockedByCache")).data(), default_group, 0);
         }
         if (!isLoad) {
             assert(request == storeWBIt->request());
@@ -1338,6 +1361,7 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
         load_inst->clearIssued();
         load_inst->effAddrValid(false);
         ++stats.rescheduledLoads;
+        stats.countMinRescheduledLoads = cpu->update_count_min(std::string(name() + ".rescheduledLoads")).data(), default_group, 0);
         DPRINTF(LSQUnit, "Strictly ordered load [sn:%lli] PC %s\n",
                 load_inst->seqNum, load_inst->pcState());
 
@@ -1523,6 +1547,7 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
 
                 // Don't need to do anything special for split loads.
                 ++stats.forwLoads;
+                stats.forwLoads = cpu->update_count_min(std::string(name() + ".forwLoads")).data(), default_group, 0);
 
                 return NoFault;
             } else if (
@@ -1551,6 +1576,7 @@ LSQUnit::read(LSQRequest *request, ssize_t load_idx)
                 load_inst->clearIssued();
                 load_inst->effAddrValid(false);
                 ++stats.rescheduledLoads;
+                stats.countMinRescheduledLoads = cpu->update_count_min(std::string(name() + ".rescheduledLoads")).data(), default_group, 0);
 
                 // Do not generate a writeback event as this instruction is not
                 // complete.

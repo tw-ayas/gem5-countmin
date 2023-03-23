@@ -549,6 +549,7 @@ class InstructionQueue
         statistics::Scalar countMinBranchInstsIssued;
         statistics::Scalar countMinSquashedInstsIssued;
         statistics::Scalar countMinSquashedInstsExamined;
+        statistics::Vector countMinFuBusy;
     } iqStats;
 
    public:

@@ -539,6 +539,14 @@ class LSQUnit
         /** Distribution of cycle latency between the first time a load
          * is issued and its completion */
         statistics::Distribution loadToUse;
+
+        statistics::Scalar countMinForwLoads;
+        statistics::Scalar countMinSquashedLoads;
+        statistics::Scalar countMinIgnoredResponses;
+        statistics::Scalar countMinMemOrderViolation;
+        statistics::Scalar countMinSquashedStores;
+        statistics::Scalar countMinRescheduledLoads;
+        statistics::Scalar countMinBlockedByCache;
     } stats;
 
   public:
@@ -564,6 +572,8 @@ class LSQUnit
   public:
     typedef typename CircularQueue<LQEntry>::iterator LQIterator;
     typedef typename CircularQueue<SQEntry>::iterator SQIterator;
+
+    int default_group;
 };
 
 } // namespace o3

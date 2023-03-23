@@ -1531,9 +1531,9 @@ IEW::writebackInsts()
 
             if (dependents) {
                 iewStats.producerInst[tid]++;
-                iewStats.countMinInstsToCommit[tid] = cpu->update_count_min(std::string(name() + ".producerInst::" + std::to_string(tid)).data(), default_group);
+                iewStats.countMinProducerInst[tid] = cpu->update_count_min(std::string(name() + ".producerInst::" + std::to_string(tid)).data(), default_group);
                 iewStats.consumerInst[tid]+= dependents;
-                iewStats.countMinInstsToCommit[tid] = cpu->update_count_min(std::string(name() + ".consermerInst::" + std::to_string(tid)).data(), default_group, dependents);
+                iewStats.countMinConsumerInst[tid] = cpu->update_count_min(std::string(name() + ".consumerInst::" + std::to_string(tid)).data(), default_group, dependents);
             }
             iewStats.writebackCount[tid]++;
             iewStats.countMinWritebackCount[tid] = cpu->update_count_min(std::string(name() + ".writebackCount::" + std::to_string(tid)).data(), default_group);

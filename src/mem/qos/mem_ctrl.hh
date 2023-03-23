@@ -170,6 +170,11 @@ class MemCtrl : public ClockedObject
         statistics::Scalar numStayReadState;
         /** Count the number of times bus staying in WRITE state */
         statistics::Scalar numStayWriteState;
+
+        statistics::Scalar countMinNumReadWriteTurnArounds;
+        statistics::Scalar countMinNumWriteReadTurnArounds;
+        statistics::Scalar countMinNumStayReadState;
+        statistics::Scalar countMinNumStayWriteState;
     } stats;
 
     /** Pointer to the System object */

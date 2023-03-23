@@ -450,7 +450,7 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
                 schedule(nextReqEvent, curTick());
             }
             stats.writeReqs++;
-            stats.countMinWriteReqs = system()->count_min_structure_system["system"]->increment(std::string(name() + ".writeReqs").data(), 4, 0);
+            stats.countMinWriteReqs = system()->count_min_structure_system["system"]->increment(std::string(name() + ".writeReqs").data(), default_group, 0);
             stats.bytesWrittenSys += size;
         }
     } else {
@@ -472,7 +472,7 @@ MemCtrl::recvTimingReq(PacketPtr pkt)
                 }
             }
             stats.readReqs++;
-            stats.countMinReadReqs = system()->count_min_structure_system["system"]->increment(std::string(name() + ".readReqs").data(), 4, 0);
+            stats.countMinReadReqs = system()->count_min_structure_system["system"]->increment(std::string(name() + ".readReqs").data(), default_group, 0);
             stats.bytesReadSys += size;
         }
     }
@@ -1258,7 +1258,17 @@ MemCtrl::CtrlStats::CtrlStats(MemCtrl &_ctrl)
     ADD_STAT(countMinReadReqs, statistics::units::Count::get(),
              "countMin Number of read requests accepted"),
     ADD_STAT(countMinWriteReqs, statistics::units::Count::get(),
-             "countMin Number of write requests accepted")
+             "countMin Number of write requests accepted"),
+    ADD_STAT(countMinReadBursts, statistics::units::Count::get(),
+            "countMin Number of controller read bursts, including those serviced by "
+            "the write queue"),
+    ADD_STAT(countMinWriteBursts, statistics::units::Count::get(),
+                "countMin Number of controller write bursts, including those merged in "
+                "the write queue"),
+    ADD_STAT(countMinNumRdRetry, statistics::units::Count::get(),
+               "countMin Number of times read queue was full causing retry"),
+    ADD_STAT(countMinNumWrRetry, statistics::units::Count::get(),
+               "countMin Number of times write queue was full causing retry")
 {
 }
 

@@ -98,6 +98,8 @@ ROB::ROB(CPU *_cpu, const BaseO3CPUParams &params)
     }
 
     resetState();
+
+    default_group = 4;
 }
 
 void
@@ -199,6 +201,7 @@ ROB::insertInst(const DynInstPtr &inst)
     assert(inst);
 
     stats.writes++;
+    stats.countMinWrites = cpu->update_count_min(std::string(name() + ".writes").data(), default_group);
 
     DPRINTF(ROB, "Adding inst PC %s to the ROB.\n", inst->pcState());
 
@@ -234,6 +237,7 @@ void
 ROB::retireHead(ThreadID tid)
 {
     stats.writes++;
+    stats.countMinWrites = cpu->update_count_min(std::string(name() + ".writes").data(), default_group);
 
     assert(numInstsInROB > 0);
 
@@ -268,6 +272,7 @@ bool
 ROB::isHeadReady(ThreadID tid)
 {
     stats.reads++;
+    stats.countMinReads = cpu->update_count_min(std::string(name() + ".reads").data(), default_group);
     if (threadEntries[tid] != 0) {
         return instList[tid].front()->readyToCommit();
     }
@@ -309,6 +314,7 @@ void
 ROB::doSquash(ThreadID tid)
 {
     stats.writes++;
+    stats.countMinWrites = cpu->update_count_min(std::string(name() + ".writes").data(), default_group);
     DPRINTF(ROB, "[tid:%i] Squashing instructions until [sn:%llu].\n",
             tid, squashedSeqNum[tid]);
 
@@ -526,7 +532,11 @@ ROB::ROBStats::ROBStats(statistics::Group *parent)
     ADD_STAT(reads, statistics::units::Count::get(),
         "The number of ROB reads"),
     ADD_STAT(writes, statistics::units::Count::get(),
-        "The number of ROB writes")
+        "The number of ROB writes"),
+    ADD_STAT(countMinReads, statistics::units::Count::get(),
+        "countMin The number of ROB reads"),
+    ADD_STAT(countMinWrites, statistics::units::Count::get(),
+        "countMin The number of ROB writes")
 {
 }
 

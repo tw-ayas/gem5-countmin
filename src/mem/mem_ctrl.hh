@@ -620,6 +620,10 @@ class MemCtrl : public qos::MemCtrl
         /** CountMin Stats */
         statistics::Scalar countMinReadReqs;
         statistics::Scalar countMinWriteReqs;
+        statistics::Scalar countMinReadBursts;
+        statistics::Scalar countMinWriteBursts;
+        statistics::Scalar countMinNumRdRetry;
+        statistics::Scalar countMinNumWrRetry;
     };
 
     CtrlStats stats;

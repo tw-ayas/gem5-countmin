@@ -1906,7 +1906,11 @@ DRAMInterface::DRAMStats::DRAMStats(DRAMInterface &_dram)
              "Data bus utilization in percentage for writes"),
 
     ADD_STAT(pageHitRate, statistics::units::Ratio::get(),
-             "Row buffer hit rate, read and write combined")
+             "Row buffer hit rate, read and write combined"),
+    ADD_STAT(countMinReadRowHits, statistics::units::Count::get(),
+             "countMin Number of row buffer hits during reads"),
+    ADD_STAT(countMinWriteRowHits, statistics::units::Count::get(),
+             "countMin Number of row buffer hits during writes")
 
 {
 }
