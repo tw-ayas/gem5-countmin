@@ -156,18 +156,25 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
     int min = -1;
 
     countersAdded.insert(s_check);
-    
+    std::cout << s_check;
     if (strategy == 3){
          if (morris_counting_index.size() == width){
              return 0;
          }
-         morris_counting_index[s_check] = morris_counting_index.size();
+         if (morris_counting_index.count(s_check) == 0) {
+             morris_counting_index[s_check] = morris_counting_index.size();
+         }
     }
 
 
-
     for (int i = 0; i < depth; i++) {
-        hashpos[i] = hashstr(s, i);
+        if (strategy == 3) {
+            hashpos[i] = morris_counting_index[s_check];
+        }
+        else{
+            hashpos[i] = hashstr(s, i);
+        }
+
         if (strategy == 1) {
             //min only kept for conservative update
             if (counters[i][hashpos[i]] < min || min < 0) {
@@ -203,6 +210,9 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
             estimate = actual_count;
         }
     }
+    std::cout << ": " << estimate << std::endl;
+
+    print();
 
     return estimate;
 }
@@ -210,18 +220,21 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
 uint64_t CountMinCounter::increment_morris(int row, int column, int pc, int update)
 {
     uint64_t estimate = 0;
+    while(update > 0) {
+        estimate = 0;
+        for(int i = 0; i < 4; i++){
+            uint8_t count = morris_counters[row][column][i];
+            double a = random_gen();
 
-    for(int i = 0; i < 4; i++){
-        uint8_t count = morris_counters[row][column][i];
-        double a = random_gen();
-
-//        if (std::fmod(pc, int(pow(a, count))) == std::fmod(morris_constants[row][i], int(pow(a, count))))
-        if (morris_delta_constants[count] > a)
-        {
-            count += update;
-            morris_counters[row][column][i] = count;
+//            if (std::fmod(pc, int(pow(a, count))) == std::fmod(morris_constants[row][i], int(pow(a, count))))
+            if (morris_delta_constants[count] > a)
+            {
+                count++;
+                morris_counters[row][column][i] = count;
+            }
+            estimate += uint64_t(pow(morris_estimate_constant, count));
         }
-        estimate += uint64_t(pow(morris_estimate_constant, count));
+        update--;
     }
 
     return estimate / 4;
