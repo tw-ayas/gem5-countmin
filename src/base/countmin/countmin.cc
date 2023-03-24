@@ -156,7 +156,7 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
     int min = -1;
 
     countersAdded.insert(s_check);
-    std::cout << s_check;
+//    std::cout << s_check;
     if (strategy == 3){
          if (morris_counting_index.size() == width){
              return 0;
@@ -210,9 +210,9 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
             estimate = actual_count;
         }
     }
-    std::cout << ": " << estimate << std::endl;
+//    std::cout << ": " << estimate << std::endl;
 
-    print();
+//    print();
 
     return estimate;
 }
