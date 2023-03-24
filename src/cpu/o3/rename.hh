@@ -547,6 +547,7 @@ class Rename
         statistics::Scalar countMinRenamedInsts;
         statistics::Scalar countMinRenamedOperands;
         statistics::Scalar countMinCommittedMaps;
+        statistics::Scalar countMinUndoneMaps;
         statistics::Scalar countMinLookups;
         statistics::Scalar countMinIntLookups;
         statistics::Scalar countMinFpLookups;

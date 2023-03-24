@@ -626,6 +626,8 @@ class MemCtrl : public qos::MemCtrl
         statistics::Scalar countMinNumWrRetry;
     };
 
+    int default_group;
+
     CtrlStats stats;
 
     /**
