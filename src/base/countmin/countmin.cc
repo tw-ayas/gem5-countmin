@@ -118,7 +118,8 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
     std::string s_check(s);
 
     if(strategy == 3 && morris_counting_index.size() == width){
-        return 0;
+        if(morris_counting_index.count(s_check) == 0)
+            return 0;
     }
     switch(current_group){
         case 0:
@@ -158,9 +159,6 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
     countersAdded.insert(s_check);
 //    std::cout << s_check;
     if (strategy == 3){
-         if (morris_counting_index.size() == width){
-             return 0;
-         }
          if (morris_counting_index.count(s_check) == 0) {
              morris_counting_index[s_check] = morris_counting_index.size();
          }
@@ -279,9 +277,12 @@ uint64_t CountMinCounter::estimate(int s, int group) {
 }
 
 uint64_t CountMinCounter::estimate(char *s, int group){
-    
+
+    std::string s_check(s);
+
     if(strategy == 3 && morris_counting_index.size()  == width){
-        return 0;
+        if (morris_counting_index.count(s_check) == 0)
+            return 0;
     }
 
     switch(current_group){
@@ -329,7 +330,12 @@ uint64_t CountMinCounter::estimate(char *s, int group){
     int estimate = -1;
     uint64_t hash;
     for(int i = 0; i < depth; i++){
-        hashval = hashstr(s, i);
+        if(strategy == 3){
+            hashval = morris_counting_index[s_check];
+        }
+        else{
+            hashval = hashstr(s, i);c
+        }
         if(strategy < 2){
             hash = counters[i][hashval];
         }
