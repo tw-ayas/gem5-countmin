@@ -25,27 +25,22 @@ CountMinCounter::CountMinCounter(unsigned int size, unsigned int d, unsigned int
         }
     }
     else{
-        if (strategy == 3) {
-            depth = 1;
-        }
-        else {
-            depth = d;
-        }
+        //In case of morris counting, only a single depth is created to simulate w*d counters
+        depth = strategy == 3 ? 1 : 0;
 
         //CMS-Morris Counter
         width = (size / depth) / 4;
-        //depth = d;
         morris_counters = new uint8_t **[depth];
-        morris_constants = new uint32_t *[depth];
+        //morris_constants = new uint32_t *[depth];
 
         for(int i = 0; i < depth; i++){
             morris_counters[i] = new uint8_t *[width];
-            morris_constants[i] = new uint32_t [4];
+            //morris_constants[i] = new uint32_t [4];
             for(int j = 0; j < width; j++){
                 morris_counters[i][j] = new uint8_t [4];
                 for(int k = 0; k < 4; k++){
                     morris_counters[i][j][k] = 0;
-                    morris_constants[i][k] = gen();
+                    //morris_constants[i][k] = gen();
                 }
             }
         }
@@ -55,10 +50,6 @@ CountMinCounter::CountMinCounter(unsigned int size, unsigned int d, unsigned int
         for (int i = 0; i < 256; i++){
             morris_delta_constants[i] = 1/(2*pow(morris_estimate_constant, i));
         }
-
-        //if (strategy == 3){
-        //    morris_counting_index = new HashMap<String, Integer>();
-        //}
 
         counters = nullptr;
     }
@@ -108,86 +99,48 @@ uint64_t CountMinCounter::increment(int s, int group, int pc, int update) {
 
 uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
 {
-    if(!pc){
+    if(!pc)
         pc = numCycles;
-    }
-    else{
+    else
         numCycles = pc;
-    }
 
     std::string s_check(s);
+    //check if morris_counters are full and if not counting
+    if(strategy == 3 && morris_counting_index.size() == width && morris_counting_index.count(s_check) == 0)
+        return 0;
 
-    if(strategy == 3 && morris_counting_index.size() == width){
-        if(morris_counting_index.count(s_check) == 0)
-            return 0;
-    }
-    switch(current_group){
-        case 0:
-            //count all counters
-            break;
-        case 1:
-            if (group > 1)
-            {
-                return 0;
-            }
-            break;
-        case 2:
-            if (group > 2)
-            {
-                return 0;
-            }
-            break;
-        case 3:
-            if (group > 3)
-            {
-                return 0;
-            }
-            break;
-        case 4:
-            if (group > 4)
-            {
-                return 0;
-            }
-            break;
-    }
+    if(check_group(group) == 0)
+        return 0;
 
     int estimate = -1;
     int actual_count = 0;
     int hashpos[depth];
     int min = -1;
 
+    //countersAdded helps to check which counters were counted, is printed at the end of the simulation.
     countersAdded.insert(s_check);
-//    std::cout << s_check;
-    if (strategy == 3){
-         if (morris_counting_index.count(s_check) == 0) {
-             morris_counting_index[s_check] = morris_counting_index.size();
-         }
-    }
+
+    //check if counting is already initiated for
+    if (strategy == 3 && morris_counting_index.count(s_check) == 0)
+        morris_counting_index[s_check] = morris_counting_index.size();
 
 
     for (int i = 0; i < depth; i++) {
-        if (strategy == 3) {
+        if (strategy == 3)
             hashpos[i] = morris_counting_index[s_check];
-        }
-        else{
+        else
             hashpos[i] = hashstr(s, i);
-        }
 
-        if (strategy == 1) {
-            //min only kept for conservative update
-            if (counters[i][hashpos[i]] < min || min < 0) {
-                min = counters[i][hashpos[i]];
-            }
-        }
+        //min only kept for conservative update
+        if (strategy == 1 && counters[i][hashpos[i]] < min || min < 0) {
+            min = counters[i][hashpos[i]];
     }
-
 
     for (int i = 0; i < depth; i++){
         if(strategy == 0){
             actual_count = counters[i][hashpos[i]];
             actual_count += update;
             counters[i][hashpos[i]] = actual_count;
-
         }
         else if(strategy == 1){
             if(counters[i][hashpos[i]] == min) {
@@ -204,13 +157,9 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
             actual_count = increment_morris(i, column, pc, update);
         }
 
-        if(actual_count < estimate || estimate < 0){
+        if(actual_count < estimate || estimate < 0)
             estimate = actual_count;
-        }
     }
-//    std::cout << ": " << estimate << std::endl;
-
-//    print();
 
     return estimate;
 }
@@ -223,8 +172,6 @@ uint64_t CountMinCounter::increment_morris(int row, int column, int pc, int upda
         for(int i = 0; i < 4; i++){
             uint8_t count = morris_counters[row][column][i];
             double a = random_gen();
-
-//            if (std::fmod(pc, int(pow(a, count))) == std::fmod(morris_constants[row][i], int(pow(a, count))))
             if (morris_delta_constants[count] > a)
             {
                 count++;
@@ -280,73 +227,27 @@ uint64_t CountMinCounter::estimate(char *s, int group){
 
     std::string s_check(s);
 
-    if(strategy == 3 && morris_counting_index.size()  == width){
-        if (morris_counting_index.count(s_check) == 0)
+    if(strategy == 3 && morris_counting_index.size() == width && morris_counting_index.count(s_check) == 0)
             return 0;
-    }
 
-    switch(current_group){
-        case 0:
-            //count all counters
-            break;
-        case 1:
-            //count only General and some pipeline and cache
-            if (group > 1)
-            {
-                return 0;
-            }
-            break;
-        case 2:
-            //count all pipeline parameters
-            if (group > 2)
-            {
-                return 0;
-            }
-            break;
-        case 3:
-            //count all l1cache parameters
-            if (group > 3)
-            {
-                return 0;
-            }
-            break;
-        case 4:
-            //count all l2 cache and memory parameters
-            if (group > 4)
-                {
-                    return 0;
-                }
-            break;
-        case 5:
-            //cpu and pipeline parameters
-            if (group > 5)
-            {
-                return 0;
-            }
-            break;
-    }
+    if(check_group(group) == 0)
+        return 0;
 
     unsigned int hashval;
     int estimate = -1;
     uint64_t hash;
     for(int i = 0; i < depth; i++){
-        if(strategy == 3){
+        if(strategy == 3)
             hashval = morris_counting_index[s_check];
-        }
-        else{
+        else
             hashval = hashstr(s, i);c
-        }
-        if(strategy < 2){
+        if(strategy < 2)
             hash = counters[i][hashval];
-        }
-        else{
+        else
             hash = estimate_morris(i, hashval);
-        }
-        //std::cout << hash << endl;
 
-        if(hash < estimate || estimate < 0){
+        if(hash < estimate || estimate < 0)
             estimate = hash;
-        }
 
     }
     return estimate;
@@ -393,6 +294,41 @@ unsigned int CountMinCounter::hash_function(uint16_t key, unsigned int row) {
         key = key >> 1;
     }
     return hash;
+}
+
+unsigned int check_group(int group){
+    switch(group){
+        case 0:
+            //count all counters
+            break;
+        case 1:
+            if (group > 1)
+            {
+                return 0;
+            }
+            break;
+        case 2:
+            if (group > 2)
+            {
+                return 0;
+            }
+            break;
+        case 3:
+            if (group > 3)
+            {
+                return 0;
+            }
+            break;
+        case 4:
+            if (group > 4)
+            {
+                return 0;
+            }
+            break;
+        default:
+
+    }
+    return 1;
 }
 
 void CountMinCounter::print() {

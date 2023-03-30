@@ -53,6 +53,7 @@ public:
     ~CountMinCounter();
     unsigned int hashstr(char *s, unsigned int row);
     unsigned int hash_function(uint16_t , unsigned int row);
+    unsigned int check_group(int group);
     void print();
     void reset();
     void change_group_context();
