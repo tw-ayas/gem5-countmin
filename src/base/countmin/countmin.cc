@@ -240,7 +240,7 @@ uint64_t CountMinCounter::estimate(char *s, int group){
         if(strategy == 3)
             hashval = morris_counting_index[s_check];
         else
-            hashval = hashstr(s, i);c
+            hashval = hashstr(s, i);
         if(strategy < 2)
             hash = counters[i][hashval];
         else
