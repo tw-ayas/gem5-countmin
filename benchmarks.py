@@ -126,9 +126,9 @@ for benchmark, execut in list_benchmarks.items():
                         f"CPU/{benchmark}/build/build_base_initial-m64.0000/{cmd} "
                         f"--options=\"{options}\" --mem-size=8GB --cpu-type=DerivO3CPU "
                         f"--num-cpu=1 --maxinsts=1000000 --caches --l2cache --l1d_size=32kB --l1i_size=32kB "
-                        f"--l2_size=512kB --prob-hw-counters=1 --prob-hw-counters-size={s}B"
-                        f"--prob-hw-counters-depth={d} --prob-hw-counters-conservative-update={st_code}"
-                        f" --l1i-hwp-type=StridePrefetcher "
+                        f"--l2_size=512kB --prob-hw-counters=1 --prob-hw-counters-size={s}B "
+                        f"--prob-hw-counters-depth={d} --prob-hw-counters-conservative-update={st_code} "
+                        f"--l1i-hwp-type=StridePrefetcher "
                         f"--l1d-hwp-type=StridePrefetcher --mem-type=DDR4_2400_4x16 "
                         f"--prob-hw-counters-group={g} >> $HOME/{path_stats}/{bench}/cron_out/{directory}.txt"
                         f" {end}\n")
