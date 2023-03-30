@@ -97,7 +97,12 @@ for benchmark, execut in list_benchmarks.items():
         file.write(f"DIR=\"$HOME/{path_stats}/{bench}\"\n")
         file.write("if [ ! -d \"$DIR\" ]; then\n")
         file.write(f"    echo 'mkdir $HOME/{path_stats}/{bench}'\n")
-        file.write(f"    mkdir {bench}\n")
+        file.write(f"    mkdir $HOME/{path_stats}/{bench}\n")
+        file.write(f"fi\n")
+        file.write(f"DIR=\"$HOME/{path_stats}/{bench}/cron_out\"\n")
+        file.write("if [ ! -d \"$DIR\" ]; then\n")
+        file.write(f"    echo 'mkdir $HOME/{path_stats}/{bench}/cron_out'\n")
+        file.write(f"    mkdir $HOME/{path_stats}/{bench}/cron_out\n")
         file.write(f"fi\n")
         for d in depth:
             for st_code, st in strategy.items():
@@ -125,7 +130,7 @@ for benchmark, execut in list_benchmarks.items():
                         f"--prob-hw-counters-depth={d} --prob-hw-counters-conservative-update={st_code}"
                         f" --l1i-hwp-type=StridePrefetcher "
                         f"--l1d-hwp-type=StridePrefetcher --mem-type=DDR4_2400_4x16 "
-                        f"--prob-hw-counters-group={g} >> $HOME/{path_stats}/{bench}/{directory}.txt"
+                        f"--prob-hw-counters-group={g} >> $HOME/{path_stats}/{bench}/cron_out/{directory}.txt"
                         f" {end}\n")
                 file.write("\n\n")
         file.close()
