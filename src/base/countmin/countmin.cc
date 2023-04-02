@@ -134,31 +134,31 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update) {
         if (strategy == 1 && (counters[i][hashpos[i]] < min || min < 0)) {
             min = counters[i][hashpos[i]];
         }
+    }
 
-        for (int i = 0; i < depth; i++) {
-            if (strategy == 0) {
+    for (int i = 0; i < depth; i++) {
+        if (strategy == 0) {
+            actual_count = counters[i][hashpos[i]];
+            actual_count += update;
+            counters[i][hashpos[i]] = actual_count;
+        } else if (strategy == 1) {
+            if (counters[i][hashpos[i]] == min) {
                 actual_count = counters[i][hashpos[i]];
                 actual_count += update;
                 counters[i][hashpos[i]] = actual_count;
-            } else if (strategy == 1) {
-                if (counters[i][hashpos[i]] == min) {
-                    actual_count = counters[i][hashpos[i]];
-                    actual_count += update;
-                    counters[i][hashpos[i]] = actual_count;
-                } else {
-                    actual_count = counters[i][hashpos[i]];
-                }
-            } else if (strategy == 2 || strategy == 3) {
-                int column = hashpos[i];
-                actual_count = increment_morris(i, column, pc, update);
+            } else {
+                actual_count = counters[i][hashpos[i]];
             }
-
-            if (actual_count < estimate || estimate < 0)
-                estimate = actual_count;
+        } else if (strategy == 2 || strategy == 3) {
+            int column = hashpos[i];
+            actual_count = increment_morris(i, column, pc, update);
         }
 
-        return estimate;
+        if (actual_count < estimate || estimate < 0)
+            estimate = actual_count;
     }
+
+    return estimate;
 }
 
 uint64_t CountMinCounter::increment_morris(int row, int column, int pc, int update)
@@ -225,7 +225,7 @@ uint64_t CountMinCounter::estimate(char *s, int group){
     std::string s_check(s);
 
     if(strategy == 3 && morris_counting_index.size() == width && morris_counting_index.count(s_check) == 0)
-            return 0;
+        return 0;
 
     if(check_group(group) == 0)
         return 0;
@@ -322,8 +322,6 @@ unsigned int CountMinCounter::check_group(int group){
                 return 0;
             }
             break;
-        default:
-
     }
     return 1;
 }
