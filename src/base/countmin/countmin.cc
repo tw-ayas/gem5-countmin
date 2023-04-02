@@ -293,7 +293,7 @@ unsigned int CountMinCounter::hash_function(uint16_t key, unsigned int row) {
     return hash;
 }
 
-unsigned int check_group(int group){
+unsigned int CountMinCounter::check_group(int group){
     switch(group){
         case 0:
             //count all counters
