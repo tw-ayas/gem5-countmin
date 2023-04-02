@@ -97,19 +97,18 @@ uint64_t CountMinCounter::increment(int s, int group, int pc, int update) {
     return CountMinCounter::increment(str, group, pc, update);
 }
 
-uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
-{
-    if(!pc)
+uint64_t CountMinCounter::increment(char *s, int group, int pc, int update) {
+    if (!pc)
         pc = numCycles;
     else
         numCycles = pc;
 
     std::string s_check(s);
     //check if morris_counters are full and if not counting
-    if(strategy == 3 && morris_counting_index.size() == width && morris_counting_index.count(s_check) == 0)
+    if (strategy == 3 && morris_counting_index.size() == width && morris_counting_index.count(s_check) == 0)
         return 0;
 
-    if(check_group(group) == 0)
+    if (check_group(group) == 0)
         return 0;
 
     int estimate = -1;
@@ -132,36 +131,34 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update)
             hashpos[i] = hashstr(s, i);
 
         //min only kept for conservative update
-        if (strategy == 1 && counters[i][hashpos[i]] < min || min < 0) {
+        if (strategy == 1 && (counters[i][hashpos[i]] < min || min < 0)) {
             min = counters[i][hashpos[i]];
-    }
-
-    for (int i = 0; i < depth; i++){
-        if(strategy == 0){
-            actual_count = counters[i][hashpos[i]];
-            actual_count += update;
-            counters[i][hashpos[i]] = actual_count;
         }
-        else if(strategy == 1){
-            if(counters[i][hashpos[i]] == min) {
+
+        for (int i = 0; i < depth; i++) {
+            if (strategy == 0) {
                 actual_count = counters[i][hashpos[i]];
                 actual_count += update;
                 counters[i][hashpos[i]] = actual_count;
+            } else if (strategy == 1) {
+                if (counters[i][hashpos[i]] == min) {
+                    actual_count = counters[i][hashpos[i]];
+                    actual_count += update;
+                    counters[i][hashpos[i]] = actual_count;
+                } else {
+                    actual_count = counters[i][hashpos[i]];
+                }
+            } else if (strategy == 2 || strategy == 3) {
+                int column = hashpos[i];
+                actual_count = increment_morris(i, column, pc, update);
             }
-            else{
-                actual_count = counters[i][hashpos[i]];
-            }
-        }
-        else if(strategy == 2 || strategy == 3){
-            int column = hashpos[i];
-            actual_count = increment_morris(i, column, pc, update);
+
+            if (actual_count < estimate || estimate < 0)
+                estimate = actual_count;
         }
 
-        if(actual_count < estimate || estimate < 0)
-            estimate = actual_count;
+        return estimate;
     }
-
-    return estimate;
 }
 
 uint64_t CountMinCounter::increment_morris(int row, int column, int pc, int update)
