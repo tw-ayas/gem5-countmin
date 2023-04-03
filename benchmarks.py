@@ -6,7 +6,7 @@ list_benchmarks = {
                               '{spec}/gcc-pp.opts-O3_-finline-limit_0_-fif-conversion_-fif-conversion2.s'],
     '503.bwaves_r': ['', 'bwaves_1 < {spec}/bwaves_1.in'],
     '505.mcf_r': ['', '{spec}/inp.in'],
-    '507.cactuBSSN_r': ['', '{spec}/spec_ref.par'],
+    '507.cactuBSSN_r': ['cactusBSSN_r', '{spec}/spec_ref.par'],
     '508.namd_r': ['', '--input {spec}/apoa1.input --output {spec}/apoa1.ref.output --iterations 65'],
     '510.parest_r': ['', '{spec}/ref.prm'],
     '511.povray_r': ['', '{spec}/SPEC-benchmark-ref.ini'],
@@ -78,9 +78,10 @@ strategy = {
     3: 'mc'}
 group = [1, 2, 3, 4, 0]
 path_spec_cpu = "sim/spec-cpu"
-path_gem5 = "sim/gem5"
+path_gem5 = "sim/gem5-countmin"
 path_stats = "stats"
 spec = f"$HOME/{path_spec_cpu}/benchspec/CPU/"
+build = "build"
 
 for benchmark, execut in list_benchmarks.items():
     bench = benchmark.split(".")[1]
@@ -121,7 +122,7 @@ for benchmark, execut in list_benchmarks.items():
                     options = f"{spec}{benchmark}/run/run_base_{ref}_initial.m64.0000"
                     options = execut[1].replace("{spec}", options)
                     file.write(
-                        f"$HOME/{path_gem5}/build/X86/gem5.opt  --outdir=$HOME/{path_stats}/{bench}/{directory} $HOME/"
+                        f"$HOME/{path_gem5}/{build}/X86/gem5.opt  --outdir=$HOME/{path_stats}/{bench}/{directory} $HOME/"
                         f"{path_gem5}/configs/example/se.py --cmd=$HOME/{path_spec_cpu}/benchspec/"
                         f"CPU/{benchmark}/build/build_base_initial-m64.0000/{cmd} "
                         f"--options=\"{options}\" --mem-size=8GB --cpu-type=DerivO3CPU "

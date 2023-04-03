@@ -26,7 +26,7 @@ CountMinCounter::CountMinCounter(unsigned int size, unsigned int d, unsigned int
     }
     else{
         //In case of morris counting, only a single depth is created to simulate w*d counters
-        depth = strategy == 3 ? 1 : 0;
+        depth = strategy == 3 ? 1 : d;
 
         //CMS-Morris Counter
         width = (size / depth) / 4;
@@ -123,7 +123,7 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update) {
     if (strategy == 3 && morris_counting_index.count(s_check) == 0)
         morris_counting_index[s_check] = morris_counting_index.size();
 
-
+//    std::cout << s_check << ": ";
     for (int i = 0; i < depth; i++) {
         if (strategy == 3)
             hashpos[i] = morris_counting_index[s_check];
@@ -157,7 +157,8 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update) {
         if (actual_count < estimate || estimate < 0)
             estimate = actual_count;
     }
-
+//    std::cout << estimate << std::endl;
+//    print();
     return estimate;
 }
 

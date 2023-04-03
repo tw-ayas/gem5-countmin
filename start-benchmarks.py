@@ -1,5 +1,6 @@
 import math
 import sys
+import os
 
 list_benchmarks = [
     '500.perlbench_r',
@@ -56,26 +57,48 @@ size = [
     '1024',
 ]
 
-
 def print_cronjobs(mnt, hour):
+    counter = 0
+    home = os.path.expanduser("~")
     for benchmark in list_benchmarks:
         bench = benchmark.split(".")[1]
+        if bench not in os.listdir(f"{home}/stats/"):
+            os.mkdir(f"{home}/stats/{bench}")
+        if "cron_out" not in os.listdir(f"{home}/stats/{bench}"):
+            os.mkdir(f"{home}/stats/{bench}/cron_out")
         for s in size:
-            print(
-                f"{mnt} {hour} * * * ~/sim/gem5-countmin/bechmarks/{bench}/{bench}_{s}.sh > ~/stats/{bench}/cron_out/{bench}_{s}.txt")
-        mnt = mnt + 10
-        if mnt >= 60:
-            hour = hour + math.floor(mnt / 60)
-            mnt = mnt % 60
-        if hour >= 23:
-            hour = hour % 23
+            print(f"{mnt} {hour} * * * ~/sim/gem5-countmin/benchmarks/{bench}/{bench}_{s}.sh > ~/stats/{bench}/cron_out/{bench}_{s}.txt")
+            mnt, hour = calculate_mnt_hr(mnt, hour, 2)
+        if counter > 3:
+            mnt, hour = calculate_mnt_hr('00', hour, 60)
+            counter = 0
+        counter = counter + 1
 
+def calculate_mnt_hr(mnt, hour, amt):
+    mnt = int(mnt)
+    hour = int(hour)
+    mnt = mnt + amt
+    if mnt >= 60:
+        hour = hour + math.floor(mnt / 60)
+        mnt = mnt % 60
+    if hour >= 23:
+        hour = hour % 24
+    if mnt < 10:
+        mnt = "0" + str(mnt)
+    else:
+        mnt = str(mnt)
+    if hour < 10:
+        hour = "0" + str(hour)
+    else:
+        hour = str(hour)
+    return mnt, hour
+           
 
 if __name__ == '__main__':
     print("Cronjobs for benchmarks.")
     if len(sys.argv) <= 2:
         print("Give proper Time for Cronjob!!!")
         exit(1)
-    h = int(sys.argv[1])
-    m = int(sys.argv[2])
+    h = (sys.argv[1])
+    m = (sys.argv[2])
     print_cronjobs(m, h)
