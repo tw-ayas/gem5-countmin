@@ -1434,7 +1434,7 @@ class BaseCache : public ClockedObject
 
         std::string key = name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".misses";
         //std::cout << key << std::endl;
-        stats.countMinCmdStats(pkt).misses[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data(), getSubGroupForCounter(), 0);
+        stats.countMinCmdStats(pkt).misses[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data(), 3, 0);
         
         pkt->req->incAccessDepth();
         if (missCount) {
@@ -1451,7 +1451,7 @@ class BaseCache : public ClockedObject
 
         std::string key = name() + ".countMin_" + MemCmd(pkt->cmdToIndex()).toString() + "::" + system->getRequestorName(pkt->req->requestorId()) + ".hits";
         //std::cout << key << std::endl;
-        stats.countMinCmdStats(pkt).hits[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data(), getSubGroupForCounter(), 0);
+        stats.countMinCmdStats(pkt).hits[pkt->req->requestorId()] = system->count_min_structure_system[getCpuCounterName(system->getRequestorName(pkt->req->requestorId()))]->increment(key.data(), 1, 0);
 
     }
 

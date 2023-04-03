@@ -405,10 +405,10 @@ TLB::translate(const RequestPtr &req,
             TlbEntry *entry = lookup(vaddr);
             if (mode == BaseMMU::Read) {
                 stats.rdAccesses++;
-                stats.countMinRdAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".rdAccesses").data(), default_group, 0);
+                stats.countMinRdAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".rdAccesses").data(), 4, 0);
             } else {
                 stats.wrAccesses++;
-                stats.countMinWrAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".wrAccesses").data(), default_group, 0);
+                stats.countMinWrAccesses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".wrAccesses").data(), 4, 0);
             }
             if (!entry) {
                 DPRINTF(TLB, "Handling a TLB miss for "
@@ -416,10 +416,10 @@ TLB::translate(const RequestPtr &req,
                         vaddr, tc->pcState().instAddr());
                 if (mode == BaseMMU::Read) {
                     stats.rdMisses++;
-                    stats.countMinRdMisses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".rdMisses").data(), default_group, 0);
+                    stats.countMinRdMisses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".rdMisses").data(), 4, 0);
                 } else {
                     stats.wrMisses++;
-                    stats.countMinWrMisses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".wrMisses").data(), default_group, 0);
+                    stats.countMinWrMisses = system->count_min_structure_system[counterName]->increment(std::string(name() + ".wrMisses").data(), 4, 0);
                 }
                 if (FullSystem) {
                     Fault fault = walker->start(tc, translation, req, mode);

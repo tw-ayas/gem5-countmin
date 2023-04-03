@@ -617,11 +617,11 @@ Decode::decode(bool &status_change, ThreadID tid)
 
     if (decodeStatus[tid] == Blocked) {
         ++stats.blockedCycles;
-        stats.countMinBlockedCycles = cpu->update_count_min(std::string(name() + ".blockedCycles").data(), default_group);
+        stats.countMinBlockedCycles = cpu->update_count_min(std::string(name() + ".blockedCycles").data(), 1);
 
     } else if (decodeStatus[tid] == Squashing) {
         ++stats.squashCycles;
-        stats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), default_group);
+        stats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), 2);
     }
 
     // Decode should try to decode as many instructions as its bandwidth
@@ -665,16 +665,16 @@ Decode::decodeInsts(ThreadID tid)
                 " early.\n",tid);
         // Should I change the status to idle?
         ++stats.idleCycles;
-        stats.countMinIdleCycles = cpu->update_count_min(std::string(name() + ".idleCycles").data(), default_group);
+        stats.countMinIdleCycles = cpu->update_count_min(std::string(name() + ".idleCycles").data(), 2);
         return;
     } else if (decodeStatus[tid] == Unblocking) {
         DPRINTF(Decode, "[tid:%i] Unblocking, removing insts from skid "
                 "buffer.\n",tid);
         ++stats.unblockCycles;
-        stats.countMinUnblockCycles = cpu->update_count_min(std::string(name() + ".unblockCycles").data(), default_group);
+        stats.countMinUnblockCycles = cpu->update_count_min(std::string(name() + ".unblockCycles").data(), 3);
     } else if (decodeStatus[tid] == Running) {
         ++stats.runCycles;
-        stats.countMinRunCycles = cpu->update_count_min(std::string(name() + ".runCycles").data(), default_group);
+        stats.countMinRunCycles = cpu->update_count_min(std::string(name() + ".runCycles").data(), 2);
     }
 
     std::queue<DynInstPtr>
@@ -699,7 +699,7 @@ Decode::decodeInsts(ThreadID tid)
                     tid, inst->seqNum, inst->pcState());
 
             ++stats.squashedInsts;
-            stats.countMinSquashedInsts = cpu->update_count_min(std::string(name() + ".squashedInsts").data(), default_group);
+            stats.countMinSquashedInsts = cpu->update_count_min(std::string(name() + ".squashedInsts").data(), 3);
 
             --insts_available;
 
@@ -722,7 +722,7 @@ Decode::decodeInsts(ThreadID tid)
         ++(toRename->size);
         ++toRenameIndex;
         ++stats.decodedInsts;
-        stats.countMinDecodedInsts = cpu->update_count_min(std::string(name() + ".decodedInsts").data(), default_group);
+        stats.countMinDecodedInsts = cpu->update_count_min(std::string(name() + ".decodedInsts").data(), 4);
         --insts_available;
 
 #if TRACING_ON
@@ -757,7 +757,7 @@ Decode::decodeInsts(ThreadID tid)
             std::unique_ptr<PCStateBase> target = inst->branchTarget();
             if (*target != inst->readPredTarg()) {
                 ++stats.branchMispred;
-                stats.countMinBranchMispred = cpu->update_count_min(std::string(name() + ".branchMispred").data(), default_group);
+                stats.countMinBranchMispred = cpu->update_count_min(std::string(name() + ".branchMispred").data(), 4);
 
                 // Might want to set some sort of boolean and just do
                 // a check at the end

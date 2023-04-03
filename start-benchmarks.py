@@ -92,7 +92,7 @@ def calculate_mnt_hr(mnt, hour, amt):
     else:
         hour = str(hour)
     return mnt, hour
-           
+
 
 if __name__ == '__main__':
     print("Cronjobs for benchmarks.")

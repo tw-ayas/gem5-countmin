@@ -565,11 +565,11 @@ Fetch::lookupAndUpdateNextPC(const DynInstPtr &inst, PCStateBase &next_pc)
     inst->setPredTaken(predict_taken);
 
     ++fetchStats.branches;
-    fetchStats.countMinBranches = cpu->update_count_min(std::string(name() + ".branches").data(), default_group);
+    fetchStats.countMinBranches = cpu->update_count_min(std::string(name() + ".branches").data(), 1);
 
     if (predict_taken) {
         ++fetchStats.predictedBranches;
-        fetchStats.countMinPredictedBranches = cpu->update_count_min(std::string(name() + ".predictedBranches").data(), default_group);
+        fetchStats.countMinPredictedBranches = cpu->update_count_min(std::string(name() + ".predictedBranches").data(), 3);
     }
 
     return predict_taken;
@@ -780,7 +780,7 @@ Fetch::doSquash(const PCStateBase &new_pc, const DynInstPtr squashInst,
     delayedCommit[tid] = true;
 
     ++fetchStats.squashCycles;
-    fetchStats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), default_group);
+    fetchStats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), 4);
 }
 
 void
@@ -1174,7 +1174,7 @@ Fetch::fetch(bool &status_change)
 
             if (fetchStatus[tid] == IcacheWaitResponse){
                 ++fetchStats.icacheStallCycles;
-                fetchStats.countMinIcacheStallCycles = cpu->update_count_min(std::string(name() + ".icacheStallCycles").data(), default_group);
+                fetchStats.countMinIcacheStallCycles = cpu->update_count_min(std::string(name() + ".icacheStallCycles").data(), 2);
             }
             else if (fetchStatus[tid] == ItlbWait){
                 ++fetchStats.tlbCycles;
@@ -1603,11 +1603,11 @@ Fetch::profileStall(ThreadID tid)
         DPRINTF(Fetch, "[tid:%i] Fetch is blocked!\n", tid);
     } else if (fetchStatus[tid] == Squashing) {
         ++fetchStats.squashCycles;
-        fetchStats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), default_group);
+        fetchStats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), 4);
         DPRINTF(Fetch, "[tid:%i] Fetch is squashing!\n", tid);
     } else if (fetchStatus[tid] == IcacheWaitResponse) {
         ++fetchStats.icacheStallCycles;
-        fetchStats.countMinIcacheStallCycles = cpu->update_count_min(std::string(name() + ".icacheStallCycles").data(), default_group);
+        fetchStats.countMinIcacheStallCycles = cpu->update_count_min(std::string(name() + ".icacheStallCycles").data(), 2);
         DPRINTF(Fetch, "[tid:%i] Fetch is waiting cache response!\n",
                 tid);
     } else if (fetchStatus[tid] == ItlbWait) {

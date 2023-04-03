@@ -624,12 +624,12 @@ InstructionQueue::insert(const DynInstPtr &new_inst)
 {
     if (new_inst->isFloating()) {
         iqIOStats.fpInstQueueWrites++;
-        iqIOStats.countMinFpInstQueueWrites = cpu->update_count_min(std::string(name() + ".fpInstQueueWrites").data(), default_group);
+        iqIOStats.countMinFpInstQueueWrites = cpu->update_count_min(std::string(name() + ".fpInstQueueWrites").data(), 3);
     } else if (new_inst->isVector()) {
         iqIOStats.vecInstQueueWrites++;
     } else {
         iqIOStats.intInstQueueWrites++;
-        iqIOStats.countMinIntInstQueueWrites = cpu->update_count_min(std::string(name() + ".intInstQueueWrites").data(), default_group);
+        iqIOStats.countMinIntInstQueueWrites = cpu->update_count_min(std::string(name() + ".intInstQueueWrites").data(), 4);
     }
     // Make sure the instruction is valid
     assert(new_inst);
@@ -660,7 +660,7 @@ InstructionQueue::insert(const DynInstPtr &new_inst)
     }
 
     ++iqStats.instsAdded;
-    iqStats.countMinInstsAdded = cpu->update_count_min(std::string(name() + ".instsAdded").data(), default_group);
+    iqStats.countMinInstsAdded = cpu->update_count_min(std::string(name() + ".instsAdded").data(), 4);
 
     count[new_inst->threadNumber]++;
 
@@ -674,12 +674,12 @@ InstructionQueue::insertNonSpec(const DynInstPtr &new_inst)
     // to issue, then calling normal insert on the inst.
     if (new_inst->isFloating()) {
         iqIOStats.fpInstQueueWrites++;
-        iqIOStats.countMinFpInstQueueWrites = cpu->update_count_min(std::string(name() + ".fpInstQueueWrites").data(), default_group);
+        iqIOStats.countMinFpInstQueueWrites = cpu->update_count_min(std::string(name() + ".fpInstQueueWrites").data(), 3);
     } else if (new_inst->isVector()) {
         iqIOStats.vecInstQueueWrites++;
     } else {
         iqIOStats.intInstQueueWrites++;
-        iqIOStats.countMinIntInstQueueWrites = cpu->update_count_min(std::string(name() + ".intInstQueueWrites").data(), default_group);
+        iqIOStats.countMinIntInstQueueWrites = cpu->update_count_min(std::string(name() + ".intInstQueueWrites").data(), 4);
     }
 
     assert(new_inst);
@@ -709,7 +709,7 @@ InstructionQueue::insertNonSpec(const DynInstPtr &new_inst)
     }
 
     ++iqStats.nonSpecInstsAdded;
-    iqStats.countMinNonSpecInstsAdded = cpu->update_count_min(std::string(name() + ".nonSpecInstsAdded").data(), default_group);
+    iqStats.countMinNonSpecInstsAdded = cpu->update_count_min(std::string(name() + ".nonSpecInstsAdded").data(), 4);
 
     count[new_inst->threadNumber]++;
 
@@ -732,12 +732,12 @@ InstructionQueue::getInstToExecute()
     instsToExecute.pop_front();
     if (inst->isFloating()) {
         iqIOStats.fpInstQueueReads++;
-        iqIOStats.countMinFpInstQueueReads = cpu->update_count_min(std::string(name() + ".fpInstQueueReads").data(), default_group);
+        iqIOStats.countMinFpInstQueueReads = cpu->update_count_min(std::string(name() + ".fpInstQueueReads").data(), 3);
     } else if (inst->isVector()) {
         iqIOStats.vecInstQueueReads++;
     } else {
         iqIOStats.intInstQueueReads++;
-        iqIOStats.countMinIntInstQueueReads = cpu->update_count_min(std::string(name() + ".intInstQueueReads").data(), default_group);
+        iqIOStats.countMinIntInstQueueReads = cpu->update_count_min(std::string(name() + ".intInstQueueReads").data(), 4);
     }
     return inst;
 }
@@ -855,12 +855,12 @@ InstructionQueue::scheduleReadyInsts()
 
         if (issuing_inst->isFloating()) {
             iqIOStats.fpInstQueueReads++;
-            iqIOStats.countMinFpInstQueueReads = cpu->update_count_min(std::string(name() + ".fpInstQueueReads").data(), default_group);
+            iqIOStats.countMinFpInstQueueReads = cpu->update_count_min(std::string(name() + ".fpInstQueueReads").data(), 3);
         } else if (issuing_inst->isVector()) {
             iqIOStats.vecInstQueueReads++;
         } else {
             iqIOStats.intInstQueueReads++;
-            iqIOStats.countMinIntInstQueueReads = cpu->update_count_min(std::string(name() + ".intInstQueueReads").data(), default_group);
+            iqIOStats.countMinIntInstQueueReads = cpu->update_count_min(std::string(name() + ".intInstQueueReads").data(), 4);
         }
 
         assert(issuing_inst->seqNum == (*order_it).oldestInst);
@@ -878,7 +878,7 @@ InstructionQueue::scheduleReadyInsts()
             listOrder.erase(order_it++);
 
             ++iqStats.squashedInstsIssued;
-            iqStats.squashedInstsIssued = cpu->update_count_min(std::string(name() + ".squashedInstsIssued").data(), default_group);
+            iqStats.squashedInstsIssued = cpu->update_count_min(std::string(name() + ".squashedInstsIssued").data(), 4);
 
 
             continue;
@@ -892,12 +892,12 @@ InstructionQueue::scheduleReadyInsts()
             idx = fuPool->getUnit(op_class);
             if (issuing_inst->isFloating()) {
                 iqIOStats.fpAluAccesses++;
-                iqIOStats.countMinFpAluAccesses = cpu->update_count_min(std::string(name() + ".fpAluAccesses").data(), default_group);
+                iqIOStats.countMinFpAluAccesses = cpu->update_count_min(std::string(name() + ".fpAluAccesses").data(), 1);
             } else if (issuing_inst->isVector()) {
                 iqIOStats.vecAluAccesses++;
             } else {
                 iqIOStats.intAluAccesses++;
-                iqIOStats.countMinIntAluAccesses = cpu->update_count_min(std::string(name() + ".intAluAccesses").data(), default_group);
+                iqIOStats.countMinIntAluAccesses = cpu->update_count_min(std::string(name() + ".intAluAccesses").data(), 4);
             }
             if (idx > FUPool::NoFreeFU) {
                 op_latency = fuPool->getOpLatency(op_class);
@@ -974,14 +974,14 @@ InstructionQueue::scheduleReadyInsts()
         } else {
             iqStats.statFuBusy[op_class]++;
             iqStats.fuBusy[tid]++;
-            iqStats.countMinFuBusy[tid] = cpu->update_count_min(std::string(name() + ".fuBusy::" + std::to_string(tid)).data(), default_group, total_issued);
+            iqStats.countMinFuBusy[tid] = cpu->update_count_min(std::string(name() + ".fuBusy::" + std::to_string(tid)).data(), 4, total_issued);
             ++order_it;
         }
     }
 
     iqStats.numIssuedDist.sample(total_issued);
     iqStats.instsIssued+= total_issued;
-    iqStats.countMinInstsIssued = cpu->update_count_min(std::string(name() + ".instsIssued").data(), default_group, total_issued);
+    iqStats.countMinInstsIssued = cpu->update_count_min(std::string(name() + ".instsIssued").data(), 4, total_issued);
 
     // If we issued any instructions, tell the CPU we had activity.
     // @todo If the way deferred memory instructions are handeled due to
@@ -1046,12 +1046,12 @@ InstructionQueue::wakeDependents(const DynInstPtr &completed_inst)
     // The instruction queue here takes care of both floating and int ops
     if (completed_inst->isFloating()) {
         iqIOStats.fpInstQueueWakeupAccesses++;
-        iqIOStats.countMinFpInstQueueWakeupAccesses = cpu->update_count_min(std::string(name() + ".fpInstQueueWakeupAccesses").data(), default_group);
+        iqIOStats.countMinFpInstQueueWakeupAccesses = cpu->update_count_min(std::string(name() + ".fpInstQueueWakeupAccesses").data(), 3);
     } else if (completed_inst->isVector()) {
         iqIOStats.vecInstQueueWakeupAccesses++;
     } else {
         iqIOStats.intInstQueueWakeupAccesses++;
-        iqIOStats.countMinIntInstQueueWakeupAccesses = cpu->update_count_min(std::string(name() + ".intInstQueueWakeupAccesses").data(), default_group);
+        iqIOStats.countMinIntInstQueueWakeupAccesses = cpu->update_count_min(std::string(name() + ".intInstQueueWakeupAccesses").data(), 4);
     }
 
     completed_inst->lastWakeDependents = curTick();
@@ -1240,7 +1240,7 @@ InstructionQueue::violation(const DynInstPtr &store,
         const DynInstPtr &faulting_load)
 {
     iqIOStats.intInstQueueWrites++;
-    iqIOStats.countMinIntInstQueueWrites = cpu->update_count_min(std::string(name() + ".intInstQueueWrites").data(), default_group);
+    iqIOStats.countMinIntInstQueueWrites = cpu->update_count_min(std::string(name() + ".intInstQueueWrites").data(), 4);
     memDepUnit[store->threadNumber].violation(store, faulting_load);
 }
 
@@ -1278,12 +1278,12 @@ InstructionQueue::doSquash(ThreadID tid)
         DynInstPtr squashed_inst = (*squash_it);
         if (squashed_inst->isFloating()) {
             iqIOStats.fpInstQueueWrites++;
-            iqIOStats.countMinFpInstQueueWrites = cpu->update_count_min(std::string(name() + ".fpInstQueueWrites").data(), default_group);
+            iqIOStats.countMinFpInstQueueWrites = cpu->update_count_min(std::string(name() + ".fpInstQueueWrites").data(), 3);
         } else if (squashed_inst->isVector()) {
             iqIOStats.vecInstQueueWrites++;
         } else {
             iqIOStats.intInstQueueWrites++;
-            iqIOStats.countMinIntInstQueueWrites = cpu->update_count_min(std::string(name() + ".intInstQueueWrites").data(), default_group);
+            iqIOStats.countMinIntInstQueueWrites = cpu->update_count_min(std::string(name() + ".intInstQueueWrites").data(), 4);
         }
 
         // Only handle the instruction if it actually is in the IQ and
@@ -1401,7 +1401,7 @@ InstructionQueue::doSquash(ThreadID tid)
         }
         instList[tid].erase(squash_it--);
         ++iqStats.squashedInstsExamined;
-        iqStats.countMinSquashedInstsExamined = cpu->update_count_min(std::string(name() + ".squashedInstsExamined").data(), default_group);
+        iqStats.countMinSquashedInstsExamined = cpu->update_count_min(std::string(name() + ".squashedInstsExamined").data(), 4);
     }
 }
 

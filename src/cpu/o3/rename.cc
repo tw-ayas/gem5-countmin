@@ -513,13 +513,13 @@ Rename::rename(bool &status_change, ThreadID tid)
 
     if (renameStatus[tid] == Blocked) {
         ++stats.blockCycles;
-        stats.countMinBlockCycles = cpu->update_count_min(std::string(name() + ".blockCycles").data(), default_group);
+        stats.countMinBlockCycles = cpu->update_count_min(std::string(name() + ".blockCycles").data(), 1);
     } else if (renameStatus[tid] == Squashing) {
         ++stats.squashCycles;
-        stats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), default_group);
+        stats.countMinSquashCycles = cpu->update_count_min(std::string(name() + ".squashCycles").data(), 4);
     } else if (renameStatus[tid] == SerializeStall) {
         ++stats.serializeStallCycles;
-        stats.countMinSerializeStallCycles = cpu->update_count_min(std::string(name() + ".serializeStallCycles").data(), default_group);
+        stats.countMinSerializeStallCycles = cpu->update_count_min(std::string(name() + ".serializeStallCycles").data(), 3);
         // If we are currently in SerializeStall and resumeSerialize
         // was set, then that means that we are resuming serializing
         // this cycle.  Tell the previous stages to block.
@@ -574,14 +574,14 @@ Rename::renameInsts(ThreadID tid)
                 tid);
         // Should I change status to idle?
         ++stats.idleCycles;
-        stats.countMinIdleCycles = cpu->update_count_min(std::string(name() + ".idleCycles").data(), default_group);
+        stats.countMinIdleCycles = cpu->update_count_min(std::string(name() + ".idleCycles").data(), 2);
         return;
     } else if (renameStatus[tid] == Unblocking) {
         ++stats.unblockCycles;
-        stats.countMinUnblockCycles = cpu->update_count_min(std::string(name() + ".unblockCycles").data(), default_group);
+        stats.countMinUnblockCycles = cpu->update_count_min(std::string(name() + ".unblockCycles").data(), 4);
     } else if (renameStatus[tid] == Running) {
         ++stats.runCycles;
-        stats.countMinRunCycles = cpu->update_count_min(std::string(name() + ".runCycles").data(), default_group);
+        stats.countMinRunCycles = cpu->update_count_min(std::string(name() + ".runCycles").data(), 3);
     }
 
     // Will have to do a different calculation for the number of free
@@ -741,11 +741,11 @@ Rename::renameInsts(ThreadID tid)
 
             if (!inst->isTempSerializeBefore()) {
                 stats.serializing++;
-                stats.countMinSerializing = cpu->update_count_min(std::string(name() + ".serializing").data(), default_group);
+                stats.countMinSerializing = cpu->update_count_min(std::string(name() + ".serializing").data(), 4);
                 inst->setSerializeHandled();
             } else {
                 stats.tempSerializing++;
-                stats.countMinTempSerializing = cpu->update_count_min(std::string(name() + ".tempSerializing").data(), default_group);
+                stats.countMinTempSerializing = cpu->update_count_min(std::string(name() + ".tempSerializing").data(), 4);
             }
 
             // Change status over to SerializeStall so that other stages know
@@ -762,7 +762,7 @@ Rename::renameInsts(ThreadID tid)
             DPRINTF(Rename, "Serialize after instruction encountered.\n");
 
             stats.serializing++;
-            stats.countMinSerializing = cpu->update_count_min(std::string(name() + ".serializing").data(), default_group);
+            stats.countMinSerializing = cpu->update_count_min(std::string(name() + ".serializing").data(), 4);
 
             inst->setSerializeHandled();
 
@@ -797,7 +797,7 @@ Rename::renameInsts(ThreadID tid)
 
     instsInProgress[tid] += renamed_insts;
     stats.renamedInsts += renamed_insts;
-    stats.countMinRenamedInsts = cpu->update_count_min(std::string(name() + ".renamedInsts").data(), default_group, renamed_insts);
+    stats.countMinRenamedInsts = cpu->update_count_min(std::string(name() + ".renamedInsts").data(), default_group, 3);
 
     // If we wrote to the time buffer, record this.
     if (toIEWIndex) {
@@ -832,7 +832,7 @@ Rename::skidInsert(ThreadID tid)
                 "skidBuffer\n", tid, inst->seqNum, inst->pcState());
 
         ++stats.skidInsts;
-        stats.countMinSkidInsts = cpu->update_count_min(std::string(name() + ".skidInsts").data(), default_group);
+        stats.countMinSkidInsts = cpu->update_count_min(std::string(name() + ".skidInsts").data(), 4);
 
         skidBuffer[tid].push_back(inst);
     }
@@ -1014,7 +1014,7 @@ Rename::doSquash(const InstSeqNum &squashed_seq_num, ThreadID tid)
         historyBuffer[tid].erase(hb_it++);
 
         ++stats.undoneMaps;
-        stats.countMinUndoneMaps = cpu->update_count_min(std::string(name() + ".undoneMaps").data(), default_group);
+        stats.countMinUndoneMaps = cpu->update_count_min(std::string(name() + ".undoneMaps").data(), 4);
     }
 }
 
@@ -1062,7 +1062,7 @@ Rename::removeFromHistory(InstSeqNum inst_seq_num, ThreadID tid)
         }
 
         ++stats.committedMaps;
-        stats.countMinCommittedMaps = cpu->update_count_min(std::string(name() + ".committedMaps").data(), default_group);
+        stats.countMinCommittedMaps = cpu->update_count_min(std::string(name() + ".committedMaps").data(), 3);
 
         historyBuffer[tid].erase(hb_it--);
     }
@@ -1087,11 +1087,11 @@ Rename::renameSrcRegs(const DynInstPtr &inst, ThreadID tid)
             break;
           case IntRegClass:
             stats.intLookups++;
-            stats.countMinIntLookups = cpu->update_count_min(std::string(name() + ".intLookups").data(), default_group);
+            stats.countMinIntLookups = cpu->update_count_min(std::string(name() + ".intLookups").data(), 2);
             break;
           case FloatRegClass:
             stats.fpLookups++;
-            stats.countMinFpLookups = cpu->update_count_min(std::string(name() + ".fpLookups").data(), default_group);
+            stats.countMinFpLookups = cpu->update_count_min(std::string(name() + ".fpLookups").data(), 2);
             break;
           case VecRegClass:
           case VecElemClass:
@@ -1135,7 +1135,7 @@ Rename::renameSrcRegs(const DynInstPtr &inst, ThreadID tid)
         }
 
         ++stats.lookups;
-        stats.countMinLookups = cpu->update_count_min(std::string(name() + ".lookups").data(), default_group);
+        stats.countMinLookups = cpu->update_count_min(std::string(name() + ".lookups").data(), 4);
     }
 }
 
@@ -1189,7 +1189,7 @@ Rename::renameDestRegs(const DynInstPtr &inst, ThreadID tid)
                             rename_result.second);
 
         ++stats.renamedOperands;
-        stats.countMinRenamedOperands = cpu->update_count_min(std::string(name() + ".renamedOperands").data(), default_group);
+        stats.countMinRenamedOperands = cpu->update_count_min(std::string(name() + ".renamedOperands").data(), 3);
     }
 }
 

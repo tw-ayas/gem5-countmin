@@ -201,7 +201,7 @@ ROB::insertInst(const DynInstPtr &inst)
     assert(inst);
 
     stats.writes++;
-    stats.countMinWrites = cpu->update_count_min(std::string(name() + ".writes").data(), default_group);
+    stats.countMinWrites = cpu->update_count_min(std::string(name() + ".writes").data(), 4);
 
     DPRINTF(ROB, "Adding inst PC %s to the ROB.\n", inst->pcState());
 
@@ -237,7 +237,7 @@ void
 ROB::retireHead(ThreadID tid)
 {
     stats.writes++;
-    stats.countMinWrites = cpu->update_count_min(std::string(name() + ".writes").data(), default_group);
+    stats.countMinWrites = cpu->update_count_min(std::string(name() + ".writes").data(), 4);
 
     assert(numInstsInROB > 0);
 

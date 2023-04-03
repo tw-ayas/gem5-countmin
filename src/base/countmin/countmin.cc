@@ -103,12 +103,12 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update) {
     else
         numCycles = pc;
 
+    if (check_group(group) == 0)
+        return 0;
+
     std::string s_check(s);
     //check if morris_counters are full and if not counting
     if (strategy == 3 && morris_counting_index.size() == width && morris_counting_index.count(s_check) == 0)
-        return 0;
-
-    if (check_group(group) == 0)
         return 0;
 
     int estimate = -1;
@@ -225,10 +225,10 @@ uint64_t CountMinCounter::estimate(char *s, int group){
 
     std::string s_check(s);
 
-    if(strategy == 3 && morris_counting_index.size() == width && morris_counting_index.count(s_check) == 0)
+    if(check_group(group) == 0)
         return 0;
 
-    if(check_group(group) == 0)
+    if(strategy == 3 && morris_counting_index.size() == width && morris_counting_index.count(s_check) == 0)
         return 0;
 
     unsigned int hashval;
@@ -295,33 +295,25 @@ unsigned int CountMinCounter::hash_function(uint16_t key, unsigned int row) {
 }
 
 unsigned int CountMinCounter::check_group(int group){
-    switch(group){
+    switch(current_group){
         case 0:
             //count all counters
             break;
         case 1:
             if (group > 1)
-            {
                 return 0;
-            }
             break;
         case 2:
             if (group > 2)
-            {
                 return 0;
-            }
             break;
         case 3:
             if (group > 3)
-            {
                 return 0;
-            }
             break;
         case 4:
             if (group > 4)
-            {
                 return 0;
-            }
             break;
     }
     return 1;
