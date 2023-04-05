@@ -32,6 +32,7 @@ private:
     //we have 4 morris constants for each row of CMS
     uint8_t ***morris_counters;
     uint32_t **morris_constants; // a
+    std::vector<uint8_t[4]> morris;
     double *morris_delta_constants;
     float morris_estimate_constant;
     std::mt19937_64 genMorris;
@@ -64,11 +65,6 @@ public:
     uint64_t increment(char *s, int group, int pc, int update);
 
     uint64_t increment_morris(int row, int column, int pc, int update);
-
-    uint64_t decrement(int s, int group, int pc);
-    uint64_t decrement(char *s, int group, int pc);
-    uint64_t decrement(int s, int group, int pc, int update);
-    uint64_t decrement(char *s, int group, int pc, int update);
 
     uint64_t estimate(int s, int group);
     uint64_t estimate(char *s, int group);
