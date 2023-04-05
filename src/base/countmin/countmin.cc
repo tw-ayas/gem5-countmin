@@ -43,7 +43,7 @@ CountMinCounter::CountMinCounter(unsigned int size, unsigned int d, unsigned int
                 if (strategy == 2)
                     morris_counters[i][j] = new uint8_t [4];
                 else
-                    morris.push_back(new uint_8_t[4]);
+                    morris.push_back(new uint8_t[4]);
                 for(int k = 0; k < 4; k++){
                     if (strategy == 2)
                         morris_counters[i][j][k] = 0;
@@ -131,7 +131,7 @@ uint64_t CountMinCounter::increment(char *s, int group, int pc, int update) {
     //check if counting is already initiated for
     if (strategy == 3 && morris_counting_index.count(s_check) == 0) {
         morris_counting_index[s_check] = morris_counting_index.size();
-        morris.push_back(new uint_8_t[4]);
+        morris.push_back(new uint8_t[4]);
     }
 
 //    std::cout << s_check << ": ";
@@ -179,10 +179,11 @@ uint64_t CountMinCounter::increment_morris(int row, int column, int pc, int upda
     while(update > 0) {
         estimate = 0;
         for(int i = 0; i < 4; i++){
+            uint8_t count;
             if (strategy == 2)
-                uint8_t count = morris_counters[row][column][i];
+                count = morris_counters[row][column][i];
             else
-                uint8_t count = morrs[column][i];
+                count = morrs[column][i];
             double a = random_gen();
             if (morris_delta_constants[count] > a)
             {
@@ -244,10 +245,11 @@ uint64_t CountMinCounter::estimate_morris(int row, int column) {
     uint32_t estimate = 0;
     for(int i = 0; i < 4; i++) {
         double a = random_gen();
+        uint8_t count;
         if (strategy == 2)
-            uint8_t count = morris_counters[row][column][i];
+            count = morris_counters[row][column][i];
         else
-            uint8_t count = morris[column][i]
+            count = morris[column][i];
         estimate += int(pow(morris_estimate_constant, count));
     }
     return estimate / 4;
@@ -320,10 +322,11 @@ void CountMinCounter::print() {
             }
             else{
                 for(int k = 0; k < 4; k++){
+                    uint32_t count;
                     if (strategy == 2)
-                        uint32_t count = morris_counters[i][j][k];
+                        count = morris_counters[i][j][k];
                     else
-                        uint32_t count = morris[j][k];
+                        count = morris[j][k];
                     cout << int(count) << " ";
                 }
                 cout << "| ";
