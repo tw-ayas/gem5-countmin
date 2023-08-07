@@ -32,7 +32,7 @@ private:
     //we have 4 morris constants for each row of CMS
     uint8_t ***morris_counters;
     uint32_t **morris_constants; // a
-    std::vector<uint8_t[4]> morris;
+    std::vector<uint8_t *> morris;
     double *morris_delta_constants;
     float morris_estimate_constant;
     std::mt19937_64 genMorris;

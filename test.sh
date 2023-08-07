@@ -1,1 +1,12 @@
-~/sim/gem5/build/X86/gem5.opt --outdir=/u/home/twayana/stats/test_stats/$1 ~/sim/gem5/configs/example/se.py --cmd=/u/home/twayana/sim/spec-cpu/benchspec/CPU/619.lbm_s/build/build_base_initial-m64.0000/lbm_s --options="2000 /u/home/twayana/sim/spec-cpu/benchspec/CPU/619.lbm_s/run/run_base_refspeed_initial-m64.0000/reference.dat 0 0 /u/home/twayana/sim/spec-cpu/benchspec/CPU/619.lbm_s/run/run_base_refspeed_initial-m64.0000/200_200_260_ldc.of" --mem-size=8GB --cpu-type=DerivO3CPU --num-cpu=2 --maxinsts=$2 --caches --l2cache --l1d_size=32kB --l1i_size=32kB --l2_size=512kB --prob-hw-counters=1 --prob-hw-counters-ep=0.004 --prob-hw-counters-gamma=0.014
+#!/bin/sh
+DIR="$HOME/stats/perlbench_r"
+if [ ! -d "$DIR" ]; then
+    echo 'mkdir $HOME/stats/perlbench_r'
+    mkdir $HOME/stats/perlbench_r
+fi
+DIR="$HOME/stats/perlbench_r/cron_out"
+if [ ! -d "$DIR" ]; then
+    echo 'mkdir $HOME/stats/perlbench_r/cron_out'
+    mkdir $HOME/stats/perlbench_r/cron_out
+fi
+

@@ -54,7 +54,7 @@ list_benchmarks = {
     '644.nab_s': ['', '{spec}/3j1n 20140317 220'],
     '648.exchange2_s': ['', '6'],
     '649.fotonik3d_s': ['', ''],
-    '654.roms_s': ['', '< {spec}/ocean_benchmark3.in'],
+    '654.roms_s': ['sroms', '< {spec}/ocean_benchmark2.in'],
     '657.xz_s': ['', '{spec}/cpu2006docs.tar.xz 6643 '
                      '055ce243071129412e9dd0b3b69a21654033a9b723d874b2015c774fac1553d9713be561ca'
                      '86f74e4f16f22e664fc17a79f30caa5ad2c04fbc447549c2810fae 1036078272 1111795472 4'],
@@ -107,6 +107,8 @@ for benchmark, execut in list_benchmarks.items():
         file.write(f"fi\n")
         for d in depth:
             for st_code, st in strategy.items():
+                if st_code != 3:
+                   continue
                 file.write(f"#{s}_{d}_{st}\n")
                 for g in group:
                     end = '&&'
@@ -131,7 +133,7 @@ for benchmark, execut in list_benchmarks.items():
                         f"--prob-hw-counters-depth={d} --prob-hw-counters-conservative-update={st_code} "
                         f"--l1i-hwp-type=StridePrefetcher "
                         f"--l1d-hwp-type=StridePrefetcher --mem-type=DDR4_2400_4x16 "
-                        f"--prob-hw-counters-group={g} >> $HOME/{path_stats}/{bench}/cron_out/{directory}.txt"
+                        f"--prob-hw-counters-group={g} > $HOME/{path_stats}/{bench}/cron_out/{directory}.txt"
                         f" {end}\n")
                 file.write("\n\n")
         file.close()

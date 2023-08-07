@@ -70,7 +70,7 @@ def print_cronjobs(mnt, hour):
             print(f"{mnt} {hour} * * * ~/sim/gem5-countmin/benchmarks/{bench}/{bench}_{s}.sh > ~/stats/{bench}/cron_out/{bench}_{s}.txt")
             mnt, hour = calculate_mnt_hr(mnt, hour, 2)
         if counter > 3:
-            mnt, hour = calculate_mnt_hr('00', hour, 60)
+            mnt, hour = calculate_mnt_hr('00', hour, 10)
             counter = 0
         counter = counter + 1
 
